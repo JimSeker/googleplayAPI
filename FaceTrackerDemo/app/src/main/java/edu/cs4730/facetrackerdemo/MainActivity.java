@@ -193,34 +193,36 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             //Is the face smiling?
             Smile = face.getIsSmilingProbability() > 0.75;
-            //  Log.i(TAG, "Smile is " + Smile);
-            //mLogger.setText("Smile: " + Smile + " Left: " + LeftEye + " Right:" +RightEye);
-            if (!mTts.isSpeaking()) {  //If not speaking.
-                if (!LeftEye) {  //checking left eye first.
-                    if (!AskLeft) { //have I already asked?
-                        Speech("Please Open your Left Eye");
-                        AskLeft = true;
+            if (canspeak) {  //don't speak if it's not setup, otherwise force close...
+                //  Log.i(TAG, "Smile is " + Smile);
+                //mLogger.setText("Smile: " + Smile + " Left: " + LeftEye + " Right:" +RightEye);
+                if (!mTts.isSpeaking()) {  //If not speaking.
+                    if (!LeftEye) {  //checking left eye first.
+                        if (!AskLeft) { //have I already asked?
+                            Speech("Please Open your Left Eye");
+                            AskLeft = true;
+                            AskRight = false;
+                            AskSmile = false;
+                        }
+                    } else if (!RightEye) {
+                        if (!AskRight) {
+                            Speech("Please Open your Right Eye");
+                            AskLeft = false;
+                            AskRight = true;
+                            AskSmile = false;
+                        }
+                    } else if (!Smile) {
+                        if (!AskSmile)
+                            Speech("Please Smile");
+                        AskLeft = false;
+                        AskRight = false;
+                        AskSmile = true;
+                    } else if (AskSmile) {
+                        AskLeft = false;
                         AskRight = false;
                         AskSmile = false;
+                        Speech("Perfect!");
                     }
-                } else if (!RightEye) {
-                    if (!AskRight) {
-                        Speech("Please Open your Right Eye");
-                        AskLeft = false;
-                        AskRight = true;
-                        AskSmile = false;
-                    }
-                } else if (!Smile) {
-                    if (!AskSmile)
-                    Speech("Please Smile");
-                    AskLeft = false;
-                    AskRight = false;
-                    AskSmile = true;
-                } else if (AskSmile) {
-                    AskLeft = false;
-                    AskRight = false;
-                    AskSmile = false;
-                    Speech("Perfect!");
                 }
             }
             sendmessage("Smile: " + Smile + " Left: " + LeftEye + " Right:" +RightEye);
