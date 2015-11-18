@@ -8,7 +8,7 @@
 
 <b>LocationAwareDemo</b> shows how to use the APIs to do location better then standard GPS demos.  plus will show the likely address of your location.
 
-<b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is similing.  Needs ask premissions for marshmallow.  VisionAPIDemo is an early version of google's examples and will likely be deleted.  See https://github.com/googlesamples/android-vision 
+<b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is similing.  VisionAPIDemo is an early version of google's examples and will likely be deleted.  See https://github.com/googlesamples/android-vision 
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.
