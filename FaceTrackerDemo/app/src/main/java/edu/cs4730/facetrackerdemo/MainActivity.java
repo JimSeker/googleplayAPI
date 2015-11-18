@@ -1,13 +1,16 @@
 package edu.cs4730.facetrackerdemo;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.SurfaceHolder;
 
@@ -33,7 +36,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     SurfaceView mPreview;
     TextView mLogger;
     private boolean mSurfaceAvailable;
-
+    //for getting permissions to use the camara in API 23+
+    final String[] permissions = new String[]{Manifest.permission.CAMERA};
+    private static final int RC_HANDLE_CAMERA_PERM = 2;
     //handler, since the facetracker is on another thread.
     protected Handler handler;
 
@@ -54,6 +59,40 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         mLogger = (TextView) findViewById(R.id.mylogger);
 
+
+        //message handler for textivew.
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+
+                Bundle stuff = msg.getData();
+                mLogger.setText(stuff.getString("logthis"));
+                mLogger.invalidate();  //should not need this...
+                return true;
+            }
+        });
+
+        // Check to be sure that TTS exists and is okay to use
+        Intent checkIntent = new Intent();
+        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
+        startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+
+
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc == PackageManager.PERMISSION_GRANTED) {
+            createCameraSource();
+        } else {
+            ActivityCompat.requestPermissions(this, permissions,
+                    RC_HANDLE_CAMERA_PERM);
+        }
+    }
+
+
+    public void createCameraSource() {
         //Setup the FaceDetector
         Context context = getApplicationContext();
         FaceDetector detector = new FaceDetector.Builder(context)
@@ -83,25 +122,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .setRequestedFps(30.0f)
                 .build();
 
-        //message handler for textivew.
-        handler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-
-                Bundle stuff = msg.getData();
-                mLogger.setText(stuff.getString("logthis"));
-                mLogger.invalidate();  //should not need this...
-                return true;
-            }
-        });
-
-        // Check to be sure that TTS exists and is okay to use
-        Intent checkIntent = new Intent();
-        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
-        startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
-
     }
+
 
     void startPreview() {
         if (mSurfaceAvailable  && mCameraSource != null) {
@@ -145,7 +167,34 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mTts.shutdown();
     }
 
+    /**
+     * Callback for the result from requesting permissions. This method
+     * is invoked for every call on {@link #requestPermissions(String[], int)}.
+     * <p>
+     * <strong>Note:</strong> It is possible that the permissions request interaction
+     * with the user is interrupted. In this case you will receive empty permissions
+     * and results arrays which should be treated as a cancellation.
+     * </p>
+     *
+     * @param requestCode  The request code passed in {@link #requestPermissions(String[], int)}.
+     * @param permissions  The requested permissions. Never null.
+     * @param grantResults The grant results for the corresponding permissions
+     *                     which is either {@link PackageManager#PERMISSION_GRANTED}
+     *                     or {@link PackageManager#PERMISSION_DENIED}. Never null.
+     * @see #requestPermissions(String[], int)
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Camera permission granted - initialize the camera source");
+            // we have permission, so create the camerasource
+            createCameraSource();
+            return;
+        }
+        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
+                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
 
+    }
     /*
     *  methods needed for the surfaceView callback methods.
      */
