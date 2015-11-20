@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.gms.samples.vision.face.facetracker.ui.camera;
+package edu.cs4730.facetrackerdemo2;
 
 import android.content.Context;
 import android.content.res.Configuration;
