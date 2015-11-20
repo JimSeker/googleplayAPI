@@ -8,7 +8,11 @@
 
 <b>LocationAwareDemo</b> shows how to use the APIs to do location better then standard GPS demos.  plus will show the likely address of your location.
 
-<b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is similing.  VisionAPIDemo is an early version of google's examples and will likely be deleted.  See https://github.com/googlesamples/android-vision 
+<b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is similing.  It uses text to speech to tell you if they are open/smiling or not.  See https://github.com/googlesamples/android-vision 
+
+
+<b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is similing.  Uses the graphic overlay to put green cirles (eye open) or red x for close.  Green box for smiling, red x not smiling over the mouth.
+See https://github.com/googlesamples/android-vision 
 
 <b>BarocdeReader</b> use the googlePlay vision APIs to find a barcode and ask if you want to search amazon or open the web page.  This a very simple example.  
 
