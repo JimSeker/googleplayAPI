@@ -1,11 +1,8 @@
-package edu.cs4730.facetrackerdemo2;
+package edu.cs4730.facetrackermultidemo;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.google.android.gms.vision.face.Face;
@@ -21,8 +18,7 @@ import java.util.List;
 class FaceGraphic extends GraphicOverlay.Graphic {
 
     private static final float STROKE_WIDTH = 5.0f;
-    //handler, since the facetracker is on another thread.
-    protected Handler handler;
+
     String TAG = "FaceGraphic";
     int mFaceId;
 
@@ -30,10 +26,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     private Paint GreenPaint;
     private volatile Face mFace;
 
-    FaceGraphic(GraphicOverlay overlay, Handler h) {
+    FaceGraphic(GraphicOverlay overlay) {
         super(overlay);
-
-        handler = h;
 
         GreenPaint = new Paint();
         GreenPaint.setColor(Color.GREEN);
@@ -60,20 +54,6 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         postInvalidate();
     }
 
-    public void sendmessage(String logthis) {
-        Bundle b = new Bundle();
-        b.putString("logthis", logthis);
-        Message msg = handler.obtainMessage();
-        msg.setData(b);
-        msg.arg1 = 1;
-
-        msg.what = 1;  //so the empty message is not used!
-        // System.out.println("About to Send message"+ logthis);
-        handler.sendMessage(msg);
-        // System.out.println("Sent message"+ logthis);
-    }
-
-
     /**
      * Draws the face annotations for position on the supplied canvas.
      */
@@ -83,13 +63,10 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         if (face == null) {
             return;
         }
-        //send it back via a handler
-//        Log.v(TAG, "Left eye is " + face.getIsLeftEyeOpenProbability());
-//        Log.v(TAG, "Right eye is " + face.getIsRightEyeOpenProbability());
-//        Log.v(TAG, "simle is " + face.getIsSmilingProbability());
-        sendmessage("Smile: " + face.getIsSmilingProbability() +
-                " Left: " + face.getIsLeftEyeOpenProbability() +
-                " Right:" + face.getIsRightEyeOpenProbability());
+
+        Log.v(TAG, "Left eye is " + face.getIsLeftEyeOpenProbability());
+        Log.v(TAG, "Right eye is " + face.getIsRightEyeOpenProbability());
+        Log.v(TAG, "simle is " + face.getIsSmilingProbability());
         // Draws a circle at the position of the detected face, with the face's track id below.
 
         int xl = 10;  //how big the x is.

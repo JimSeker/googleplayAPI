@@ -1,4 +1,4 @@
-package edu.cs4730.facetrackerdemo2;
+package edu.cs4730.facetrackermultidemo;
 
 import android.Manifest;
 import android.content.Context;
@@ -21,10 +21,11 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
 
-/*
-  * This example uses the face tracker (only one face though), so show if the eyes are open and
-  * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
-  * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
+/**
+ * This example uses the face tracker and the multi processor so that more then one face and be analysised
+ * at the same time.   It is based on FaceTrackerDemo2, if the eyes are open and
+ * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
+ * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                     RC_HANDLE_CAMERA_PERM);
         }
     }
+
     //seperate this to it's own method, so we can deal with the permissions in API 23+
     public void createCameraSource() {
         Context context = getApplicationContext();
@@ -79,10 +81,10 @@ public class MainActivity extends AppCompatActivity {
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
                 .build();
 
-
+        //set it up to easily handle more then one face at a time, via the multi processor class.
         detector.setProcessor(
-                //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
-                new LargestFaceFocusingProcessor(detector,new GraphicFaceTracker(mGraphicOverlay)));
+                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
+        //new LargestFaceFocusingProcessor(detector,new GraphicFaceTracker(mGraphicOverlay)));
 
         if (!detector.isOperational()) {
             // Note: The first time that an app using face API is installed on a device, GMS will
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mCameraSource != null)
-          mCameraSource.release();
+            mCameraSource.release();
 
     }
 
@@ -206,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
 
         GraphicFaceTracker(GraphicOverlay overlay) {
             mOverlay = overlay;
-            mFaceGraphic = new FaceGraphic(overlay, handler);
+            mFaceGraphic = new FaceGraphic(overlay);
         }
 
         /**

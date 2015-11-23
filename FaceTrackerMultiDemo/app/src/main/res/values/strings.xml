@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">FaceTrackerMultiDemo</string>
+    <string name="hello_world">Multi Face Tracker Demo</string>
+</resources>
