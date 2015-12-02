@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -86,7 +87,7 @@ public class myMapFragment extends Fragment {
             //add a new line to map
             map.addPolyline(new PolylineOptions()
                     .add(current.myLatlng,objDataList.myLatlng)   //line segment.
-                    .color(Color.RED)  //make it red.
+                    .color(getActivityColor(objDataList.act))  //make it red.
                     //.width(10)   //width of 10
             );
             //move the camera to center it to it.
@@ -113,4 +114,39 @@ public class myMapFragment extends Fragment {
         current = null;  //so the start marker will show up.
     }
 
+    /**
+     * Returns a human readable String corresponding to a detected activity type.
+     */
+
+    public static int getActivityColor(int detectedActivityType) {
+        switch (detectedActivityType) {
+            case DetectedActivity.IN_VEHICLE:
+                //return "In a Vehicle";
+                return Color.BLUE;
+            case DetectedActivity.ON_BICYCLE:
+                //return "On a bicycle";
+                return Color.BLACK;
+            case DetectedActivity.ON_FOOT:
+                //return "On Foot";
+                return Color.CYAN;
+            case DetectedActivity.RUNNING:
+                //return "Running";
+                return Color.GRAY;
+            case DetectedActivity.STILL:
+                //return "Still (not moving)";
+                return Color.GREEN;
+            case DetectedActivity.TILTING:
+                //return "Tilting";
+               return Color.MAGENTA;
+            case DetectedActivity.UNKNOWN:
+                //return "Unknown Activity";
+                return Color.RED;
+            case DetectedActivity.WALKING:
+                //return "Walking";
+                return Color.YELLOW;
+            default:
+                //return "Unknown Type";
+                return Color.WHITE;
+        }
+    }
 }

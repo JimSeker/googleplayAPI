@@ -12,10 +12,11 @@ public class objData {
     LatLng myLatlng;
     int act;
 
-    objData(double lt, double lg, double t) {
+    objData(double lt, double lg, double t, int ac) {
         lat = lt;
         lng = lg;
         myTime = t;
         myLatlng = new LatLng(lat,lng);
+        act = ac;
     }
 }
