@@ -4,6 +4,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -92,6 +95,21 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
+    /**
+    * The service will call the handler to send back information.
+    **/
+    private Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            currentActivity = msg.arg1;
+            Log.v(TAG, "handler, update activity");
+            return true;
+        }
+
+        ;
+    });
+
+    //menu methods
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -139,7 +157,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -181,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
+    //two methods to start and stop location updates.
     protected void startLocationUpdates() {
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
@@ -192,12 +210,13 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
+    //method to start or stop the activity recognition.
     void setupActivityRec(boolean gettingupdates) {
         if (!mGoogleApiClient.isConnected()) {
             Log.v(TAG, "GoogleAPIclient is not connected, ActRec issues.");
             return;
         }
-        if (gettingupdates) { //we are already getting updates, so stop
+        if (gettingupdates) { //true to start it.
             ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
                     mGoogleApiClient,
                     DETECTION_INTERVAL_IN_MILLISECONDS,
@@ -212,57 +231,21 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+
     /**
      * Gets a PendingIntent to be sent for each activity detection.
      */
     private PendingIntent getActivityDetectionPendingIntent() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+        Messenger messenger = new Messenger(handler);
+        intent.putExtra("MESSENGER", messenger);
 
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    //we want to get the intent back here without starting another instanced
-    //so  we get the data here, hopefully.
-    @Override
-    protected void onNewIntent(Intent intent) {
-        Log.v(TAG, "onNewIntent");
 
-        ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-        //get most probable activity
-        DetectedActivity probably = result.getMostProbableActivity();
-        if (probably.getConfidence() >= 50) {  //doc's say over 50% is likely, under is not sure at all.
-           currentActivity = probably.getType();
-        }
-    }
-    /**
-     * Returns a human readable String corresponding to a detected activity type.
-     */
-
-    public static String getActivityString(int detectedActivityType) {
-        switch (detectedActivityType) {
-            case DetectedActivity.IN_VEHICLE:
-                return "In a Vehicle";
-            case DetectedActivity.ON_BICYCLE:
-                return "On a bicycle";
-            case DetectedActivity.ON_FOOT:
-                return "On Foot";
-            case DetectedActivity.RUNNING:
-                return "Running";
-            case DetectedActivity.STILL:
-                return "Still (not moving)";
-            case DetectedActivity.TILTING:
-                return "Tilting";
-            case DetectedActivity.UNKNOWN:
-                return "Unknown Activity";
-            case DetectedActivity.WALKING:
-                return "Walking";
-            default:
-                return "Unknown Type";
-        }
-    }
     //GoogleApiCloient call back methods
     @Override
     public void onConnected(Bundle bundle) {
@@ -272,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements
         mapfrag.setupInitialloc(mlocation.getLatitude(), mlocation.getLongitude());
         //initial spot maybe?
         if (mRequestingLocationUpdates)
-          addData(mlocation);
+            addData(mlocation);
 
     }
 
@@ -286,7 +269,9 @@ public class MainActivity extends AppCompatActivity implements
         Log.v(TAG, "onConnectionFailed");
         mRequestingLocationUpdates = false;
     }
-    //resultcallback ... not sure if need this or not.
+
+    //resultcallback for the Activity Recognition... not sure if need this or not, but
+    //shows when the system is running correctly.
     @Override
     public void onResult(Status status) {
         Log.v(TAG, "onResult");
@@ -307,8 +292,8 @@ public class MainActivity extends AppCompatActivity implements
         if (mlocation != null) {
             DataList.add(
                     DateFormat.getTimeInstance().format(new Date()) + ": "
-                    + String.valueOf(mlocation.getLatitude())  +" "
-                    + String.valueOf(mlocation.getLongitude())
+                            + String.valueOf(mlocation.getLatitude()) + " "
+                            + String.valueOf(mlocation.getLongitude())
             );
             objDataList.add(new objData(
                     mlocation.getLatitude(),
@@ -326,9 +311,10 @@ public class MainActivity extends AppCompatActivity implements
             ));
         }
     }
+
     //view page for the two fragments map and list.
     public class myFragmentPagerAdapter extends FragmentPagerAdapter {
-        int PAGE_COUNT =2;
+        int PAGE_COUNT = 2;
 
         //required constructor that simply supers.
         public myFragmentPagerAdapter(FragmentManager fm) {
@@ -340,9 +326,12 @@ public class MainActivity extends AppCompatActivity implements
         public Fragment getItem(int position) {
 
             switch (position) {
-                case 0: return mapfrag;
-                case 1: return listfrag;
-                default: return null;
+                case 0:
+                    return mapfrag;
+                case 1:
+                    return listfrag;
+                default:
+                    return null;
             }
         }
 
@@ -358,9 +347,12 @@ public class MainActivity extends AppCompatActivity implements
         public CharSequence getPageTitle(int position) {
 
             switch (position) {
-                case 0: return "Map";
-                case 1: return "List";
-                default: return null;
+                case 0:
+                    return "Map";
+                case 1:
+                    return "List";
+                default:
+                    return null;
             }
             //return String.valueOf(position);  //returns string of position for title
 
