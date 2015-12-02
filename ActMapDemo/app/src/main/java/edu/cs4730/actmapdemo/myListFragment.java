@@ -2,12 +2,13 @@ package edu.cs4730.actmapdemo;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import java.util.List;
 
 
 /**
@@ -16,13 +17,13 @@ import android.widget.ListView;
  */
 public class myListFragment extends Fragment {
     String TAG = "ListFragment";
-    String[] values;
-    ListView myList;
-    ArrayAdapter<String> adapter;
+    List<objData> values;
+    RecyclerView mRecyclerView;
+    myAdapter mAdapter;;
 
     public myListFragment() {
         // Required empty public constructor
-        values = new String[]{"Menu -> Start Nav"};  //just case.
+       // values = new String[]{"Menu -> Start Nav"};  //just case.
     }
 
 
@@ -31,25 +32,31 @@ public class myListFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myView =  inflater.inflate(R.layout.fragment_my_list, container, false);
-        myList = (ListView) myView.findViewById(R.id.mylist);
-        adapter = new ArrayAdapter<String>(getActivity(),
-                android.R.layout.simple_list_item_1, values);
+               //setup the RecyclerView
+        mRecyclerView = (RecyclerView)myView.findViewById(R.id.list);
 
-        myList.setAdapter(adapter);
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        //and default animator
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        //setup the adapter, which is myAdapter, see the code.
+        mAdapter = new myAdapter(values, R.layout.rowlayout, getContext());
+        //add the adapter to the recyclerview
+        mRecyclerView.setAdapter(mAdapter);
+
         return myView;
     }
 
-    public void updateAdatper(String[] newValues) {
+    public void updateAdatper(List<objData> newValues) {
         //Log.v(TAG, "update");
         values = newValues;
-        adapter = new ArrayAdapter<String>(getActivity(),
-              //  R.layout.rowlayout,R.id.label, values);
-                android.R.layout.simple_list_item_1, values);
+        mAdapter.updateData(values);
 
-        myList.setAdapter(adapter);
-       // Log.v(TAG, "data lenght is " + values.length);
-
-        //adapter.notifyDataSetChanged();
     }
+
 
 }

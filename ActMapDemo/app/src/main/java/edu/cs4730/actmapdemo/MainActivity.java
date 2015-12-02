@@ -3,6 +3,7 @@ package edu.cs4730.actmapdemo;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -28,6 +29,7 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -289,27 +291,44 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void addData(Location mlocation) {
-        if (mlocation != null) {
-            DataList.add(
-                    DateFormat.getTimeInstance().format(new Date()) + ": "
-                            + String.valueOf(mlocation.getLatitude()) + " "
-                            + String.valueOf(mlocation.getLongitude())
-            );
-            objDataList.add(new objData(
-                    mlocation.getLatitude(),
-                    mlocation.getLongitude(),
-                    mlocation.getTime(),
-                    currentActivity
-            ));
+        objData newData;
 
-            listfrag.updateAdatper(DataList.toArray(new String[DataList.size()]));
-            mapfrag.updateMapDraw(new objData(
+
+        if (mlocation != null) {
+
+            newData = new objData(
                     mlocation.getLatitude(),
                     mlocation.getLongitude(),
                     mlocation.getTime(),
                     currentActivity
-            ));
+            );
+
+            //figure distance info.
+            if (objDataList.isEmpty()) {
+                newData.distance =0.0f;
+            } else {
+                newData.distance = distanceBetween(objDataList.get(objDataList.size() -1).myLatlng, newData.myLatlng) * 0.3048f; //converted to feet
+                newData.distance += objDataList.get(objDataList.size() -1).distance;  //previous distance, to ge the total.
+            }
+            //add everything and add to the data structures.
+            objDataList.add(newData);
+            listfrag.updateAdatper(objDataList);
+            mapfrag.updateMapDraw(newData);
         }
+    }
+    private float distanceBetween(LatLng latLng1, LatLng latLng2) {
+
+        Location loc1 = new Location(LocationManager.GPS_PROVIDER);
+        Location loc2 = new Location(LocationManager.GPS_PROVIDER);
+
+        loc1.setLatitude(latLng1.latitude);
+        loc1.setLongitude(latLng1.longitude);
+
+        loc2.setLatitude(latLng2.latitude);
+        loc2.setLongitude(latLng2.longitude);
+
+
+        return loc1.distanceTo(loc2);
     }
 
     //view page for the two fragments map and list.

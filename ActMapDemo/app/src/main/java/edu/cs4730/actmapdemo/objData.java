@@ -11,6 +11,7 @@ public class objData {
     double myTime;
     LatLng myLatlng;
     int act;
+    float distance =0.0f;
 
     objData(double lt, double lg, double t, int ac) {
         lat = lt;
@@ -18,5 +19,6 @@ public class objData {
         myTime = t;
         myLatlng = new LatLng(lat,lng);
         act = ac;
+
     }
 }
