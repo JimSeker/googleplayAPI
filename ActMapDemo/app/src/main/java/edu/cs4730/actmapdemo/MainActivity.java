@@ -15,6 +15,7 @@ import android.view.MenuItem;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(ActivityRecognition.API)
                 .build();
         // createLocationRequest();
     }
@@ -94,11 +96,23 @@ public class MainActivity extends AppCompatActivity implements
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_start) {
+            //first reset everything (in case this is the 2+ time)
+            mapfrag.clearmap();
+            DataList.clear();
+            objDataList.clear();
+            //now do the stetup and start it.
             createLocationRequest();
             startLocationUpdates();
             mRequestingLocationUpdates = true;
             return true;
         } else if (id == R.id.action_stop) {
+            //add end marker
+            Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            mapfrag.finishMap(new objData(
+                    mlocation.getLatitude(),
+                    mlocation.getLongitude(),
+                    mlocation.getTime()
+            ));
             stopLocationUpdates();
             mRequestingLocationUpdates = true;
             return true;

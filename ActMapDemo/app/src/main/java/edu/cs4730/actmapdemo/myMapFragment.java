@@ -76,22 +76,41 @@ public class myMapFragment extends Fragment {
         Log.v(TAG, "map Update!");
         if (current == null) {
             map.addMarker(new MarkerOptions()
-                            .position(new LatLng(
-                                    objDataList.lat,
-                                    objDataList.lng))
+                            .position(objDataList.myLatlng)
                             .title("Start")
 
             );
             Log.v(TAG, "Added init marker");
             current = objDataList;
         } else {
+            //add a new line to map
             map.addPolyline(new PolylineOptions()
-            .add(new LatLng(current.lat, current.lng), new LatLng(objDataList.lat, objDataList.lng))   //line segment.
-            .color(Color.RED)  //make it red.
-            //.width(10)   //width of 10
+                    .add(current.myLatlng,objDataList.myLatlng)   //line segment.
+                    .color(Color.RED)  //make it red.
+                    //.width(10)   //width of 10
             );
+            //move the camera to center it to it.
+            map.moveCamera(CameraUpdateFactory.newLatLng(objDataList.myLatlng));
+            //and finally make it the current position
             current = objDataList;
         }
+    }
+
+    public void finishMap(objData objDataList) {
+        //add a marker for the stop position.
+        map.addMarker(new MarkerOptions()
+                .position(new LatLng(
+                        objDataList.lat,
+                        objDataList.lng))
+                .title("End")
+        );
+        //move the camera to center it to it.
+        map.moveCamera(CameraUpdateFactory.newLatLng(objDataList.myLatlng));
+    }
+
+    public void clearmap() {
+        map.clear();
+        current = null;  //so the start marker will show up.
     }
 
 }
