@@ -63,8 +63,12 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
         objData entry = myList.get(i);
-        viewHolder.pos.setText(""+entry.lat + " " + entry.lng);
-        viewHolder.miles.setText(String.valueOf(entry.distance) + " feet");
+        viewHolder.pos.setText(entry.lat + " " + entry.lng);
+        if (entry.distance <5280.0f)
+          viewHolder.miles.setText(String.format("%.2f", entry.distance) + " feet");
+        else
+            viewHolder.miles.setText(String.format("%.2f", entry.distance /5280.0f) + " miles");
+
         viewHolder.Pic.setImageResource(getActivityPic(entry.act));
     }
 

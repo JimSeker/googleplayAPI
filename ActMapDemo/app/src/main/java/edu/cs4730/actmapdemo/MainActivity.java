@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements
             if (objDataList.isEmpty()) {
                 newData.distance =0.0f;
             } else {
-                newData.distance = distanceBetween(objDataList.get(objDataList.size() -1).myLatlng, newData.myLatlng) * 0.3048f; //converted to feet
+                newData.distance = distanceBetween(objDataList.get(objDataList.size() -1).myLatlng, newData.myLatlng) * 3.28f; //converted to feet
                 newData.distance += objDataList.get(objDataList.size() -1).distance;  //previous distance, to ge the total.
             }
             //add everything and add to the data structures.
