@@ -48,6 +48,9 @@ public class MainActivity extends AppCompatActivity implements
     List<String> DataList = new ArrayList<String>();
     List<objData> objDataList = new ArrayList<objData>();
 
+    float Milecheck =1.0f;
+    float MileIncr = 1.0f;
+
     //for the location.
     GoogleApiClient mGoogleApiClient;
     Boolean mRequestingLocationUpdates = false;
@@ -314,6 +317,10 @@ public class MainActivity extends AppCompatActivity implements
             objDataList.add(newData);
             listfrag.updateAdatper(objDataList);
             mapfrag.updateMapDraw(newData);
+            if (newData.distance >= Milecheck) {
+                mapfrag.mileMarker(newData, Milecheck + " Miles");
+                Milecheck += MileIncr;
+            }
         }
     }
     private float distanceBetween(LatLng latLng1, LatLng latLng2) {

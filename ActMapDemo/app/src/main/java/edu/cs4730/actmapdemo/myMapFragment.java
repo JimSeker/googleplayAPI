@@ -12,6 +12,7 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
@@ -96,14 +97,22 @@ public class myMapFragment extends Fragment {
             current = objDataList;
         }
     }
-
+    public void mileMarker(objData objDataList, String Title) {
+        map.addMarker(new MarkerOptions()
+                        .position(new LatLng(
+                                objDataList.lat,
+                                objDataList.lng))
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                        .title(Title)
+        );
+    }
     public void finishMap(objData objDataList) {
         //add a marker for the stop position.
         map.addMarker(new MarkerOptions()
                 .position(new LatLng(
                         objDataList.lat,
                         objDataList.lng))
-                .title("End")
+                .title("End " + objDataList.distance + " Miles")
         );
         //move the camera to center it to it.
         map.moveCamera(CameraUpdateFactory.newLatLng(objDataList.myLatlng));
