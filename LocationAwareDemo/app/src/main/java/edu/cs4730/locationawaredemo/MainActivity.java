@@ -1,23 +1,24 @@
 package edu.cs4730.locationawaredemo;
 
-import android.app.PendingIntent;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.ActivityRecognition;
-import com.google.android.gms.location.ActivityRecognitionApi;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -30,11 +31,19 @@ import java.util.Date;
   * http://developer.android.com/training/location/index.html
   *
   * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
+  *
+  * This shows how to get location updates, either the last known and continuing.
+  * Also uses the intent service to get address locations as well.
+  *
  */
 
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    // for checking permissions.
+    public static final int REQUEST_ACCESS_startLocationUpdates = 0;
+    public static final int REQUEST_ACCESS_onConnected = 1;
+
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
@@ -75,14 +84,6 @@ public class MainActivity extends AppCompatActivity implements
         // createLocationRequest();
     }
 
-    public void activityRegnition() {
-        // ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
-        //         mGoogleApiClient, detectionInterval, pendingIntent);
-        //DetectedActivity.IN_VEHICLE, ON_BICYLE, WALKING, RUNNING, STILL
-        //PendingIntent.getS
-
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -108,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onResume() {
         super.onResume();
-        if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
         }
     }
@@ -135,6 +136,15 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     protected void startLocationUpdates() {
+        //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.REQUEST_ACCESS_startLocationUpdates);
+            return;
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
     }
@@ -146,6 +156,21 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnected(Bundle bundle) {
+
+        getLastLocation();
+
+    }
+
+    public void getLastLocation() {
+        //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.REQUEST_ACCESS_onConnected);
+            return;
+        }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
         Log.v(TAG, "onConnected");
@@ -155,7 +180,6 @@ public class MainActivity extends AppCompatActivity implements
             logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
             startIntentService();
         }
-
     }
 
     /**
@@ -224,4 +248,48 @@ public class MainActivity extends AppCompatActivity implements
         mLastLocation = location;
         startIntentService();
     }
+
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.v(TAG, "onRequest result called.");
+        boolean coarse = false, fine = false;
+
+        //received result for GPS access
+        for (int i = 0; i < grantResults.length; i++) {
+            if ((permissions[i].compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0) &&
+                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                coarse = true;
+            else if ((permissions[i].compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0) &&
+                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                fine = true;
+        }
+        Log.v(TAG, "Received response for gps permission request.");
+        // If request is cancelled, the result arrays are empty.
+        if (coarse && fine) {
+            // permission was granted
+            Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
+            Toast.makeText(this, "GPS access granted",
+                    Toast.LENGTH_SHORT).show();
+            if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
+                startLocationUpdates();
+            } else if (requestCode == REQUEST_ACCESS_onConnected) {
+                getLastLocation();
+            }
+
+        } else {
+            // permission denied,    Disable this feature or close the app.
+            Log.v(TAG, "GPS permission was NOT granted.");
+            Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+
+
+    }
+
+
 }
