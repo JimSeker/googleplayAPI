@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        logger.append(DateFormat.getTimeInstance().format(new Date()) + ": ");
+        logger.append("\n\n"+DateFormat.getTimeInstance().format(new Date()) + ": ");
         logger.append(" Lat: " + String.valueOf(location.getLatitude()));
         logger.append(" Long: " + String.valueOf(location.getLongitude()) + "\n");
         mLastLocation = location;
