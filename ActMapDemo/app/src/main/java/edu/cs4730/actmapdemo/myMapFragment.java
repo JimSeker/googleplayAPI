@@ -7,15 +7,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -51,19 +54,33 @@ public class myMapFragment extends Fragment {
             ((ViewGroup) container.getParent()).removeView(myView);
             return myView;
         }
-        //in a fragment
-        map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
+        //in a fragment  This method is deprecated and can return a null map.
+        //map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
+        //The new method here, will provide a non-null map.
+        ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                map = googleMap;
+                // Zoom in, animating the camera.
+                map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+
+                // Sets the map type to be "hybrid"
+                map.setMapType(GoogleMap.MAP_TYPE_NORMAL); //normal map
+                //map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
+                //allow user to use zoom controls (ie the + - buttons on the map.
+                map.getUiSettings().setZoomControlsEnabled(true);
+
+                map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+                    @Override
+                    public void onPolylineClick(Polyline polyline) {
+                        Toast.makeText(getActivity(),getActivityString(polyline.getColor()) ,Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
 
 
-        // Zoom in, animating the camera.
-        map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
-
-        // Sets the map type to be "hybrid"
-        map.setMapType(GoogleMap.MAP_TYPE_NORMAL); //normal map
-        //map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-
-        //allow user to use zoom controls (ie the + - buttons on the map.
-        map.getUiSettings().setZoomControlsEnabled(true);
 
 
         return myView;
@@ -89,6 +106,7 @@ public class myMapFragment extends Fragment {
             map.addPolyline(new PolylineOptions()
                     .add(current.myLatlng,objDataList.myLatlng)   //line segment.
                     .color(getActivityColor(objDataList.act))  //make it red.
+                    .clickable(true)  //for the listener.
                     //.width(10)   //width of 10
             );
             //move the camera to center it to it.
@@ -124,7 +142,7 @@ public class myMapFragment extends Fragment {
     }
 
     /**
-     * Returns a human readable String corresponding to a detected activity type.
+     * Returns color  corresponding to a detected activity type to draw on the map.
      */
 
     public static int getActivityColor(int detectedActivityType) {
@@ -156,6 +174,32 @@ public class myMapFragment extends Fragment {
             default:
                 //return "Unknown Type";
                 return Color.WHITE;
+        }
+    }
+    /**
+     * Returns a human readable String corresponding to a map color
+     */
+
+    public static String getActivityString(int color) {
+        switch (color) {
+            case Color.BLUE:
+                return "In a Vehicle";
+            case Color.BLACK:
+                return "On a bicycle";
+            case Color.CYAN:
+                return "On Foot";
+            case Color.GRAY:
+                return "Running";
+            case Color.GREEN:
+                return "Still (not moving)";
+            case Color.MAGENTA:
+                return "Tilting";
+            case Color.RED:
+                return "Unknown Activity";
+            case Color.YELLOW:
+                return "Walking";
+            default:
+                return "Unknown Type";
         }
     }
 }

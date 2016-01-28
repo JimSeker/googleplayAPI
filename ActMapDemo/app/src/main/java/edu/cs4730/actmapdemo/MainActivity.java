@@ -2,6 +2,7 @@ package edu.cs4730.actmapdemo;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -9,15 +10,19 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+import android.Manifest;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -38,6 +43,10 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<Status> {
+
+    // for checking permissions.
+    public static final int REQUEST_ACCESS_startLocationUpdates = 0;
+    public static final int REQUEST_ACCESS_onConnected = 1;
 
     String TAG = "MainActivity";
     ViewPager viewPager;
@@ -144,14 +153,21 @@ public class MainActivity extends AppCompatActivity implements
             mRequestingLocationUpdates = true;
             return true;
         } else if (id == R.id.action_stop) {
-            //add end marker
-            Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            mapfrag.finishMap(new objData(
-                    mlocation.getLatitude(),
-                    mlocation.getLongitude(),
-                    mlocation.getTime(),
-                    currentActivity
-            ));
+            //this should never happen.
+            if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+                //I'm on not explaining why, just asking for permission.
+                //we don't have permission here to do anything with location, but it is started.  So ... can't stop it... odd possibility.
+            } else {
+                //add end marker
+                Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                mapfrag.finishMap(new objData(
+                        mlocation.getLatitude(),
+                        mlocation.getLongitude(),
+                        mlocation.getTime(),
+                        currentActivity
+                ));
+            }
             stopLocationUpdates();
             setupActivityRec(false);
             mRequestingLocationUpdates = false;
@@ -205,6 +221,15 @@ public class MainActivity extends AppCompatActivity implements
 
     //two methods to start and stop location updates.
     protected void startLocationUpdates() {
+        //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.REQUEST_ACCESS_startLocationUpdates);
+            return;
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
     }
@@ -256,12 +281,25 @@ public class MainActivity extends AppCompatActivity implements
     public void onConnected(Bundle bundle) {
 
         Log.v(TAG, "onConnected");
+        initialsetup();
+
+    }
+
+    public void initialsetup() {
+        //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MainActivity.REQUEST_ACCESS_onConnected);
+            return;
+        }
         Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         mapfrag.setupInitialloc(mlocation.getLatitude(), mlocation.getLongitude());
         //initial spot maybe?
         if (mRequestingLocationUpdates)
             addData(mlocation);
-
     }
 
     @Override
@@ -337,6 +375,44 @@ public class MainActivity extends AppCompatActivity implements
 
         return loc1.distanceTo(loc2);
     }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.v(TAG, "onRequest result called.");
+        boolean coarse = false, fine = false;
+
+        //received result for GPS access
+        for (int i = 0; i < grantResults.length; i++) {
+            if ((permissions[i].compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0) &&
+                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                coarse = true;
+            else if ((permissions[i].compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0) &&
+                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                fine = true;
+        }
+        Log.v(TAG, "Received response for gps permission request.");
+        // If request is cancelled, the result arrays are empty.
+        if (coarse && fine) {
+            // permission was granted
+            Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
+            //Toast.makeText(this, "GPS access granted", Toast.LENGTH_SHORT).show();
+            if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
+                startLocationUpdates();
+            } else if (requestCode == REQUEST_ACCESS_onConnected) {
+                initialsetup();
+            }
+
+        } else {
+            // permission denied,    Disable this feature or close the app.
+            Log.v(TAG, "GPS permission was NOT granted.");
+            Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
 
     //view page for the two fragments map and list.
     public class myFragmentPagerAdapter extends FragmentPagerAdapter {
