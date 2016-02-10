@@ -17,6 +17,7 @@ import android.view.SurfaceHolder;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     SurfaceView mPreview;
     TextView mLogger;
     private boolean mSurfaceAvailable;
+    boolean alreadyaskingpremission = false;
     //for getting permissions to use the camara in API 23+
     final String[] permissions = new String[]{Manifest.permission.CAMERA};
     private static final int RC_HANDLE_CAMERA_PERM = 2;
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     //speech variables.
     private static final int REQ_TTS_STATUS_CHECK = 0;
     private TextToSpeech mTts;
-    private  String myUtteranceId = "txt2spk";
+    private String myUtteranceId = "txt2spk";
     private boolean canspeak;
 
     @Override
@@ -77,18 +79,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
         startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
-
-
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource();
-        } else {
-            ActivityCompat.requestPermissions(this, permissions,
-                    RC_HANDLE_CAMERA_PERM);
-        }
+        createCameraSource();
     }
 
 
@@ -101,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .build();
 
         detector.setProcessor(
-                new LargestFaceFocusingProcessor(detector,new FaceTracker()));
+                new LargestFaceFocusingProcessor(detector, new FaceTracker()));
 
 
         if (!detector.isOperational()) {
@@ -126,7 +117,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
 
     void startPreview() {
-        if (mSurfaceAvailable  && mCameraSource != null) {
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc != PackageManager.PERMISSION_GRANTED) {
+            if (!alreadyaskingpremission) {
+                ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
+                alreadyaskingpremission = true;
+            }
+            return;
+        }
+        if (mSurfaceAvailable && mCameraSource != null) {
+
             try {
                 mCameraSource.start(mPreview.getHolder());
             } catch (IOException e) {
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         if (mCameraSource != null)
             mCameraSource.stop();
         //if we lose focus, stop talking.
-        if( mTts != null)
+        if (mTts != null)
             mTts.stop();
     }
 
@@ -185,14 +185,17 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        alreadyaskingpremission = false;
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so create the camerasource
-            createCameraSource();
+            // we have permission, so start the preview now.
+            startPreview();
             return;
         }
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
                 " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
+        Toast.makeText(this, "Camera permission not granted, so exiting", Toast.LENGTH_LONG).show();
+        finish();
 
     }
     /*
@@ -207,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            //should not be called, app is locked in portrait mode.
+        //should not be called, app is locked in portrait mode.
     }
 
     @Override
@@ -274,21 +277,20 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     }
                 }
             }
-            sendmessage("Smile: " + Smile + " Left: " + LeftEye + " Right:" +RightEye);
-
+            sendmessage("Smile: " + Smile + " Left: " + LeftEye + " Right:" + RightEye);
 
 
         }
 
         public void onDone() {
             Log.i(TAG, "Elvis has left the building.");
-           //mLogger.setText("No Face dectected");
+            //mLogger.setText("No Face dectected");
             sendmessage("No Face detected.");
         }
     }
 
     public void Speech(String text) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             //not sure what an utteranceId is supposed to be... we maybe able to setup a
             //listener for "utterances" and check to see if they completed or something.
             mTts.speak(text, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
@@ -306,9 +308,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         msg.arg1 = 1;
 
         msg.what = 1;  //so the empty message is not used!
-       // System.out.println("About to Send message"+ logthis);
+        // System.out.println("About to Send message"+ logthis);
         handler.sendMessage(msg);
-       // System.out.println("Sent message"+ logthis);
+        // System.out.println("Sent message"+ logthis);
     }
 
     /*
@@ -327,15 +329,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     Log.e(TAG, "Got a failure. TTS apparently not available");
             }
         }
-        else {
-            // Got something else
-        }
     }
+
     @Override
     public void onInit(int status) {
         // Now that the TTS engine is ready, we enable the button
-        if( status == TextToSpeech.SUCCESS) {
-            canspeak =true;
+        if (status == TextToSpeech.SUCCESS) {
+            canspeak = true;
         }
     }
 }

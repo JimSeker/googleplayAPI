@@ -59,19 +59,10 @@ public class MainActivity extends AppCompatActivity {
         mPreview = (CameraSourcePreview) findViewById(R.id.CameraView);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
 
+        createCameraSource();
 
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource();
-        } else {
-            ActivityCompat.requestPermissions(this, permissions,
-                    RC_HANDLE_CAMERA_PERM);
-        }
     }
-    //seperate this to it's own method, so we can deal with the permissions in API 23+
+
     public void createCameraSource() {
         Context context = getApplicationContext();
         FaceDetector detector = new FaceDetector.Builder(context)
@@ -82,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
         detector.setProcessor(
                 //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
-                new LargestFaceFocusingProcessor(detector,new GraphicFaceTracker(mGraphicOverlay)));
+                new LargestFaceFocusingProcessor(detector, new GraphicFaceTracker(mGraphicOverlay)));
 
         if (!detector.isOperational()) {
             // Note: The first time that an app using face API is installed on a device, GMS will
@@ -129,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mCameraSource != null)
-          mCameraSource.release();
+            mCameraSource.release();
 
     }
 
@@ -155,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
             // we have permission, so create the camerasource
-            createCameraSource();
+            startCameraSource();
             return;
         }
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
@@ -172,6 +163,16 @@ public class MainActivity extends AppCompatActivity {
      * again when the camera source is created.
      */
     private void startCameraSource() {
+
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
+            return;
+        }
+
         try {
             mPreview.start(mCameraSource, mGraphicOverlay);
         } catch (IOException e) {

@@ -22,7 +22,7 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import java.io.IOException;
 
 /**
- * This example uses the face tracker and the multi processor so that more then one face and be analysised
+ * This example uses the face tracker and the multi processor so that more then one face and be analysed
  * at the same time.   It is based on FaceTrackerDemo2, if the eyes are open and
  * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
  * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         mCameraSource = new CameraSource.Builder(context, detector)
                 .setRequestedPreviewSize(640, 480)
+                //.setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setFacing(CameraSource.CAMERA_FACING_FRONT)
                 .setRequestedFps(30.0f)
                 .build();
