@@ -123,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             return;
         }
         if (mSurfaceAvailable && mCameraSource != null) {
-            createCameraSource();
             try {
                 mCameraSource.start(mPreview.getHolder());
                 Log.v("TAG", "started, I think");
@@ -172,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         alreadyaskingpremission = false;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so start the preview (which creates the camerasource first).
+            // we have permission, so start the preview.
             startPreview();
             return;
         }
