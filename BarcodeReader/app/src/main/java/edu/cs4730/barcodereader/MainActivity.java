@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     SurfaceView mPreview;
     TextView mLogger;
     private boolean mSurfaceAvailable;
+    boolean alreadyaskingpremission = false;
     //for getting permissions to use the camara in API 23+
     final String[] permissions = new String[]{Manifest.permission.CAMERA};
     private static final int RC_HANDLE_CAMERA_PERM = 2;
@@ -62,22 +64,14 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 mLogger.invalidate();  //should not need this...
                 //now start a dialog about web or amazon search.
                 myDialogFragment myDialog = myDialogFragment.newInstance(bc);
-                myDialog.show(getSupportFragmentManager(),null);
+                myDialog.show(getSupportFragmentManager(), null);
                 return true;
             }
         });
 
 
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource();
-        } else {
-            ActivityCompat.requestPermissions(this, permissions,
-                    RC_HANDLE_CAMERA_PERM);
-        }
+        createCameraSource();
+
     }
 
     //create the create source.  Once the permissions have been granted above/below.
@@ -110,13 +104,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .setRequestedPreviewSize(1600, 1024)
                 .setRequestedFps(15.0f);
 
-            builder = builder.setAutoFocusEnabled(true);
+        builder = builder.setAutoFocusEnabled(true);
 
         mCameraSource = builder.build();
     }
 
     //now that we have the camera source, we can actually show the preview picture to find the barcode
     void startPreview() {
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc != PackageManager.PERMISSION_GRANTED) {
+            if (!alreadyaskingpremission) {
+                ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
+                alreadyaskingpremission = true;
+            }
+            return;
+        }
         if (mSurfaceAvailable && mCameraSource != null) {
             createCameraSource();
             try {
@@ -162,20 +167,23 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        //because it's setup in oncreate and onresume, it's likely I'm asking twice very quickly.  the
+        //alreadyaskingpremission vairable will stop the second request on top of the first request.
+        alreadyaskingpremission = false;
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so create the camerasource
-            createCameraSource();
+            // we have permission, so start the preview (which creates the camerasource first).
+            startPreview();
             return;
         }
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
                 " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-
+        Toast.makeText(this, "Camera permission not granted, so exiting", Toast.LENGTH_LONG).show();
+        finish();
     }
 
     //A simple implementation of the MultiProcessor factory.
-    // I seriously could not figure out how to remove this class, so it really doesn't do anything
-// at all.  But appears to be necessary.
+    // appears to be necessary for the Detector.
     public class BarcodeTrackFactory implements MultiProcessor.Factory<Barcode> {
 
         @Override
@@ -203,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     /*
     send a message back to main thread so see what the user wants to do
     */
-        public void sendmessage(String logthis) {
+    public void sendmessage(String logthis) {
         Bundle b = new Bundle();
         b.putString("barcode", logthis);
         Message msg = handler.obtainMessage();
@@ -211,9 +219,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         msg.arg1 = 1;
 
         msg.what = 1;  //so the empty message is not used!
-       // System.out.println("About to Send message"+ logthis);
+        // System.out.println("About to Send message"+ logthis);
         handler.sendMessage(msg);
-       // System.out.println("Sent message"+ logthis);
+        // System.out.println("Sent message"+ logthis);
     }
 
     /*
