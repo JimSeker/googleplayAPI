@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_sensor"
+        android:title="Sensor Demo" />
+    <item
+        android:id="@+id/nav_record"
+        android:title="Record Demo" />
+    <item
+        android:id="@+id/nav_session"
+        android:title="Session Demo" />
+    <item
+        android:id="@+id/nav_history"
+        android:title="History Demo" />
+
+</menu>
