@@ -8,10 +8,11 @@
         android:id="@+id/nav_record"
         android:title="Record Demo" />
     <item
-        android:id="@+id/nav_session"
-        android:title="Session Demo" />
-    <item
         android:id="@+id/nav_history"
         android:title="History Demo" />
+    <item
+        android:id="@+id/nav_session"
+        android:title="Session Demo" />
+
 
 </menu>

@@ -3,6 +3,8 @@ package edu.cs4730.fitdemo;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,7 +47,7 @@ public class HistoryFragment extends Fragment implements
         GoogleApiClient.OnConnectionFailedListener {
 
     GoogleApiClient mGoogleApiClient;
-
+    Handler handler;
 
     static final int REQUEST_OAUTH = 3;
     String TAG = "HistoryFrag";
@@ -74,6 +76,16 @@ public class HistoryFragment extends Fragment implements
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myView = inflater.inflate(R.layout.fragment_history, container, false);
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg.what == 0) {
+                    Bundle stuff = msg.getData();
+                    logthis(stuff.getString("logthis"));
+                }
+                return true;
+            }
+        });
         logger = (TextView) myView.findViewById(R.id.loggerh);
 
         btn_ViewWeek = (Button) myView.findViewById(R.id.btn_view_week);
@@ -124,6 +136,18 @@ public class HistoryFragment extends Fragment implements
         logger.append(item + "\n");
     }
 
+
+    public void sendmessage(String logthis) {
+        Bundle b = new Bundle();
+        b.putString("logthis", logthis);
+        Message msg = handler.obtainMessage();
+        msg.setData(b);
+        msg.arg1 = 1;
+        msg.what = 0;
+        handler.sendMessage(msg);
+
+    }
+    
     @Override
     public void onStart() {
         super.onStart();
@@ -172,18 +196,18 @@ public class HistoryFragment extends Fragment implements
 
     //A method to display the dataset data.
     private void showDataSet(DataSet dataSet) {
-        Log.e("History", "Data returned for Data type: " + dataSet.getDataType().getName());
+        sendmessage("Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
         DateFormat timeFormat = DateFormat.getTimeInstance();
 
         for (DataPoint dp : dataSet.getDataPoints()) {
-
-            Log.e("History", "Data point:");
-            Log.e("History", "\tType: " + dp.getDataType().getName());
-            Log.e("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            Log.e("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                //I'm using a handler here to cheat, since I'm not in the asynctask and can't call publishprogress.
+            sendmessage("Data point:");
+            sendmessage("\tType: " + dp.getDataType().getName());
+            sendmessage("\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            sendmessage("\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for(Field field : dp.getDataType().getFields()) {
-                Log.e("History", "\tField: " + field.getName() +
+                sendmessage("\tField: " + field.getName() +
                         " Value: " + dp.getValue(field));
             }
         }
@@ -199,8 +223,8 @@ public class HistoryFragment extends Fragment implements
         long startTime = cal.getTimeInMillis();
 
         java.text.DateFormat dateFormat = DateFormat.getDateInstance();
-        Log.e("History", "Range Start: " + dateFormat.format(startTime));
-        Log.e("History", "Range End: " + dateFormat.format(endTime));
+        sendmessage("Range Start: " + dateFormat.format(startTime));
+        sendmessage("Range End: " + dateFormat.format(endTime));
 
         //Check how many steps were walked and recorded in the last 7 days
         DataReadRequest readRequest = new DataReadRequest.Builder()
@@ -213,7 +237,7 @@ public class HistoryFragment extends Fragment implements
 
         //Used for aggregated data
         if (dataReadResult.getBuckets().size() > 0) {
-            Log.e("History", "Number of buckets: " + dataReadResult.getBuckets().size());
+            sendmessage("Number of buckets: " + dataReadResult.getBuckets().size());
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
@@ -223,7 +247,7 @@ public class HistoryFragment extends Fragment implements
         }
         //Used for non-aggregated data
         else if (dataReadResult.getDataSets().size() > 0) {
-            Log.e("History", "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+            sendmessage( "Number of returned DataSets: " + dataReadResult.getDataSets().size());
             for (DataSet dataSet : dataReadResult.getDataSets()) {
                 showDataSet(dataSet);
             }
@@ -247,7 +271,7 @@ public class HistoryFragment extends Fragment implements
         }
     }
 
-    class AddStepsToGoogleFitTask extends AsyncTask<Void, Void, Void> {
+    class AddStepsToGoogleFitTask extends AsyncTask<Void, String, Void> {
         protected Void doInBackground(Void... params) {
             //Adds steps spread out evenly from start time to end time
             Calendar cal = Calendar.getInstance();
@@ -275,13 +299,17 @@ public class HistoryFragment extends Fragment implements
             com.google.android.gms.common.api.Status status = Fitness.HistoryApi.insertData(mGoogleApiClient, dataSet).await(1, TimeUnit.MINUTES);
 
             if (!status.isSuccess()) {
-                Log.e( "History", "Problem with inserting data: " + status.getStatusMessage());
+                publishProgress("Problem with inserting data: " + status.getStatusMessage());
             } else {
-                Log.e( "History", "data inserted" );
+                publishProgress( "data inserted" );
             }
 
             displayLastWeeksData();
             return null;
+        }
+
+        protected void onProgressUpdate(String... item) {
+            logthis(item[0]);
         }
     }
 
