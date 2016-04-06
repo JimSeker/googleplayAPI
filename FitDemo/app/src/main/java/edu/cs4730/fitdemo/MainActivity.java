@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity
 
     FragmentManager fragmentManager;
     SensorFragment sensorFragment;
+    RecordFragment recordFragment = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +67,8 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_sensor) {
             fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
         } else if (id == R.id.nav_record) {
-            fragmentManager.beginTransaction().replace(R.id.container, new RecordFragment()).commit();
+            if (recordFragment == null) recordFragment = new RecordFragment();
+            fragmentManager.beginTransaction().replace(R.id.container, recordFragment).commit();
         } else if (id == R.id.nav_session) {
             fragmentManager.beginTransaction().replace(R.id.container, new SessionFragment()).commit();
         } else if (id == R.id.nav_history) {

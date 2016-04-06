@@ -66,8 +66,7 @@ public class SensorFragment extends Fragment implements
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
                 //select the fitness API
                 .addApi(Fitness.SENSORS_API)
-                        //specifiy the scope of access
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                        //specify the scope of access
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
                         //provide callbacks
                 .addConnectionCallbacks(this)
