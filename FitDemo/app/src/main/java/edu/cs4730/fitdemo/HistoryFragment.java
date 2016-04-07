@@ -17,6 +17,7 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
@@ -52,7 +53,7 @@ public class HistoryFragment extends Fragment implements
     static final int REQUEST_OAUTH = 3;
     String TAG = "HistoryFrag";
     TextView logger;
-    Button  btn_ViewWeek, btn_ViewToday,  btn_AddSteps, btn_UpdateSteps, btn_DeleteSteps;
+    Button btn_ViewWeek, btn_ViewToday, btn_AddSteps, btn_UpdateSteps, btn_DeleteSteps;
 
     public HistoryFragment() {
         // Required empty public constructor
@@ -61,6 +62,7 @@ public class HistoryFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //create the client needed.
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
                 .addApi(Fitness.HISTORY_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
@@ -124,7 +126,8 @@ public class HistoryFragment extends Fragment implements
         btn_DeleteSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new DeleteYesterdaysStepsTask().execute();
+               // new DeleteYesterdaysStepsTask().execute();  //this one uses an asynctask
+                DeleteYesterdaysStepsResultcallBack();  //this one uses a resultcallback() method.
             }
         });
 
@@ -147,7 +150,7 @@ public class HistoryFragment extends Fragment implements
         handler.sendMessage(msg);
 
     }
-    
+
     @Override
     public void onStart() {
         super.onStart();
@@ -194,26 +197,27 @@ public class HistoryFragment extends Fragment implements
         logthis("onConnectionFailed cause:" + connectionResult.toString());
     }
 
-    //A method to display the dataset data.
+    //A method to display the dataset data.  It's google method, but modified fo this example.
     private void showDataSet(DataSet dataSet) {
         sendmessage("Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
         DateFormat timeFormat = DateFormat.getTimeInstance();
 
         for (DataPoint dp : dataSet.getDataPoints()) {
-                //I'm using a handler here to cheat, since I'm not in the asynctask and can't call publishprogress.
+            //I'm using a handler here to cheat, since I'm not in the asynctask and can't call publishprogress.
             sendmessage("Data point:");
             sendmessage("\tType: " + dp.getDataType().getName());
             sendmessage("\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             sendmessage("\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            for(Field field : dp.getDataType().getFields()) {
+            for (Field field : dp.getDataType().getFields()) {
                 sendmessage("\tField: " + field.getName() +
                         " Value: " + dp.getValue(field));
             }
         }
     }
 
-    //this method is called from many of the aysnctask below, so it is all here isntead
+    //this method is called from many of the aysnctask below, so it is all here instead
+    //This method will list the step data for the last week
     private void displayLastWeeksData() {
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -222,6 +226,7 @@ public class HistoryFragment extends Fragment implements
         cal.add(Calendar.WEEK_OF_YEAR, -1);
         long startTime = cal.getTimeInMillis();
 
+        //show the dates requested
         java.text.DateFormat dateFormat = DateFormat.getDateInstance();
         sendmessage("Range Start: " + dateFormat.format(startTime));
         sendmessage("Range End: " + dateFormat.format(endTime));
@@ -232,7 +237,7 @@ public class HistoryFragment extends Fragment implements
                 .bucketByTime(1, TimeUnit.DAYS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-
+        //now submit the request.
         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
         //Used for aggregated data
@@ -247,7 +252,7 @@ public class HistoryFragment extends Fragment implements
         }
         //Used for non-aggregated data
         else if (dataReadResult.getDataSets().size() > 0) {
-            sendmessage( "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+            sendmessage("Number of returned DataSets: " + dataReadResult.getDataSets().size());
             for (DataSet dataSet : dataReadResult.getDataSets()) {
                 showDataSet(dataSet);
             }
@@ -255,22 +260,30 @@ public class HistoryFragment extends Fragment implements
     }
 
     //Asnyc Task to complete the choices
-    //In use, call this every 30 seconds in active mode, 60 in ambient for watch faces
+
+
+    //
+    //This one is very simple, because it is only today information
+    // A note, that step count doesn't actually require authenication, so it can be easily used for wear
+    //  In use, call this every 30 seconds in active mode, 60 in ambient for watch faces
     class ViewTodaysStepCountTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA).await(1, TimeUnit.MINUTES);
+            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal(mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA).await(1, TimeUnit.MINUTES);
             showDataSet(result.getTotal());
             return null;
         }
     }
 
-   class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
+    //show the step count for the last 7 days.
+    class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             displayLastWeeksData();
             return null;
         }
     }
 
+    //add data into the fit system.
+    //Note, you can't over lapping data, it will be ignored, so use update if data already exists for this time period.
     class AddStepsToGoogleFitTask extends AsyncTask<Void, String, Void> {
         protected Void doInBackground(Void... params) {
             //Adds steps spread out evenly from start time to end time
@@ -288,7 +301,7 @@ public class HistoryFragment extends Fragment implements
                     .setType(DataSource.TYPE_RAW)
                     .build();
 
-            int stepCountDelta = 1000000;
+            int stepCountDelta = 10000;  //we will add 10,000 steps for yesterday.
             DataSet dataSet = DataSet.create(dataSource);
 
             DataPoint point = dataSet.createDataPoint()
@@ -301,7 +314,7 @@ public class HistoryFragment extends Fragment implements
             if (!status.isSuccess()) {
                 publishProgress("Problem with inserting data: " + status.getStatusMessage());
             } else {
-                publishProgress( "data inserted" );
+                publishProgress("data inserted");
             }
 
             displayLastWeeksData();
@@ -313,6 +326,7 @@ public class HistoryFragment extends Fragment implements
         }
     }
 
+    //This will update the existing data and add the step count.
     class UpdateStepsOnGoogleFitTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             //If two entries overlap, the new data is dropped when trying to insert. Instead, you need to use update
@@ -330,7 +344,7 @@ public class HistoryFragment extends Fragment implements
                     .setType(DataSource.TYPE_RAW)
                     .build();
 
-            int stepCountDelta = 2000000;
+            int stepCountDelta = 20000;  //add another 20K steps to the data already there.
             DataSet dataSet = DataSet.create(dataSource);
 
             DataPoint point = dataSet.createDataPoint()
@@ -346,6 +360,7 @@ public class HistoryFragment extends Fragment implements
         }
     }
 
+    //simple function to delete data.  this case the step_count for today.
     class DeleteYesterdaysStepsTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             Calendar cal = Calendar.getInstance();
@@ -365,5 +380,35 @@ public class HistoryFragment extends Fragment implements
             displayLastWeeksData();
             return null;
         }
+    }
+
+    //using a resultcallback, we don't need to use an ansyctask/thread.
+    //not the result is NOT on the main thread.
+    void DeleteYesterdaysStepsResultcallBack() {
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        DataDeleteRequest request = new DataDeleteRequest.Builder()
+                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .build();
+        Fitness.HistoryApi.deleteData(mGoogleApiClient, request)
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        if (status.isSuccess()) {
+                            sendmessage("Successfully deleted today's step count");
+                        } else {
+                            sendmessage("FAILED to delete today's step count");
+                        }
+                        //wait, we are on the UI thread!  doc's say we are not supported to be.
+                        new ViewWeekStepCountTask().execute();
+                        //displayLastWeeksData();
+                    }
+                });
     }
 }
