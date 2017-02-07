@@ -19,7 +19,7 @@ public class myListFragment extends Fragment {
     String TAG = "ListFragment";
     List<objData> values;
     RecyclerView mRecyclerView;
-    myAdapter mAdapter;;
+    myAdapter mAdapter;
 
     public myListFragment() {
         // Required empty public constructor

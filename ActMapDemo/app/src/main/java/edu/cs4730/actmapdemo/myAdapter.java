@@ -46,7 +46,7 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
     }
 
     //constructor
-    public myAdapter(List<objData> myList, int rowLayout, Context context) {
+    myAdapter(List<objData> myList, int rowLayout, Context context) {
         this.myList = myList;
         this.rowLayout = rowLayout;
         this.mContext = context;

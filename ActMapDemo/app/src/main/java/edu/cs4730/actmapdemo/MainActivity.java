@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -29,16 +30,14 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
-import com.google.android.gms.location.ActivityRecognitionResult;
+//import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
@@ -119,8 +118,6 @@ public class MainActivity extends AppCompatActivity implements
             Log.v(TAG, "handler, update activity");
             return true;
         }
-
-        ;
     });
 
     //menu methods
@@ -154,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements
             return true;
         } else if (id == R.id.action_stop) {
             //this should never happen.
+            //noinspection StatementWithEmptyBody
             if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
                 //I'm on not explaining why, just asking for permission.
@@ -308,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.v(TAG, "onConnectionFailed");
         mRequestingLocationUpdates = false;
     }
@@ -316,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements
     //resultcallback for the Activity Recognition... not sure if need this or not, but
     //shows when the system is running correctly.
     @Override
-    public void onResult(Status status) {
+    public void onResult(@NonNull Status status) {
         Log.v(TAG, "onResult");
         if (status.isSuccess()) {
             Log.v(TAG, "onResult success");
@@ -380,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements
      * Callback received when a permissions request has been completed.
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.v(TAG, "onRequest result called.");
         boolean coarse = false, fine = false;
 
@@ -419,7 +417,7 @@ public class MainActivity extends AppCompatActivity implements
         int PAGE_COUNT = 2;
 
         //required constructor that simply supers.
-        public myFragmentPagerAdapter(FragmentManager fm) {
+        myFragmentPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
