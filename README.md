@@ -25,6 +25,9 @@ See https://github.com/googlesamples/android-vision
 
 <b>adMobDemo</b> is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/releases for more examples.
 
+<b>CouldMessageDemo</b> is a start at an example for Google Cloud Messaging.  It sort of works.  You will need to register it your google API to use it. https://github.com/GoogleCloudPlatform/gradle-appengine-templates/tree/master/GcmEndpoints  There are multiple problems.  The main is deprecated code and GCM is also deprecated for the new Firebase Cloud messaging.  So basically I've stopped work on this example and hope to replace it with firebase version at some point.
+
+
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.
 
