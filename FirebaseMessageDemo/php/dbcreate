@@ -1,0 +1,11 @@
+mysql -u root -p  //or administrative access to db
+
+//create the database and a user  Change 'password' to a real password.
+create database FcmDemo;
+grant all privileges on FcmDemo.* to fcm@localhost identified by 'password' with grant option;
+
+CREATE TABLE `devices` (
+  `id` int(11) PRIMARY KEY AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `token` text NOT NULL
+);
