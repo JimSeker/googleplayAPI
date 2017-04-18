@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="edu.cs4730.firebasemessagedemo.SendActivity">
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radioButtonSendAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send to All" />
+
+        <RadioButton
+            android:id="@+id/radioButtonSendOne"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send to One" />
+
+    </RadioGroup>
+
+    <Spinner
+        android:id="@+id/spinnerDevices"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></Spinner>
+
+    <EditText
+        android:id="@+id/editTextTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Message Title" />
+
+    <EditText
+        android:id="@+id/editTextMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Message" />
+
+
+    <Button
+        android:id="@+id/buttonSendPush"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Push" />
+
+</LinearLayout>

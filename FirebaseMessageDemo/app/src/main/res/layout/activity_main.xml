@@ -5,17 +5,26 @@
     android:layout_height="match_parent"
     tools:context="edu.cs4730.firebasemessagedemo.MainActivity">
 
+    <EditText
+        android:layout_above="@+id/buttonRegister"
+        android:hint="Enter Name"
+        android:id="@+id/editTextName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <Button
         android:layout_centerVertical="true"
-        android:text="Display Token"
-        android:id="@+id/buttonDisplayToken"
+        android:text="Register Device"
+        android:id="@+id/buttonRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/textViewToken"
-        android:layout_alignParentBottom="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
+    <Button
+        android:text="Send Notification"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonRegister"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/buttonSendNotification" />
 </RelativeLayout>
