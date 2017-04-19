@@ -47,40 +47,35 @@ class DbOperation
     public function getAllTokens(){
         $stmt = $this->con->prepare("SELECT token FROM devices");
         $stmt->execute(); 
+       //same, if you have a msyldnd, instead of mysql you can uncomment these lines and remove the later.
        // $result = $stmt->get_result();
-        $stmt->store_result();
+       //while($token = $result->fetch_assoc()){
+       //   array_push($tokens, $token['token']);
+       //  }
+       // return $tokens; 
+
         $tokens = array(); 
-        //while($token = $result->fetch_assoc()){
-        while($token = $this->fetchAssocStatement($stmt)){
-          array_push($tokens, $token['token']);
-        }
+        $stmt->store_result();
+        $stmt->bind_result($token);     
+        while($stmt->fetch() ) {
+          $tokens[] = array("token"=>$token);
+        } 
         return $tokens; 
     }
 
-    public function fetchAssocStatement($stmt) {
-      if($stmt->num_rows>0) {
-        $result = array();
-        $md = $stmt->result_metadata();
-        $params = array();
-        while($field = $md->fetch_field()) {
-            $params[] = &$result[$field->name];
-        }
-        call_user_func_array(array($stmt, 'bind_result'), $params);
-        if($stmt->fetch())
-            return $result;
-      }
-       return null;
-    }
- 
     //getting a specified token to send push to selected device
     public function getTokenByName($name){
       $stmt = $this->con->prepare("SELECT token FROM devices WHERE name = ?");
       $stmt->bind_param("s",$name);
       $stmt->execute(); 
+      //if you have a mysqlnd server, then you can uncomment these two lines and remove the last 4.
       //$result = $stmt->get_result()->fetch_assoc();
+      //return array($result['token']);        
       $stmt->store_result();
-      $result = $this->fetchAssocStatement($stmt);
-      return array($result['token']);        
+      $stmt->bind_result($token);     
+      $stmt->fetch();
+      return array($token);        
+     
     }
  
     //getting all the registered devices from database 
