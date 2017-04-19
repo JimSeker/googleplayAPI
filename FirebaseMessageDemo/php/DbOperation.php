@@ -58,7 +58,7 @@ class DbOperation
         $stmt->store_result();
         $stmt->bind_result($token);     
         while($stmt->fetch() ) {
-          $tokens[] = array("token"=>$token);
+          array_push($tokens, $token);
         } 
         return $tokens; 
     }
