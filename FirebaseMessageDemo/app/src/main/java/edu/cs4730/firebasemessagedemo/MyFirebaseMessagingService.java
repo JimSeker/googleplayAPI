@@ -16,45 +16,71 @@ import org.json.JSONObject;
 
 /**
  * Created by Seker on 4/14/2017.
+ *
+ * This class is where the push message will go.  onMessageReceived is called, when then
+ * creates a notification.  This would be changed to call an activity, update a service, any number
+ * of things the developer wants to do.
  */
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
+    //This is called when we get a new push message.
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         //Displaying data in log
         //It is optional
         Log.d(TAG, "From: " + remoteMessage.getFrom());
-        Log.d(TAG, "Notification Message Body: " + remoteMessage.getData().toString());
+        String message =  remoteMessage.getData().toString();
+        //getData should have the data we need, but when sending from the console, it's in getBody,
+        //so this is accounting for the possibilities.
+        if (message.compareTo("{}") != 0) {  //none empty message
+            Log.d(TAG, "Notification Message Data: " + message);
+        } else {
+            message = remoteMessage.getNotification().getBody();
+            Log.d(TAG, "Notification Message Body: " + message);
+        }
 
         //Calling method to generate notification
-        sendNotification(remoteMessage.getData().toString());
+        sendNotification(message);
     }
 
-    //This method is only generating push notification
-    //It is same as we did in earlier posts
+    //This method generates a notification on the device.
+    //If there is correctly formatted json, it will use it, other just display the message
     private void sendNotification(String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
-        JSONObject json = null;
+        String title = "", message;
+
+        //read for a json object.  if that fails, just show the data as message body.
 
         try {
-            json = new JSONObject(messageBody);
-
+            JSONObject json  = new JSONObject(messageBody);
+            JSONObject data = json.getJSONObject("data");
+            title = data.getString("title");
+            if (title == null || title.compareTo("{}") == 0 ) {
+                //something wrong the json or there is no json.
+                title = "Firebase Push Notification";
+                message = messageBody;
+            } else {
+                title = "FCM: " + title;
+                message = data.getString("message");
+            }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.v(TAG, "no JSON, fail back.");
+            title = "Firebase Push Notification";
+            message = messageBody;
         }
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-       // if (json == null || )
+
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Firebase Push Notification")
-                .setContentText(messageBody)
+                .setContentTitle(title)
+                .setContentText(message)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);

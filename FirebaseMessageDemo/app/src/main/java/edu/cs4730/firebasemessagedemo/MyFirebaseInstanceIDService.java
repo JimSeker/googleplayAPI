@@ -8,6 +8,9 @@ import com.google.firebase.iid.FirebaseInstanceIdService;
 
 /**
  * Created by Seker on 4/14/2017.
+ *
+ * This is called on at least the first startup.  it generates a unique token that is
+ * used by the cloud messaging system.  definitely save the token for later use.
  */
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {

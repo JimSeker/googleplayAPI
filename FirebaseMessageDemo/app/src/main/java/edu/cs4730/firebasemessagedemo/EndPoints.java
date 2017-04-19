@@ -2,6 +2,10 @@ package edu.cs4730.firebasemessagedemo;
 
 /**
  * Created by Seker on 4/18/2017.
+ *
+ * These are just constants, stored here, so if the backend server changes it's quick and easy to fix
+ * them all here, instead of through out the code.
+ *
  */
 
 public class EndPoints {

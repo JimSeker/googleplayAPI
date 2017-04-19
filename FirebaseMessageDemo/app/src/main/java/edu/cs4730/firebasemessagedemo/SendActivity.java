@@ -30,6 +30,16 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/*
+ * this activity is used to send the message to one or all devices.
+ * To do this, it must pull a list of all the registered devices off the server and put it into the
+ * spinner.
+ *
+ * This sends a simple text message (in json).  But much more complex information can be send, like
+ * images, etc.
+ */
+
 public class SendActivity extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener, View.OnClickListener {
 
     private Button buttonSendPush;
@@ -39,7 +49,7 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private EditText editTextTitle, editTextMessage;
 
-    private boolean isSendAllChecked;
+    private boolean isSendAllChecked ;
     private List<String> devices;
 
     @Override
@@ -62,7 +72,8 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         loadRegisteredDevices();
     }
 
-    //method to load all the devices from database
+    //method to load all the devices from database on the backend server.
+    //see the php code in the directory for more details about the backend.
     private void loadRegisteredDevices() {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Fetching Devices...");
@@ -118,10 +129,10 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         }
     }
 
+    //this method will send a message to all registered devices.
     private void sendMultiplePush(){
         final String title = editTextTitle.getText().toString();
         final String message = editTextMessage.getText().toString();
-        final String name = spinner.getSelectedItem().toString();
 
         progressDialog.setMessage("Sending Push");
         progressDialog.show();
@@ -154,6 +165,7 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         MyVolley.getInstance(this).addToRequestQueue(stringRequest);
     }
 
+    //this will send a message to only the device/token listed.
     private void sendSinglePush(){
         final String title = editTextTitle.getText().toString();
         final String message = editTextMessage.getText().toString();

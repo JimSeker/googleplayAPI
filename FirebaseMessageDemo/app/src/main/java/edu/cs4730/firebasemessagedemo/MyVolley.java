@@ -7,6 +7,8 @@ import com.android.volley.toolbox.Volley;
 
 /**
  * Created by Seker on 4/18/2017.
+ *
+ *
  */
 
 public class MyVolley {

@@ -24,11 +24,20 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-// using https://www.simplifiedcoding.net/firebase-cloud-messaging-tutorial-android/
+// These sites were used in createing this example code
+//       https://www.simplifiedcoding.net/firebase-cloud-messaging-tutorial-android/
 //   and https://www.simplifiedcoding.net/firebase-cloud-messaging-android/
 //   and https://www.androidtutorialpoint.com/firebase/firebase-android-tutorial-getting-started/
 //   and https://www.androidtutorialpoint.com/firebase/firebase-cloud-messaging-tutorial/
 //   and https://firebase.google.com/docs/cloud-messaging/
+
+/*
+ *  The mainactivity only registers the device with the back end server.  It only needs to be done
+ *  once (unless the token changes, which I don't think it does).  The user then can push the button
+ *  to move to the sendactivity.
+ *
+ *  honesty this code needs rewritten to use two fragments instead of two activities.
+ */
 
 
 public class MainActivity extends AppCompatActivity {
@@ -39,8 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private EditText editTextName;
     private ProgressDialog progressDialog;
 
-    //URL to RegisterDevice.php
-    private static final String URL_REGISTER_DEVICE = "http://10.216.218.12/FcmDemo/RegisterDevice.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    //storing token to mysql server
+    //This will send the token to the backend server (which is mysql/php/apache.  see
+    // the php directory in this project for the source code.
     private void sendTokenToServer() {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Registering Device...");
@@ -86,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_REGISTER_DEVICE,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_REGISTER_DEVICE,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
