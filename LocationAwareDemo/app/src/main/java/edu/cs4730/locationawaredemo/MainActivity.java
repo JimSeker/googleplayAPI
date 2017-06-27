@@ -2,11 +2,14 @@ package edu.cs4730.locationawaredemo;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,11 +20,21 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -33,23 +46,44 @@ import java.util.Date;
   * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
   *
   * This shows how to get location updates, either the last known and continuing.
+  * getLastLocation is get the last known location  and startLocationUpdates() is continuing.
   * Also uses the intent service to get address locations as well.
   *
  */
 
 
-public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends AppCompatActivity {
     // for checking permissions.
     public static final int REQUEST_ACCESS_startLocationUpdates = 0;
     public static final int REQUEST_ACCESS_onConnected = 1;
+    /**
+     * Constant used in the location settings dialog.
+     */
+    private static final int REQUEST_CHECK_SETTINGS = 0x1;
 
-    GoogleApiClient mGoogleApiClient;
+    private FusedLocationProviderClient mFusedLocationClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
     TextView logger;
     Button btn;
     Boolean mRequestingLocationUpdates = false;
+    /**
+     * Provides access to the Location Settings API.
+     */
+    private SettingsClient mSettingsClient;
+    /**
+     * Stores the types of location services the client is interested in using. Used for checking
+     * settings to determine if the device has optimal location settings.
+     */
+    private LocationSettingsRequest mLocationSettingsRequest;
+    /**
+     * Callback for Location events.
+     */
+    private LocationCallback mLocationCallback;
+    /**
+     * Receiver registered with this activity to get the response from FetchAddressIntentService.
+     */
+    private AddressResultReceiver mResultReceiver;
 
     String TAG = "MainActivity";
 
@@ -70,46 +104,40 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
         mResultReceiver = new AddressResultReceiver(new Handler());
-        buildGoogleApiClient();
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
+
+        createLocationRequest();
+        createLocationCallback();
+        buildLocationSettingsRequest();
         Log.v(TAG, "starting");
+        getLastLocation();
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        Log.v(TAG, "Building GoogleApiClient");
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        // createLocationRequest();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        mGoogleApiClient.disconnect();
-
-        super.onStop();
+    /**
+     * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
+     * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
+     * if a device has the needed location settings.
+     */
+    private void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-        if (mGoogleApiClient.isConnected()) {
-            stopLocationUpdates();
-        }
+        stopLocationUpdates();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+
+        if (mRequestingLocationUpdates) {
             startLocationUpdates();
         }
     }
@@ -117,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements
     public void locationUpdates() {
         if (mRequestingLocationUpdates) {
             //true, so start them
-            createLocationRequest();
+
             startLocationUpdates();
             btn.setText("Stop location updates");
         } else {
@@ -135,6 +163,24 @@ public class MainActivity extends AppCompatActivity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
+    /**
+     * Creates a callback for receiving location events.
+     */
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                mLastLocation = locationResult.getLastLocation();
+                logger.append("\n\n" + DateFormat.getTimeInstance().format(new Date()) + ": ");
+                logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
+                logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
+                startIntentService();
+            }
+        };
+    }
+
     protected void startLocationUpdates() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
@@ -145,22 +191,72 @@ public class MainActivity extends AppCompatActivity implements
                     MainActivity.REQUEST_ACCESS_startLocationUpdates);
             return;
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
+
+        // Begin by checking if the device has the necessary location settings.
+        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                    @Override
+                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                        Log.i(TAG, "All location settings are satisfied.");
+
+                        //noinspection MissingPermission
+                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                mLocationCallback, Looper.myLooper());
+
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        int statusCode = ((ApiException) e).getStatusCode();
+                        switch (statusCode) {
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                        "location settings ");
+                                try {
+                                    // Show the dialog by calling startResolutionForResult(), and check the
+                                    // result in onActivityResult().
+                                    ResolvableApiException rae = (ResolvableApiException) e;
+                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                } catch (IntentSender.SendIntentException sie) {
+                                    Log.i(TAG, "PendingIntent unable to execute request.");
+                                }
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                String errorMessage = "Location settings are inadequate, and cannot be " +
+                                        "fixed here. Fix in Settings.";
+                                Log.e(TAG, errorMessage);
+                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                                mRequestingLocationUpdates = false;
+                        }
+
+
+                    }
+                });
+
+
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
+        if (!mRequestingLocationUpdates) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
+        }
+
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        mRequestingLocationUpdates = false;
+                    }
+                });
     }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-
-        getLastLocation();
-
-    }
-
+    //This shows how to get a "one off" location.  instead of using the location updates
+    //
     public void getLastLocation() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
@@ -171,21 +267,35 @@ public class MainActivity extends AppCompatActivity implements
                     MainActivity.REQUEST_ACCESS_onConnected);
             return;
         }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        Log.v(TAG, "onConnected");
-        if (mLastLocation != null) {
-            logger.append("Last location: ");
-            logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
-            logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
-            startIntentService();
-        }
-    }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location == null) {
+                            Log.w(TAG, "onSuccess:null");
+                            logger.append("Last location: None");
+                            return;
+                        }
+                        mLastLocation = location;
 
-    /**
-     * Receiver registered with this activity to get the response from FetchAddressIntentService.
-     */
-    private AddressResultReceiver mResultReceiver;
+                        Log.v(TAG, "getLastLocation");
+                        if (mLastLocation != null) {
+                            logger.append("Last location: ");
+                            logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
+                            logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
+                            startIntentService();
+                        }
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "getLastLocation:onFailure", e);
+                        logger.append("Last location: Fail");
+                    }
+                });
+
+    }
 
     /**
      * Receiver for data sent from FetchAddressIntentService.
@@ -212,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements
      * Creates an intent, adds location data to it as an extra, and starts the intent service for
      * fetching an address.
      */
+
     protected void startIntentService() {
         // Create an intent for passing to the intent service responsible for fetching the address.
         Intent intent = new Intent(this, FetchAddressIntentService.class);
@@ -226,27 +337,6 @@ public class MainActivity extends AppCompatActivity implements
         // (creating a process for it if needed); if it is running then it remains running. The
         // service kills itself automatically once all intents are processed.
         startService(intent);
-    }
-
-    //location listener methods
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.v(TAG, "onConnectionSuspected");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.v(TAG, "onConnectionFailed");
-        mRequestingLocationUpdates = false;
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        logger.append("\n\n"+DateFormat.getTimeInstance().format(new Date()) + ": ");
-        logger.append(" Lat: " + String.valueOf(location.getLatitude()));
-        logger.append(" Long: " + String.valueOf(location.getLongitude()) + "\n");
-        mLastLocation = location;
-        startIntentService();
     }
 
 
@@ -286,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
             finish();
         }
-
 
 
     }
