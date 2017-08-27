@@ -91,10 +91,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar =  findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        logger = (TextView) findViewById(R.id.logger);
-        btn = (Button) findViewById(R.id.button);
+        logger =  findViewById(R.id.logger);
+        btn = findViewById(R.id.button);
         btn.setText("Start location updates");
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -300,8 +300,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Receiver for data sent from FetchAddressIntentService.
      */
-    class AddressResultReceiver extends ResultReceiver {
-        public AddressResultReceiver(Handler handler) {
+    private class AddressResultReceiver extends ResultReceiver {
+        AddressResultReceiver(Handler handler) {
             super(handler);
         }
 
