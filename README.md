@@ -1,6 +1,6 @@
 # Android Google Play API Demos
 
-<b>legacy/</a> older examples that are no longer updated.
+<b>legacy/</b> older examples that are no longer updated.
 
 <b>ActMapDemo</b> combines LocationAware, ActivityRecognition, and Google Maps together in an example where it use the location to draw on a map the path the user is 
 going.  The line changes color to show the different activities (ie walking, running, driving, etc).  A key is needed on the map for the colors though.
