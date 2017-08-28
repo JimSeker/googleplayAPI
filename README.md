@@ -1,5 +1,7 @@
 # Android Google Play API Demos
 
+<b>legacy/</a> older examples that are no longer updated.
+
 <b>ActMapDemo</b> combines LocationAware, ActivityRecognition, and Google Maps together in an example where it use the location to draw on a map the path the user is 
 going.  The line changes color to show the different activities (ie walking, running, driving, etc).  A key is needed on the map for the colors though.
 
@@ -25,7 +27,7 @@ See https://github.com/googlesamples/android-vision
 
 <b>adMobDemo</b> is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/releases for more examples.
 
-<b>CouldMessageDemo</b> is a start at an example for Google Cloud Messaging (GCM).  It sort of works.  You will need to register it your google API to use it. https://github.com/GoogleCloudPlatform/gradle-appengine-templates/tree/master/GcmEndpoints  There are multiple problems.  There is code in mainActivity that is deprecated code and GCM is also deprecated for the new Firebase Cloud messaging.  So basically I've stopped work on this example and hope to replace it with firebase version at some point.
+<b>FirebaseMessageDemo</b> is a start at an example for Cloud Messaging.  It works pretty well.  The webcode needed is in thephp directory, you will need a webserver to get this project running.
 
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
