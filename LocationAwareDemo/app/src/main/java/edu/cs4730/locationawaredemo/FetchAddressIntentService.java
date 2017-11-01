@@ -126,7 +126,9 @@ public class FetchAddressIntentService extends IntentService {
             // getPostalCode() ("94043", for example)
             // getCountryCode() ("US", for example)
             // getCountryName() ("United States", for example)
+            Log.wtf(TAG, "postal code is " + address.getPostalCode());
             for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                Log.d(TAG, "line " + i +" is " +address.getAddressLine(i));
                 addressFragments.add(address.getAddressLine(i));
             }
             Log.i(TAG, getString(R.string.address_found));

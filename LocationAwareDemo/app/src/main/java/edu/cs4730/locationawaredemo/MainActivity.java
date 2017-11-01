@@ -315,6 +315,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Display the address string or an error message sent from the intent service.
             String mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
+            Log.i(TAG, "address received: "+ mAddressOutput);
             logger.append(mAddressOutput);
 
         }
