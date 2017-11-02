@@ -1,9 +1,11 @@
 package edu.cs4730.activityrecognitiondemo;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,15 +14,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
 
 import java.util.List;
 
@@ -35,29 +35,33 @@ import java.util.List;
 //https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
 
 
-public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status>, TextToSpeech.OnInitListener {
+public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnInitListener {
     //for the speech part.
     private static final int REQ_TTS_STATUS_CHECK = 0;
     private TextToSpeech mTts;
     private  String myUtteranceId = "txt2spk";
     private boolean canspeak = false;
+
+    private Context mContext;
     /**
      * The desired time between activity detections. Larger values result in fewer activity
      * detections while improving battery life. A value of 0 results in activity detections at the
      * fastest possible rate. Getting frequent updates negatively impact battery life and a real
      * app may prefer to request less frequent updates.
      */
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;  //fastest rate which appear to be about 10 seconds.
+                                                                 //30 * 1000; // 30 seconds
     /**
-     * Provides the entry point to Google Play services.
+     * The entry point for interacting with activity recognition.
      */
-    protected GoogleApiClient mGoogleApiClient;
+    private ActivityRecognitionClient mActivityRecognitionClient;
+
     boolean gettingupdates = false;
+
     //widgets
     Button btn;
     TextView logger;
-    String TAG = "MainActivity";
+    static String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,82 +72,115 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 //do something...
-                setupDemo();
+                if (!gettingupdates) {
+                    startActivityUpdates();
+                } else {
+                    stopActivityUpdates();
+                }
             }
         });
+        mContext = this;
         logger = (TextView) findViewById(R.id.logger);
         // Check to be sure that TTS exists and is okay to use
         Intent checkIntent = new Intent();
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
         startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
-        // Kick off the request to build GoogleApiClient.
-        buildGoogleApiClient();
-    }
 
-    /**
-     * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
-     * ActivityRecognition API.
-     */
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(ActivityRecognition.API)
-                .build();
+        //setup the client activity piece.
+        mActivityRecognitionClient = new ActivityRecognitionClient(this);
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiClient.disconnect();
-    }
-
 
     @Override
     protected void onResume() {
         super.onResume();
         // Register the broadcast receiver that informs this activity of the DetectedActivity
         // object broadcast sent by the intent service.
-        setupDemo();  //likely always starts (even first use), since it should be turned off by onPause()
-        //should set a preference in OnPause, that is read here as well, to determine if it should be started.
+        if (!gettingupdates)
+            startActivityUpdates();
     }
 
     @Override
-    protected void onPause() {
+    protected void onStop() {
+        Log.wtf(TAG, "onStop called.");
         // Unregister the broadcast receiver that was registered during onResume().
         if (gettingupdates)  //if turned on, stop them during pause.
-          setupDemo();
-        super.onPause();
+         stopActivityUpdates();
+        super.onStop();
     }
-    void setupDemo() {
-        if (!mGoogleApiClient.isConnected()) {
-            Toast.makeText(this, "Google API is not connected!",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (gettingupdates) { //we are already getting updates, so stop
-            ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(
-                    mGoogleApiClient,
-                    getActivityDetectionPendingIntent()
-            ).setResultCallback(this);
-            btn.setText("Start Recognition");
-        } else {
-            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
-                    mGoogleApiClient,
-                    DETECTION_INTERVAL_IN_MILLISECONDS,
-                    getActivityDetectionPendingIntent()
-            ).setResultCallback(this);
-            btn.setText("Stop Recognition");
-        }
-        gettingupdates = !gettingupdates;
+
+
+    /**
+     * Registers for activity recognition updates using
+     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
+     * Registers success and failure callbacks.
+     */
+    public void startActivityUpdates() {
+        Log.wtf(TAG, "start called.");
+        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
+                DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(mContext,
+                        "Activity updates enabled",
+                        Toast.LENGTH_SHORT)
+                        .show();
+                gettingupdates = true;
+                btn.setText("Stop Recognition");
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w(TAG, "Failed to enable activity updates");
+                Toast.makeText(mContext,
+                        "Failed to enable activity updates",
+                        Toast.LENGTH_SHORT)
+                        .show();
+                gettingupdates = false;
+                btn.setText("Start Recognition");
+            }
+        });
     }
+
+    /**
+     * Removes activity recognition updates using
+     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
+     * failure callbacks.
+     */
+    public void stopActivityUpdates() {
+        Log.wtf(TAG, "stop called.");
+        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+                getActivityDetectionPendingIntent());
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(mContext,
+                        "Activity updates removed",
+                        Toast.LENGTH_SHORT)
+                        .show();
+                gettingupdates = false;
+                btn.setText("Start Recognition");
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w(TAG, "Failed to enable activity recognition.");
+                Toast.makeText(mContext, "Failed to remove activity updates",
+                        Toast.LENGTH_SHORT).show();
+                gettingupdates = true;  //I think this is true???
+                btn.setText("Stop Recognition");
+            }
+        });
+    }
+
+
 
     /**
      * Gets a PendingIntent to be sent for each activity detection.
@@ -209,36 +246,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    //GoogleAPIClient connection call backs
-    @Override
-    public void onConnected(Bundle bundle) {
-        Log.v(TAG, "Connected");
-    }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        // The connection to Google Play services was lost for some reason. We call connect() to
-        // attempt to re-establish the connection.
-        Log.i(TAG, "Connection suspended");
-        mGoogleApiClient.connect();
-    }
-
-    //GoogleAPIClient connection failed
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.v(TAG, "Connected Failed");
-    }
-
-    //resultcallback ... not sure if need this or not.
-    @Override
-    public void onResult(Status status) {
-        Log.v(TAG, "onResult");
-        if (status.isSuccess()) {
-            Log.v(TAG, "onResult success");
-        } else {
-            Log.v(TAG, "onResult failed. " + status.getStatusMessage());
-        }
-    }
     //simple method to do the speech
     public void speech(String words) {
         //Speech is simple.  send the words to speech aloud via the
@@ -267,6 +275,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         else {
             // Got something else
+            Log.wtf(TAG, "Got something else in onActivityResult");
         }
     }
 
