@@ -12,7 +12,7 @@ import com.google.android.gms.location.DetectedActivity;
 
 
 /**
- * Simple intenet service to get the activity Recognation info and send back to activity
+ * Simple intent service to get the activity Recognition info and send back to activity
  * the most probable activity (or unknown) via a messager.
  **/
 

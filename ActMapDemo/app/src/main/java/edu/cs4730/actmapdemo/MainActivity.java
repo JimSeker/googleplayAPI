@@ -1,5 +1,6 @@
 package edu.cs4730.actmapdemo;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -7,6 +8,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.NonNull;
@@ -25,23 +27,29 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import android.Manifest;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.ActivityRecognition;
-//import com.google.android.gms.location.ActivityRecognitionResult;
+
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<Status> {
+public class MainActivity extends AppCompatActivity {
 
     // for checking permissions.
     public static final int REQUEST_ACCESS_startLocationUpdates = 0;
@@ -56,13 +64,18 @@ public class MainActivity extends AppCompatActivity implements
     List<String> DataList = new ArrayList<String>();
     List<objData> objDataList = new ArrayList<objData>();
 
-    float Milecheck =5280.0f;
+    float Milecheck = 5280.0f;
     float MileIncr = 5280.0f;
 
-    //for the location.
-    GoogleApiClient mGoogleApiClient;
+    //for the activity rec
+    private ActivityRecognitionClient mActivityRecognitionClient;
+    //for location.
     Boolean mRequestingLocationUpdates = false;
     LocationRequest mLocationRequest;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private SettingsClient mSettingsClient;
+    private LocationSettingsRequest mLocationSettingsRequest;
+    private LocationCallback mLocationCallback;
     /**
      * The desired time between activity detections. Larger values result in fewer activity
      * detections while improving battery life. A value of 0 results in activity detections at the
@@ -93,24 +106,21 @@ public class MainActivity extends AppCompatActivity implements
         TabLayout mTabLayout = (TabLayout) findViewById(R.id.tablayout1);
         mTabLayout.setupWithViewPager(viewPager);
 
-        buildGoogleApiClient();
+        //setup the client activity piece.
+        mActivityRecognitionClient = new ActivityRecognitionClient(this);
+        //setup the location pieces.
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
+        createLocationRequest();
+        createLocationCallback();
+        buildLocationSettingsRequest();
+        initialsetup();  //get last location and call it current spot.
     }
 
-
-    protected synchronized void buildGoogleApiClient() {
-        Log.v(TAG, "Building GoogleApiClient");
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .addApi(ActivityRecognition.API)
-                .build();
-
-    }
 
     /**
-    * The service will call the handler to send back information.
-    **/
+     * The service will call the handler to send back information.
+     **/
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -158,13 +168,31 @@ public class MainActivity extends AppCompatActivity implements
                 //we don't have permission here to do anything with location, but it is started.  So ... can't stop it... odd possibility.
             } else {
                 //add end marker
-                Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                mapfrag.finishMap(new objData(
-                        mlocation.getLatitude(),
-                        mlocation.getLongitude(),
-                        mlocation.getTime(),
-                        currentActivity
-                ));
+                mFusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                if (location == null) {
+                                    Log.w(TAG, "onSuccess:null");
+                                    return;
+                                }
+                                Log.v(TAG, "getLastLocation");
+                                mapfrag.finishMap(new objData(
+                                        location.getLatitude(),
+                                        location.getLongitude(),
+                                        location.getTime(),
+                                        currentActivity
+                                ));
+                            }
+                        })
+                        .addOnFailureListener(this, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w(TAG, "getLastLocation:onFailure", e);
+                            }
+                        });
+
+
             }
             stopLocationUpdates();
             setupActivityRec(false);
@@ -175,35 +203,27 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    /*
+        @Override
+        protected void onStop() {
+            setupActivityRec(false);
+            stopLocationUpdates();
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        setupActivityRec(false);
-        mGoogleApiClient.disconnect();
-
-        super.onStop();
-    }
-
+            super.onStop();
+        }
+    */
     @Override
     protected void onPause() {
         super.onPause();
         // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-        if (mGoogleApiClient.isConnected()) {
-            stopLocationUpdates();
-        }
+        stopLocationUpdates();
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+        if (mRequestingLocationUpdates) {
             setupActivityRec(true);
             startLocationUpdates();
         }
@@ -217,6 +237,32 @@ public class MainActivity extends AppCompatActivity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
+    /**
+     * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
+     * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
+     * if a device has the needed location settings.
+     */
+    private void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
+    }
+
+    /**
+     * Creates a callback for receiving location events.
+     */
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                addData(locationResult.getLastLocation());
+            }
+        };
+    }
+
+
     //two methods to start and stop location updates.
     protected void startLocationUpdates() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
@@ -228,34 +274,97 @@ public class MainActivity extends AppCompatActivity implements
                     MainActivity.REQUEST_ACCESS_startLocationUpdates);
             return;
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
+        // Begin by checking if the device has the necessary location settings.
+        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                        Log.i(TAG, "All location settings are satisfied.");
+
+                        //noinspection MissingPermission
+                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                mLocationCallback, Looper.myLooper());
+
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        mRequestingLocationUpdates = false;
+                        int statusCode = ((ApiException) e).getStatusCode();
+                        switch (statusCode) {
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                Log.i(TAG, "Location settings are not satisfied. ");
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                String errorMessage = "Location settings are inadequate, and cannot be " +
+                                        "fixed here. Fix in Settings.";
+                                Log.e(TAG, errorMessage);
+                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                                mRequestingLocationUpdates = false;
+                        }
+
+
+                    }
+                });
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
+        if (!mRequestingLocationUpdates) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
+        }
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        mRequestingLocationUpdates = false;
+                    }
+                });
     }
 
 
     //method to start or stop the activity recognition.
     void setupActivityRec(boolean gettingupdates) {
-        if (!mGoogleApiClient.isConnected()) {
-            Log.v(TAG, "GoogleAPIclient is not connected, ActRec issues.");
-            return;
-        }
+
         if (gettingupdates) { //true to start it.
-            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
-                    mGoogleApiClient,
+            Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
                     DETECTION_INTERVAL_IN_MILLISECONDS,
-                    getActivityDetectionPendingIntent()
-            ).setResultCallback(this);
-            Log.v(TAG, "starting ActLocation");
+                    getActivityDetectionPendingIntent());
+            task.addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Log.v(TAG, "starting ActLocation");
+                }
+            });
+            task.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    mRequestingLocationUpdates = false;
+                    Log.w(TAG, "Failed to enable activity updates");
+                }
+            });
+
         } else {
-            ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(
-                    mGoogleApiClient,
-                    getActivityDetectionPendingIntent()
-            ).setResultCallback(this);
+            Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+                    getActivityDetectionPendingIntent());
+            task.addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Log.w(TAG, "disabled activity recognition.");
+                }
+            });
+            task.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "Failed to disable activity recognition.");
+                }
+            });
+
         }
     }
 
@@ -274,15 +383,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-    //GoogleApiCloient call back methods
-    @Override
-    public void onConnected(Bundle bundle) {
-
-        Log.v(TAG, "onConnected");
-        initialsetup();
-
-    }
-
     public void initialsetup() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
@@ -293,41 +393,31 @@ public class MainActivity extends AppCompatActivity implements
                     MainActivity.REQUEST_ACCESS_onConnected);
             return;
         }
-        Location mlocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        mapfrag.setupInitialloc(mlocation.getLatitude(), mlocation.getLongitude());
-        //initial spot maybe?
-        if (mRequestingLocationUpdates)
-            addData(mlocation);
+
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location == null) {
+                            Log.w(TAG, "onSuccess:null");
+                            return;
+                        }
+                        Log.v(TAG, "getLastLocation");
+                        mapfrag.setupInitialloc(location.getLatitude(), location.getLongitude());
+                        //initial spot maybe?
+                        if (mRequestingLocationUpdates)
+                            addData(location);
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "getLastLocation:onFailure", e);
+                    }
+                });
+
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.v(TAG, "onConnectionSuspected");
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.v(TAG, "onConnectionFailed");
-        mRequestingLocationUpdates = false;
-    }
-
-    //resultcallback for the Activity Recognition... not sure if need this or not, but
-    //shows when the system is running correctly.
-    @Override
-    public void onResult(@NonNull Status status) {
-        Log.v(TAG, "onResult");
-        if (status.isSuccess()) {
-            Log.v(TAG, "onResult success");
-        } else {
-            Log.v(TAG, "onResult failed. " + status.getStatusMessage());
-        }
-    }
-
-    //location listener methods
-    @Override
-    public void onLocationChanged(Location location) {
-        addData(location);
-    }
 
     public void addData(Location mlocation) {
         objData newData;
@@ -344,21 +434,22 @@ public class MainActivity extends AppCompatActivity implements
 
             //figure distance info.
             if (objDataList.isEmpty()) {
-                newData.distance =0.0f;
+                newData.distance = 0.0f;
             } else {
-                newData.distance = distanceBetween(objDataList.get(objDataList.size() -1).myLatlng, newData.myLatlng) * 3.28f; //converted to feet
-                newData.distance += objDataList.get(objDataList.size() -1).distance;  //previous distance, to ge the total.
+                newData.distance = distanceBetween(objDataList.get(objDataList.size() - 1).myLatlng, newData.myLatlng) * 3.28f; //converted to feet
+                newData.distance += objDataList.get(objDataList.size() - 1).distance;  //previous distance, to ge the total.
             }
             //add everything and add to the data structures.
             objDataList.add(newData);
             listfrag.updateAdatper(objDataList);
             mapfrag.updateMapDraw(newData);
             if (newData.distance >= Milecheck) {
-                mapfrag.mileMarker(newData, Milecheck/5280 + " Miles");
+                mapfrag.mileMarker(newData, Milecheck / 5280 + " Miles");
                 Milecheck += MileIncr;
             }
         }
     }
+
     private float distanceBetween(LatLng latLng1, LatLng latLng2) {
 
         Location loc1 = new Location(LocationManager.GPS_PROVIDER);
