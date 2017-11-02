@@ -25,6 +25,8 @@ See https://github.com/googlesamples/android-vision
 
 <b>BarocdeReader</b> use the googlePlay vision APIs to find a barcode and ask if you want to search Amazon or open the web page.  This a very simple example.  
 
+<b>ocr-reader</b> is google's example code from https://github.com/googlesamples/android-vision uses the OCR pieces of the vision APIs.
+
 <b>adMobDemo</b> is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/releases for more examples.
 
 <b>FirebaseMessageDemo</b> is a start at an example for Cloud Messaging.  It works pretty well.  The webcode needed is in the php directory of the project, you will need a webserver to get this project running.
