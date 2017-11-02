@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //Setup the BarCodeDetector
         Context context = getApplicationContext();
         BarcodeDetector detector = new BarcodeDetector.Builder(context)
-                .build();
+            .build();
 
         //note the barcodeTrackerFactory is defined below and is very simple.
         detector.setProcessor(new MultiProcessor.Builder<>(new BarcodeTrackFactory()).build());
@@ -100,9 +101,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         // to other detection examples to enable the barcode detector to detect small barcodes
         // at long distances.
         CameraSource.Builder builder = new CameraSource.Builder(getApplicationContext(), detector)
-                .setFacing(CameraSource.CAMERA_FACING_BACK)
-                .setRequestedPreviewSize(1600, 1024)
-                .setRequestedFps(15.0f);
+            .setFacing(CameraSource.CAMERA_FACING_BACK)
+            .setRequestedPreviewSize(1600, 1024)
+            .setRequestedFps(15.0f);
 
         builder = builder.setAutoFocusEnabled(true);
 
@@ -165,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      * So we have the result of the request for premissions, hopefully yes.
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //because it's setup in oncreate and onresume, it's likely I'm asking twice very quickly.  the
         //alreadyaskingpremission vairable will stop the second request on top of the first request.
         alreadyaskingpremission = false;
@@ -176,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             return;
         }
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
+            " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
         Toast.makeText(this, "Camera permission not granted, so exiting", Toast.LENGTH_LONG).show();
         finish();
     }
