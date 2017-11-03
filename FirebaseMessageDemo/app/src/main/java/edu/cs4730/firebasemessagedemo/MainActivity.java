@@ -1,7 +1,11 @@
 package edu.cs4730.firebasemessagedemo;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -23,7 +27,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-// These sites were used in createing this example code
+// These sites were used in creating this example code
 //       https://www.simplifiedcoding.net/firebase-cloud-messaging-tutorial-android/
 //   and https://www.simplifiedcoding.net/firebase-cloud-messaging-android/
 //   and https://www.androidtutorialpoint.com/firebase/firebase-android-tutorial-getting-started/
@@ -74,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        createchannel();
     }
 
 
@@ -124,5 +129,29 @@ public class MainActivity extends AppCompatActivity {
         };
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         requestQueue.add(stringRequest);
+    }
+
+
+    /*
+* for API 26+ create notification channels
+*/
+    private void createchannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationChannel mChannel = new NotificationChannel(getString(R.string.default_notification_channel_id),
+                getString(R.string.channel_name),  //name of the channel
+                NotificationManager.IMPORTANCE_DEFAULT);   //importance level
+            //important level: default is is high on the phone.  high is urgent on the phone.  low is medium, so none is low?
+            // Configure the notification channel.
+            mChannel.setDescription(getString(R.string.channel_description));
+            mChannel.enableLights(true);
+            //Sets the notification light color for notifications posted to this channel, if the device supports this feature.
+            mChannel.setLightColor(Color.RED);
+            mChannel.enableVibration(true);
+            mChannel.setShowBadge(true);
+            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            nm.createNotificationChannel(mChannel);
+
+        }
     }
 }

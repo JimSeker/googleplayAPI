@@ -5,7 +5,7 @@ package edu.cs4730.firebasemessagedemo;
  *
  * These are just constants, stored here, so if the backend server changes it's quick and easy to fix
  * them all here, instead of through out the code.
- *
+ *./get
  */
 
 public class EndPoints {
