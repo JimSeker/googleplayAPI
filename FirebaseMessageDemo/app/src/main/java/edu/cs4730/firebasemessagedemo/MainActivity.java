@@ -21,6 +21,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -99,25 +100,31 @@ public class MainActivity extends AppCompatActivity {
         }
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_REGISTER_DEVICE,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        progressDialog.dismiss();
-                        try {
-                            JSONObject obj = new JSONObject(response);
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
+                    try {
+                        JSONObject obj = new JSONObject(response);
+
+                        if (obj.getString("message").compareTo("Device already registered") == 0) {
+                            //Toast.makeText(MainActivity.this, "warning, device name already registered.", Toast.LENGTH_LONG).show();
+                            verifyRegistration(name, token);
+                        } else {
                             Toast.makeText(MainActivity.this, obj.getString("message"), Toast.LENGTH_LONG).show();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        progressDialog.dismiss();
-                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }) {
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }) {
 
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
@@ -131,10 +138,61 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(stringRequest);
     }
 
+    /*
+    * this is called when the device is already registered to verify that the name and token match.
+     */
+    private void verifyRegistration(String name, String token) {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Verifying name and Token ...");
+        progressDialog.show();
+        final String thisName = name;
+        final String thisToken = token;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, EndPoints.URL_FETCH_DEVICES,
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
+                    JSONObject obj = null;
+                    try {
+                        obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            JSONArray jsonDevices = obj.getJSONArray("devices");
+
+                            for (int i = 0; i < jsonDevices.length(); i++) {
+                                JSONObject d = jsonDevices.getJSONObject(i);
+                                if (d.getString("name").compareTo(thisName)==0) {
+                                    if (d.getString("token").compareTo(thisToken)==0) {
+                                        Toast.makeText(MainActivity.this, "Device already registered", Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Name registered doesn't make our Token.", Toast.LENGTH_LONG).show();
+                                    }
+                                    return;
+                                }
+                            }
+                            Toast.makeText(MainActivity.this, "Our Name is not registered", Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }) {
+
+        };
+        MyVolley.getInstance(this).addToRequestQueue(stringRequest);
+
+    }
 
     /*
-* for API 26+ create notification channels
-*/
+     * for API 26+ create notification channels
+     */
     private void createchannel() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
