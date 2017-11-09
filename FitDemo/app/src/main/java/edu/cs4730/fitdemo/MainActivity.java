@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.addDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -40,8 +40,8 @@ public class MainActivity extends AppCompatActivity
 
         //first instance, so the default is zero.
         sensorFragment = new SensorFragment();
+        recordFragment = new RecordFragment();
         fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
-
     }
 
     @Override
@@ -79,6 +79,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SensorFragment.REQUEST_OAUTH) {
+            sensorFragment.onActivityResult(requestCode, resultCode, data);
+            return;
+        } else if (requestCode == RecordFragment.REQUEST_OAUTH) {
             sensorFragment.onActivityResult(requestCode, resultCode, data);
             return;
         }

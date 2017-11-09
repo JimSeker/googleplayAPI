@@ -3,10 +3,10 @@ package edu.cs4730.fitdemo;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,14 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
@@ -30,25 +25,25 @@ import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.request.SensorRequest;
-import com.google.android.gms.fitness.result.DataSourcesResult;
-
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A simple {@link Fragment} subclass.
+ * This will connect the the "step counter" sensor.  And display results as it is able to get them
+ *  Note the step count is cumalutive, since I can't get the delta
  */
-public class SensorFragment extends Fragment implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+public class SensorFragment extends Fragment {
 
     String TAG = "SensorFrag";
     TextView logger;
     static final int REQUEST_OAUTH = 1;
-    private static final String AUTH_PENDING = "auth_state_pending";
-    private boolean authInProgress = false;
-    //921882021599-sa40s3crq61b27kgiiin5bibo1ta6mdo.apps.googleusercontent.com
-    GoogleApiClient mGoogleApiClient;
     OnDataPointListener mlistener;
     Handler handler;
+
     public SensorFragment() {
         // Required empty public constructor
     }
@@ -57,21 +52,7 @@ public class SensorFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
-        }
 
-
-        //create the Google API Client
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
-                //select the fitness API
-                .addApi(Fitness.SENSORS_API)
-                        //specify the scope of access
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                        //provide callbacks
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
     }
 
     @Override
@@ -88,14 +69,52 @@ public class SensorFragment extends Fragment implements
                 return true;
             }
         });
-        View myView =  inflater.inflate(R.layout.fragment_sensor, container, false);
+        View myView = inflater.inflate(R.layout.fragment_sensor, container, false);
         logger = (TextView) myView.findViewById(R.id.logger);
+
         return myView;
     }
+
+
+    /**
+     * A wrapper. If the user account has OAuth permission,
+     * continue to setupsensors , else request OAuth permission for the account.
+     */
+    private void findFitnessDataSourcesWrapper() {
+        if (hasOAuthPermission()) {
+            findFitnessDataSources();
+        } else {
+            requestOAuthPermission();
+        }
+    }
+
+    /** Gets the {@link FitnessOptions} in order to check or request OAuth permission for the user. */
+    private FitnessOptions getFitnessSignInOptions() {
+        return FitnessOptions.builder().addDataType(DataType.TYPE_LOCATION_SAMPLE).build();
+    }
+
+    /** Checks if user's account has OAuth permission to Fitness API. */
+    private boolean hasOAuthPermission() {
+        FitnessOptions fitnessOptions = getFitnessSignInOptions();
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions);
+    }
+
+    /** Launches the Google SignIn activity to request OAuth permission for the user. */
+    private void requestOAuthPermission() {
+        FitnessOptions fitnessOptions = getFitnessSignInOptions();
+        GoogleSignIn.requestPermissions(
+            this,
+            REQUEST_OAUTH,
+            GoogleSignIn.getLastSignedInAccount(getContext()),
+            fitnessOptions);
+    }
+
+
 
     public void logthis(String item) {
         logger.append(item + "\n");
     }
+
     public void sendmessage(String logthis) {
         Bundle b = new Bundle();
         b.putString("logthis", logthis);
@@ -109,53 +128,61 @@ public class SensorFragment extends Fragment implements
 
 
     @Override
-    public void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onStop() {
-
-        mGoogleApiClient.disconnect();
-
-        super.onStop();
-    }
-    @Override
     public void onPause() {
         super.onPause();
-        // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-        if (mGoogleApiClient.isConnected()) {
-           // setupSensors();
-        }
+        // Stop location updates to save battery.
+        unregisterFitnessDataListener();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        if (mGoogleApiClient.isConnected()) {
-            removeListener();
-        }
+        // This ensures that if the user denies the permissions then uses Settings to re-enable
+        // them, the app will start working.
+        findFitnessDataSourcesWrapper();
 
     }
 
+    /** Finds available data sources and attempts to register on a specific {@link DataType}. */
+    private void findFitnessDataSources() {
+        // [START find_data_sources]
+        // Note: Fitness.SensorsApi.findDataSources() requires the ACCESS_FINE_LOCATION permission.
+        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .findDataSources(
+                new DataSourcesRequest.Builder()
+                    //.setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
+                    .setDataTypes(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+                    .setDataSourceTypes(DataSource.TYPE_RAW)
+                    .build())
+            .addOnSuccessListener(
+                new OnSuccessListener<List<DataSource>>() {
+                    @Override
+                    public void onSuccess(List<DataSource> dataSources) {
+                        for (DataSource dataSource : dataSources) {
+                            Log.wtf(TAG, "Data source found: " + dataSource.toString());
+                            Log.wtf(TAG, "Data Source type: " + dataSource.getDataType().getName());
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        Log.i(TAG, "OnConnected!");
-        logthis("OnConnected");
-        //now you can make call to the fitness APIs
-        setupSensors();
+                            // Let's register a listener to receive Activity data!
+                            if (dataSource.getDataType().equals(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+                                && mlistener == null) {
+                                Log.i(TAG, "Data source for Step Count (cumulative) found!  Registering.");
+                                setupSensors(dataSource, DataType.TYPE_STEP_COUNT_CUMULATIVE);
+                            }
+                        }
+                    }
+                })
+            .addOnFailureListener(
+                new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "failed", e);
+                    }
+                });
+        // [END find_data_sources]
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.v(TAG, "onConnectionSuspected");
-        logthis("OnConnectionSuspected");
-    }
 
-    public void setupSensors() {
+    public void setupSensors(DataSource dataSource, DataType dataType) {
         logthis("Setup Sensors start");
         mlistener = new OnDataPointListener() {
             @Override
@@ -171,85 +198,63 @@ public class SensorFragment extends Fragment implements
             }
         };
 
-        DataSourcesRequest dataSourceRequest = new DataSourcesRequest.Builder()
-                //.setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)  //works, but never get any data...
-                .setDataTypes(DataType.TYPE_STEP_COUNT_CUMULATIVE)
-                        //.setDataSourceTypes(DataSource.TYPE_DERIVED)  //works on moto G, but not Nexus 5X
-                        // .setDataSourceTypes(DataSource.TYPE_RAW)  //works on Nexus 5X, but not moto G.  wtf?  commented both out and it works.
-                .build();
-
-        ResultCallback<DataSourcesResult> dataSourcesResultCallback = new ResultCallback<DataSourcesResult>() {
-            @Override
-            public void onResult(DataSourcesResult dataSourcesResult) {
-                logthis("onResult of data source sert.");
-                for (DataSource dataSource : dataSourcesResult.getDataSources()) {
-                    logthis("data source is " + dataSource.toDebugString());
-                    if (DataType.TYPE_STEP_COUNT_CUMULATIVE.equals(dataSource.getDataType())) {
-                        logthis("Found a data source");
-                        addListener(dataSource, DataType.TYPE_STEP_COUNT_CUMULATIVE);
-                    }
-                }
-            }
-        };
-
-        Fitness.SensorsApi.findDataSources(mGoogleApiClient, dataSourceRequest)
-                .setResultCallback(dataSourcesResultCallback);
-        logthis("Setup Sensors done");
-    }
-    public void addListener(DataSource dataSource, DataType dataType) {
-        //adding listener
-        logthis("Adding Listener");
-
-        SensorRequest req = new SensorRequest.Builder()
-                .setDataSource(dataSource)
-                .setDataType(dataType)
-                .setSamplingRate(1, TimeUnit.SECONDS)
-                .build();
-
-        Fitness.SensorsApi.add(mGoogleApiClient, req, mlistener)
-                .setResultCallback(new ResultCallback<Status>() {
+        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .add(
+                new SensorRequest.Builder()
+                    .setDataSource(dataSource) // Optional but recommended for custom data sets.
+                    .setDataType(dataType) // Can't be omitted.
+                    .setSamplingRate(10, TimeUnit.SECONDS)
+                    .build(),
+                mlistener)
+            .addOnCompleteListener(
+                new OnCompleteListener<Void>() {
                     @Override
-                    public void onResult(Status status) {
-                        Log.i(TAG, "Result call back: " + status.getStatusMessage());
-                        logthis("Result call back: " + status.getStatusMessage());
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.i(TAG, "Listener registered!");
+                        } else {
+                            Log.e(TAG, "Listener not registered.", task.getException());
+                        }
                     }
                 });
 
     }
-    public void removeListener() {
-        PendingResult<Status> pendingResult = Fitness.SensorsApi.remove(mGoogleApiClient, mlistener);
-        pendingResult.setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(Status status) {
-                Log.i(TAG, "Result call back: " + status.getStatusMessage());
-            }
-        });
-    }
 
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (!authInProgress) {
-            try {
-                authInProgress = true;
-                connectionResult.startResolutionForResult(getActivity(), REQUEST_OAUTH);
-            } catch (IntentSender.SendIntentException e) {
-
-            }
-        } else {
-            Log.v(TAG, "onConnectionFailed cause:" + connectionResult.toString());
-            logthis("onConnectionFailed cause:" + connectionResult.toString());
+    /** Unregisters the listener with the Sensors API. */
+    private void unregisterFitnessDataListener() {
+        if (mlistener == null) {
+            // This code only activates one listener at a time.  If there's no listener, there's
+            // nothing to unregister.
+            return;
         }
+
+        // [START unregister_data_listener]
+        // Waiting isn't actually necessary as the unregister call will complete regardless,
+        // even if called from within onStop, but a callback can still be added in order to
+        // inspect the results.
+        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .remove(mlistener)
+            .addOnCompleteListener(
+                new OnCompleteListener<Boolean>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Boolean> task) {
+                        if (task.isSuccessful() && task.getResult()) {
+                            Log.i(TAG, "Listener was removed!");
+                        } else {
+                            Log.i(TAG, "Listener was not removed.");
+                        }
+                    }
+                });
+        // [END unregister_data_listener]
     }
+
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_OAUTH) {
-            authInProgress = false;
             if (resultCode == Activity.RESULT_OK) {
-                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.connect();
-                }
+                findFitnessDataSources();
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Log.e("GoogleFit", "RESULT_CANCELED");
             }

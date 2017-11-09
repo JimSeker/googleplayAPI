@@ -1,6 +1,9 @@
 package edu.cs4730.fitdemo;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,18 +12,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.FitnessStatusCodes;
+import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Subscription;
-import com.google.android.gms.fitness.result.ListSubscriptionsResult;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.List;
 
 /**
  * This fragment shows to add/cancel subscriptions so the phone can update the data.
@@ -28,12 +28,8 @@ import com.google.android.gms.fitness.result.ListSubscriptionsResult;
  * This needs cleaned up and the async tasks need fixed so they can use the UI.  right now everything
  * uses Log.e instead of the standard logger (it works though).
  */
-public class RecordFragment extends Fragment implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class RecordFragment extends Fragment {
 
-    GoogleApiClient mGoogleApiClient;
-
-    boolean subscribed = false;
     static final int REQUEST_OAUTH = 2;
     String TAG = "RecordFrag";
     TextView logger;
@@ -41,18 +37,6 @@ public class RecordFragment extends Fragment implements
 
     public RecordFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
-                .addApi(Fitness.RECORDING_API)
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                .addConnectionCallbacks(this)
-                        //have it login the user instead of us doing it manually.
-                .enableAutoManage(getActivity(), REQUEST_OAUTH, this)
-                .build();
     }
 
     @Override
@@ -65,40 +49,57 @@ public class RecordFragment extends Fragment implements
         btn_show.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fitness.RecordingApi.listSubscriptions(mGoogleApiClient)
-                        .setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-                            @Override
-                            public void onResult(ListSubscriptionsResult listSubscriptionsResult) {
-                                for (Subscription subscription : listSubscriptionsResult.getSubscriptions()) {
-                                    DataType dataType = subscription.getDataType();
-                                    logthis(dataType.getName());
-                                    for (Field field : dataType.getFields()) {
-                                        logthis(field.toString());
-                                    }
-                                }
+                Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+                    .listSubscriptions(DataType.TYPE_STEP_COUNT_DELTA)
+                    .addOnSuccessListener(new OnSuccessListener<List<Subscription>>() {
+                        @Override
+                        public void onSuccess(List<Subscription> subscriptions) {
+                            for (Subscription sc : subscriptions) {
+                                DataType dt = sc.getDataType();
+                                logthis( "Active subscription for data type: " + dt.getName());
                             }
-                        });
+                        }
+                    });
+
             }
         });
         btn_cancel = (Button) myView.findViewById(R.id.btn_cancel);
         btn_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fitness.RecordingApi.unsubscribe(mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA)
-                        .setResultCallback(new ResultCallback<Status>() {
-                            @Override
-                            public void onResult(Status status) {
-                                if (status.isSuccess()) {
-                                    logthis("Canceled subscriptions!");
-                                    subscribed = false;
-                                } else {
-                                    // Subscription not removed
-                                    logthis("Failed to cancel subscriptions");
-                                }
-                            }
-                        });
+                Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+                    .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            logthis("Canceled subscriptions!");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Subscription not removed
+                            logthis("Failed to cancel subscriptions");
+                        }
+                    });
             }
         });
+
+
+        FitnessOptions fitnessOptions =
+            FitnessOptions.builder().addDataType(DataType.TYPE_STEP_COUNT_DELTA).build();
+
+        // Check if the user has permissions to talk to Fitness APIs, otherwise authenticate the
+        // user and request required permissions.
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                this,
+                REQUEST_OAUTH,
+                GoogleSignIn.getLastSignedInAccount(getContext()),
+                fitnessOptions);
+        } else {
+            subscribe();
+        }
 
         return myView;
     }
@@ -110,66 +111,29 @@ public class RecordFragment extends Fragment implements
 
     public void subscribe() {
         //connect to the step count.
-        Fitness.RecordingApi.subscribe(mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.isSuccess()) {
-                            if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                logthis("Already subscribed to the Recording API");
-                            } else {
-                                logthis("Subscribed to the Recording API");
-                            }
-                            subscribed = true;
-                        }
-                    }
-                });
+        Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    logthis("Subscribed to the Recording API");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    logthis("failed to subscribe to the Recording API");
+                }
+            });
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
 
     @Override
-    public void onStop() {
-
-        mGoogleApiClient.disconnect();
-
-        super.onStop();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mGoogleApiClient.isConnected()) {
-
+    public  void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_OAUTH) {
+                subscribe();
+            }
         }
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mGoogleApiClient.isConnected()) {
-            subscribe();
-        }
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        logthis("OnConnected!");
-        subscribe();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        logthis("OnConnectionSuspected");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        logthis("onConnectionFailed cause:" + connectionResult.toString());
-    }
-
 }

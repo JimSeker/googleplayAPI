@@ -1,10 +1,12 @@
 package edu.cs4730.fitdemo;
 
 
-import android.os.AsyncTask;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,24 +16,26 @@ import android.widget.Button;
 import android.widget.TextView;
 
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Session;
 import com.google.android.gms.fitness.request.DataDeleteRequest;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.request.DataUpdateRequest;
-import com.google.android.gms.fitness.result.DailyTotalResult;
-import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.fitness.request.SessionReadRequest;
+import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.text.DateFormat;
 import java.util.Calendar;
@@ -41,13 +45,11 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * A simple example of how to use the history API.
+ * A simple example of how to use the history API adding, updating, and removing steps.
  */
-public class HistoryFragment extends Fragment implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+public class HistoryFragment extends Fragment {
 
-    GoogleApiClient mGoogleApiClient;
+
     Handler handler;
 
     static final int REQUEST_OAUTH = 3;
@@ -57,19 +59,6 @@ public class HistoryFragment extends Fragment implements
 
     public HistoryFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //create the client needed.
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
-                .addApi(Fitness.HISTORY_API)
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                .addConnectionCallbacks(this)
-                        //have it login the user instead of us doing it manually.
-                .enableAutoManage(getActivity(), REQUEST_OAUTH, this)
-                .build();
     }
 
 
@@ -94,7 +83,8 @@ public class HistoryFragment extends Fragment implements
         btn_ViewWeek.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new ViewWeekStepCountTask().execute();
+                //new ViewWeekStepCountTask().execute();
+                displayLastWeeksData();
             }
         });
 
@@ -102,7 +92,7 @@ public class HistoryFragment extends Fragment implements
         btn_ViewToday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new ViewTodaysStepCountTask().execute();
+                displayTodayData();
             }
         });
 
@@ -110,7 +100,7 @@ public class HistoryFragment extends Fragment implements
         btn_AddSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AddStepsToGoogleFitTask().execute();
+                insertAndDisplayToday();
             }
         });
 
@@ -118,7 +108,7 @@ public class HistoryFragment extends Fragment implements
         btn_UpdateSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new UpdateStepsOnGoogleFitTask().execute();
+                UpdateAndDisplayWeek();
             }
         });
 
@@ -126,13 +116,281 @@ public class HistoryFragment extends Fragment implements
         btn_DeleteSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               // new DeleteYesterdaysStepsTask().execute();  //this one uses an asynctask
-                DeleteYesterdaysStepsResultcallBack();  //this one uses a resultcallback() method.
+                deleteStepsYesterday();
             }
         });
 
+
+        // When permissions are revoked the app is restarted so onCreate is sufficient to check for
+        // permissions core to the Activity's functionality.
+
+        // insertAndVerifySessionWrapper();
+        //make sure we have permission to read and change the step data
+        //note, if you doing other things like run with location data, you will fine_access permissions too.
+        if (!hasOAuthPermission()) {
+            requestOAuthPermission();
+        }
         return myView;
     }
+
+
+    /*
+     * Checks if user's account has OAuth permission to Fitness API.
+     */
+    private boolean hasOAuthPermission() {
+        FitnessOptions fitnessOptions = getFitnessSignInOptions();
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions);
+    }
+
+    /**
+     * Launches the Google SignIn activity to request OAuth permission for the user.
+     */
+    private void requestOAuthPermission() {
+        FitnessOptions fitnessOptions = getFitnessSignInOptions();
+        GoogleSignIn.requestPermissions(
+            this,
+            REQUEST_OAUTH,
+            GoogleSignIn.getLastSignedInAccount(getContext()),
+            fitnessOptions);
+    }
+
+    /**
+     * Gets {@link FitnessOptions} in order to check or request OAuth permission for the user.
+     */
+    private FitnessOptions getFitnessSignInOptions() {
+        return FitnessOptions.builder()
+            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_WRITE)
+            .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_WRITE)
+            .build();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_OAUTH) {
+                displayLastWeeksData();
+            }
+        }
+    }
+
+    //This one is very simple, because it is only today information
+    // A note, that step count doesn't actually require authentication, so it can be easily used for wear
+    private Task<DataSet> displayTodayData() {
+        Log.i(TAG, "Reading History API results for today of Steps");
+        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener(new OnSuccessListener<DataSet>() {
+                @Override
+                public void onSuccess(DataSet dataSet) {
+                    Log.i(TAG, "Reading History API results for today");
+                    showDataSet(dataSet);
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.i(TAG, "Failed to read DailyTotal for Steps.");
+                }
+            });
+
+    }
+
+    /**
+     * Creates and executes a {@link SessionReadRequest} using {@link
+     * com.google.android.gms.fitness.SessionsClient} to verify the insertion succeeded .
+     */
+    private Task<DataReadResponse> displayLastWeeksData() {
+        // Begin by creating the query.
+
+        Log.i(TAG, "Reading History API results for last 7 days of Steps");
+        //First create the DataReadRequest data.
+        // Set a start and end time for our query, using a start time of 1 week before this moment.
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        //show the dates requested
+        java.text.DateFormat dateFormat = DateFormat.getDateInstance();
+        sendmessage("Range Start: " + dateFormat.format(startTime));
+        sendmessage("Range End: " + dateFormat.format(endTime));
+
+        //Check how many steps were walked and recorded in the last 7 days
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build();
+
+
+        // Now we can return the task object which will run.
+        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            //.readSession(readRequest)
+            .readData(readRequest)
+            .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                @Override
+                public void onSuccess(DataReadResponse dataReadResponse) {
+                    // Get a list of the sessions that match the criteria to check the result.
+                    //Used for aggregated data
+                    if (dataReadResponse.getBuckets().size() > 0) {
+                        sendmessage("Number of buckets: " + dataReadResponse.getBuckets().size());
+                        for (Bucket bucket : dataReadResponse.getBuckets()) {
+                            List<DataSet> dataSets = bucket.getDataSets();
+                            for (DataSet dataSet : dataSets) {
+                                showDataSet(dataSet);
+                            }
+                        }
+                    }
+                    //Used for non-aggregated data
+                    else if (dataReadResponse.getDataSets().size() > 0) {
+                        sendmessage("Number of returned DataSets: " + dataReadResponse.getDataSets().size());
+                        for (DataSet dataSet : dataReadResponse.getDataSets()) {
+                            showDataSet(dataSet);
+                        }
+                    }
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    sendmessage("Failed to read DataResponse.");
+                }
+            });
+
+    }
+
+
+    /**
+     * Inserts and verifies a session by chaining {@link Task} form {@link #insertSteps} and
+     * {@link #displayTodayData()}.
+     */
+    private void insertAndDisplayToday() {
+
+        insertSteps().continueWithTask(new Continuation<Void, Task<DataSet>>() {
+            @Override
+            public Task<DataSet> then(@NonNull Task<Void> task) throws Exception {
+                return displayTodayData();
+            }
+        });
+    }
+
+
+    /**
+     * Creates and executes a insert Data request for 10,000 steps for today.
+     */
+    private Task<Void> insertSteps() {
+        //First, create a new session and an insertion request.
+        //Adds steps spread out evenly from start time to end time
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.HOUR_OF_DAY, -1);
+        long startTime = cal.getTimeInMillis();
+
+        DataSource dataSource = new DataSource.Builder()
+            .setAppPackageName(getActivity())
+            .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .setName("Step Count")
+            .setType(DataSource.TYPE_RAW)
+            .build();
+
+        int stepCountDelta = 10000;  //we will add 10,000 steps for yesterday.
+        DataSet dataSet = DataSet.create(dataSource);
+
+        DataPoint point = dataSet.createDataPoint()
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
+        point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
+        dataSet.add(point);
+
+        // Now insert the new dataset view the client.
+        Log.i(TAG, "Inserting the session in the History API");
+        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .insertData(dataSet)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    // At this point, the session has been inserted and can be read.
+                    sendmessage("dataSet of 10000 steps inserted successfully!");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    sendmessage("There was a problem inserting the dataset: " +
+                        e.getLocalizedMessage());
+                }
+            });
+
+    }
+
+
+    /*
+    * This is a wrapper function to update yesterdays data and display this weeks data.
+    */
+    private void UpdateAndDisplayWeek() {
+
+        insertUpdateSteps().continueWithTask(new Continuation<Void, Task<DataReadResponse>>() {
+            @Override
+            public Task<DataReadResponse> then(@NonNull Task<Void> task) throws Exception {
+                return displayLastWeeksData();
+            }
+        });
+    }
+
+
+    /**
+     * Creates and executes a This will update the existing data and add the step count.
+     */
+    private Task<Void> insertUpdateSteps() {
+        //If two entries overlap, the new data is dropped when trying to insert. Instead, you need to use update
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.HOUR_OF_DAY, -1);
+        long startTime = cal.getTimeInMillis();
+
+        DataSource dataSource = new DataSource.Builder()
+            .setAppPackageName(getActivity())
+            .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .setName("Step Count")
+            .setType(DataSource.TYPE_RAW)
+            .build();
+
+        int stepCountDelta = 20000;  //add another 20K steps to the data already there.
+        DataSet dataSet = DataSet.create(dataSource);
+
+        DataPoint point = dataSet.createDataPoint()
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
+        point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
+        dataSet.add(point);
+
+        DataUpdateRequest updateRequest = new DataUpdateRequest.Builder().setDataSet(dataSet).setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS).build();
+
+        // Now insert the new dataset view the client.
+        Log.i(TAG, "Inserting the session in the History API");
+        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .updateData(updateRequest)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    // At this point, the session has been inserted and can be read.
+                    sendmessage("dataSet of 20000 steps updated for yesterday successfully!");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    sendmessage("There was a problem updating yesterdays dataset: " +
+                        e.getLocalizedMessage());
+                }
+            });
+
+    }
+
 
     public void logthis(String item) {
         Log.i(TAG, item);
@@ -151,51 +409,46 @@ public class HistoryFragment extends Fragment implements
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
+    /**
+     * Deletes a {@link DataSet} from the History API. In this example, we delete all step count data
+     * for the past 24 hours.
+     */
+    private void deleteStepsYesterday() {
+        Log.i(TAG, "Deleting today's session data for speed");
+
+        // Set a start and end time for our data, using a start time of 1 day before this moment.
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        // Create a delete request object, providing a data type and a time interval
+        DataDeleteRequest request = new DataDeleteRequest.Builder()
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .deleteAllSessions() // Or specify a particular session here
+            .build();
+
+        // Delete request using HistoryClient and specify listeners that will check the result.
+        Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+            .deleteData(request)
+            .addOnCompleteListener(
+                new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            sendmessage( "Successfully deleted today's step count data.");
+                        } else {
+                            sendmessage( "Failed to delete today's step count data." + task.getException());
+                        }
+                    }
+                });
+
+        displayLastWeeksData();
     }
 
-    @Override
-    public void onStop() {
-
-        mGoogleApiClient.disconnect();
-
-        super.onStop();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mGoogleApiClient.isConnected()) {
-
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mGoogleApiClient.isConnected()) {
-
-        }
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        logthis("OnConnected!");
-
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        logthis("OnConnectionSuspected");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        logthis("onConnectionFailed cause:" + connectionResult.toString());
-    }
 
     //A method to display the dataset data.  It's google method, but modified fo this example.
     private void showDataSet(DataSet dataSet) {
@@ -211,204 +464,8 @@ public class HistoryFragment extends Fragment implements
             sendmessage("\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for (Field field : dp.getDataType().getFields()) {
                 sendmessage("\tField: " + field.getName() +
-                        " Value: " + dp.getValue(field));
+                    " Value: " + dp.getValue(field));
             }
         }
-    }
-
-    //this method is called from many of the aysnctask below, so it is all here instead
-    //This method will list the step data for the last week
-    private void displayLastWeeksData() {
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.WEEK_OF_YEAR, -1);
-        long startTime = cal.getTimeInMillis();
-
-        //show the dates requested
-        java.text.DateFormat dateFormat = DateFormat.getDateInstance();
-        sendmessage("Range Start: " + dateFormat.format(startTime));
-        sendmessage("Range End: " + dateFormat.format(endTime));
-
-        //Check how many steps were walked and recorded in the last 7 days
-        DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .bucketByTime(1, TimeUnit.DAYS)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .build();
-        //now submit the request.
-        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
-
-        //Used for aggregated data
-        if (dataReadResult.getBuckets().size() > 0) {
-            sendmessage("Number of buckets: " + dataReadResult.getBuckets().size());
-            for (Bucket bucket : dataReadResult.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
-                for (DataSet dataSet : dataSets) {
-                    showDataSet(dataSet);
-                }
-            }
-        }
-        //Used for non-aggregated data
-        else if (dataReadResult.getDataSets().size() > 0) {
-            sendmessage("Number of returned DataSets: " + dataReadResult.getDataSets().size());
-            for (DataSet dataSet : dataReadResult.getDataSets()) {
-                showDataSet(dataSet);
-            }
-        }
-    }
-
-    //Asnyc Task to complete the choices
-
-
-    //
-    //This one is very simple, because it is only today information
-    // A note, that step count doesn't actually require authenication, so it can be easily used for wear
-    //  In use, call this every 30 seconds in active mode, 60 in ambient for watch faces
-    class ViewTodaysStepCountTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal(mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA).await(1, TimeUnit.MINUTES);
-            showDataSet(result.getTotal());
-            return null;
-        }
-    }
-
-    //show the step count for the last 7 days.
-    class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            displayLastWeeksData();
-            return null;
-        }
-    }
-
-    //add data into the fit system.
-    //Note, you can't over lapping data, it will be ignored, so use update if data already exists for this time period.
-    class AddStepsToGoogleFitTask extends AsyncTask<Void, String, Void> {
-        protected Void doInBackground(Void... params) {
-            //Adds steps spread out evenly from start time to end time
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.HOUR_OF_DAY, -1);
-            long startTime = cal.getTimeInMillis();
-
-            DataSource dataSource = new DataSource.Builder()
-                    .setAppPackageName(getActivity())
-                    .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                    .setName("Step Count")
-                    .setType(DataSource.TYPE_RAW)
-                    .build();
-
-            int stepCountDelta = 10000;  //we will add 10,000 steps for yesterday.
-            DataSet dataSet = DataSet.create(dataSource);
-
-            DataPoint point = dataSet.createDataPoint()
-                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
-            point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
-            dataSet.add(point);
-
-            com.google.android.gms.common.api.Status status = Fitness.HistoryApi.insertData(mGoogleApiClient, dataSet).await(1, TimeUnit.MINUTES);
-
-            if (!status.isSuccess()) {
-                publishProgress("Problem with inserting data: " + status.getStatusMessage());
-            } else {
-                publishProgress("data inserted");
-            }
-
-            displayLastWeeksData();
-            return null;
-        }
-
-        protected void onProgressUpdate(String... item) {
-            logthis(item[0]);
-        }
-    }
-
-    //This will update the existing data and add the step count.
-    class UpdateStepsOnGoogleFitTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            //If two entries overlap, the new data is dropped when trying to insert. Instead, you need to use update
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.HOUR_OF_DAY, -1);
-            long startTime = cal.getTimeInMillis();
-
-            DataSource dataSource = new DataSource.Builder()
-                    .setAppPackageName(getActivity())
-                    .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                    .setName("Step Count")
-                    .setType(DataSource.TYPE_RAW)
-                    .build();
-
-            int stepCountDelta = 20000;  //add another 20K steps to the data already there.
-            DataSet dataSet = DataSet.create(dataSource);
-
-            DataPoint point = dataSet.createDataPoint()
-                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
-            point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
-            dataSet.add(point);
-
-            DataUpdateRequest updateRequest = new DataUpdateRequest.Builder().setDataSet(dataSet).setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS).build();
-            Fitness.HistoryApi.updateData(mGoogleApiClient, updateRequest).await(1, TimeUnit.MINUTES);
-
-            displayLastWeeksData();
-            return null;
-        }
-    }
-
-    //simple function to delete data.  this case the step_count for today.
-    class DeleteYesterdaysStepsTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.DAY_OF_YEAR, -1);
-            long startTime = cal.getTimeInMillis();
-
-            DataDeleteRequest request = new DataDeleteRequest.Builder()
-                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                    .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                    .build();
-
-            Fitness.HistoryApi.deleteData(mGoogleApiClient, request).await(1, TimeUnit.MINUTES);
-
-            displayLastWeeksData();
-            return null;
-        }
-    }
-
-    //using a resultcallback, we don't need to use an ansyctask/thread.
-    //not the result is NOT on the main thread.
-    void DeleteYesterdaysStepsResultcallBack() {
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -1);
-        long startTime = cal.getTimeInMillis();
-
-        DataDeleteRequest request = new DataDeleteRequest.Builder()
-                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .build();
-        Fitness.HistoryApi.deleteData(mGoogleApiClient, request)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.isSuccess()) {
-                            sendmessage("Successfully deleted today's step count");
-                        } else {
-                            sendmessage("FAILED to delete today's step count");
-                        }
-                        //wait, we are on the UI thread!  doc's say we are not supported to be.
-                        new ViewWeekStepCountTask().execute();
-                        //displayLastWeeksData();
-                    }
-                });
     }
 }
