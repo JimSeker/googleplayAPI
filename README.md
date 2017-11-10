@@ -14,7 +14,7 @@ going.  The line changes color to show the different activities (ie walking, run
 
 <b>LocationAwareDemo</b> shows how to use the APIs to do location better then standard GPS demos.  plus will show the likely address of your location.
 
-<b>FitDemo</b> Currently demo's the Sensor APIs of Google Fit.  More is planned for this demo.  Note you will need a key to run this demo, see https://developers.google.com/fit/android/get-api-key#release-cert to create one you can use. 
+<b>FitDemo</b> Currently demo's the Sensor APIs of Google Fit. This is example is based on https://github.com/googlesamples/android-fit  Note you will need a key to run this demo, see https://developers.google.com/fit/android/get-api-key#release-cert to create one you can use. 
 
 <b>FaceTrackerDemo</b> uses the GooglePlay vision APIs to track see if the user has the eyes open and is smiling.  It uses text to speech to tell you if they are open/smiling or not.  See https://github.com/googlesamples/android-vision 
 
