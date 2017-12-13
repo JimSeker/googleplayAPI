@@ -1,0 +1,231 @@
+package edu.cs4730.nearbyconnectiondemo;
+
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import com.google.android.gms.nearby.Nearby;
+import com.google.android.gms.nearby.connection.AdvertisingOptions;
+import com.google.android.gms.nearby.connection.ConnectionInfo;
+import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
+import com.google.android.gms.nearby.connection.ConnectionResolution;
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
+import com.google.android.gms.nearby.connection.Payload;
+import com.google.android.gms.nearby.connection.PayloadCallback;
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+/**
+ * This is the advertise side of the Nearby API.  (server)
+ */
+public class AdvertiseFragment extends Fragment {
+
+
+    String TAG = "AdvertiseFragment";
+    String UserNickName = "AdvertiseNearbyDemo"; //idk what this should be.  doc's don't say.
+    TextView logger;
+    boolean mIsAdvertising = false;
+
+    String ConnectedEndPointId;
+
+
+    public AdvertiseFragment() {
+        // Required empty public constructor
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View myView = inflater.inflate(R.layout.fragment_advertise, container, false);
+        logger = myView.findViewById(R.id.ad_output);
+        myView.findViewById(R.id.start_advertise).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mIsAdvertising)
+                    stopAdvertising();  //already advertising, turn it off
+                else
+                    startAdvertising();
+            }
+        });
+        myView.findViewById(R.id.end_advertise).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ConnectedEndPointId.compareTo("") !=0 ) { //connected to someone
+                    Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
+                    ConnectedEndPointId = "";
+                }
+                if (mIsAdvertising) {
+                    stopAdvertising();
+                }
+            }
+        });
+        return myView;
+    }
+
+    /**
+     * Callbacks for connections to other devices.
+     */
+    private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
+        new ConnectionLifecycleCallback() {
+            @Override
+            public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+                logthis("Connection Initiated :" + endpointId + " Name is " + connectionInfo.getEndpointName());
+                // Automatically accept the connection on both sides.
+                Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
+                    new PayloadCallback() {
+                        @Override
+                        public void onPayloadReceived(String endpointId, Payload payload) {
+                            //input makes sense, get a stream like below.  how to send???
+                            //To send payloads to a connected endpoint, call sendPayload().  not from this method.  should work else where.
+                            /*Stream
+                            Stream payloads are suitable when you want to send large amounts of data that is generated on the fly,
+                            such as an audio stream. Create a STREAM Payload by calling Payload.fromStream(), passing in either an
+                            InputStream or a ParcelFileDescriptor. On the recipient, call payload.asStream().asInputStream()
+                            or payload.asStream().asParcelFileDescriptor().*/
+
+                            if (payload.getType() == Payload.Type.BYTES) {
+                                String stuff = new String(payload.asBytes());
+                                logthis("Received data is " + stuff);
+                                if (stuff.startsWith("Hi")) {
+                                    send("Good to meet you Discovery");
+                                } else {
+
+                                }
+                            } else if (payload.getType() == Payload.Type.FILE)
+                                logthis("We got a file.  not handled");
+                            else if (payload.getType() == Payload.Type.STREAM)
+                              //payload.asStream().asInputStream()
+                                logthis("We got a stream, not handled");
+                        }
+
+                        @Override
+                        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
+                            //if stream or file, we need to know when the transfer has finished.  ignoring this right now.
+                        }
+                    });
+            }
+
+            @Override
+            public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                logthis("Connection Initiated :" + endpointId + " result is " + result.toString());
+
+                switch (result.getStatus().getStatusCode()) {
+                    case ConnectionsStatusCodes.STATUS_OK:
+                        // We're connected! Can now start sending and receiving data.
+                         ConnectedEndPointId = endpointId;
+                        //if we don't then more can be added to conversation, when an List<string> of endpointIds to send to, instead a string.
+                        // ... .add(endpointId);
+                        send("Hi from Advertiser");
+                        break;
+                    case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                        // The connection was rejected by one or both sides.
+                        break;
+                    case ConnectionsStatusCodes.STATUS_ERROR:
+                        // The connection broke before it was able to be accepted.
+                        break;
+                }
+            }
+
+            @Override
+            public void onDisconnected(String endpointId) {
+                logthis("Connection disconnected :" + endpointId);
+                ConnectedEndPointId = "";  //need a remove if using a list.
+            }
+        };
+
+
+    private void startAdvertising() {
+
+        Nearby.getConnectionsClient(getContext())
+            .startAdvertising(
+                UserNickName,    //human readable name for the endpoint.
+                MainActivity.ServiceId,  //unique identifer for advertise endpoints
+                mConnectionLifecycleCallback,  //callback notified when remote endpoints request a connection to this endpoint.
+                new AdvertisingOptions(MainActivity.STRATEGY))
+            .addOnSuccessListener(
+                new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unusedResult) {
+                        mIsAdvertising = true;
+                        logthis("we're advertising!");
+                    }
+                })
+            .addOnFailureListener(
+                new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        mIsAdvertising = false;
+                        // We were unable to start advertising.
+                        logthis("we're failed to advertise");
+                        e.printStackTrace();
+                    }
+                });
+    }
+
+
+    /**
+     * Sends a {@link Payload} to all currently connected endpoints.
+     *
+     */
+    protected void send(String data) {
+
+        //basic error checking
+        if (ConnectedEndPointId.compareTo("") == 0)   //empty string, no connection
+            return;
+
+        Payload payload = Payload.fromBytes(data.getBytes());
+
+        // sendPayload (List<String> endpointIds, Payload payload)  if more then one connection allowed.
+        Nearby.getConnectionsClient(getContext()).
+            sendPayload(ConnectedEndPointId,  //end point to end to
+                payload)   //the actual payload of data to send.
+            .addOnSuccessListener(new OnSuccessListener<Void>() {  //don't know if need this one.
+                @Override
+                public void onSuccess(Void aVoid) {
+                    logthis("Message send successfully.");
+                }
+            })
+            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    logthis("Message send completed.");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    logthis("Message send failed.");
+                    e.printStackTrace();
+                }
+            });
+    }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        stopAdvertising();
+    }
+
+    public void stopAdvertising() {
+        mIsAdvertising = false;
+        Nearby.getConnectionsClient(getContext()).stopAdvertising();
+    }
+
+
+    public void logthis(String msg) {
+        logger.append(msg + "\n");
+        Log.d(TAG, msg);
+    }
+
+}
