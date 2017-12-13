@@ -25,12 +25,13 @@ See https://github.com/googlesamples/android-vision
 
 <b>BarocdeReader</b> use the googlePlay vision APIs to find a barcode and ask if you want to search Amazon or open the web page.  This a very simple example.  
 
-<b>ocr-reader</b> is google's example code from https://github.com/googlesamples/android-vision uses the OCR pieces of the vision APIs.
+<b>ocr-reader</b> is Google's example code from https://github.com/googlesamples/android-vision uses the OCR pieces of the vision APIs.
 
 <b>adMobDemo</b> is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/releases for more examples.
 
 <b>FirebaseMessageDemo</b> is a start at an example for Cloud Messaging.  It works pretty well.  The webcode needed is in the php directory of the project, you will need a webserver to get this project running.
 
+<b>NearbyConnectionDemo</b> is simple example of using the Nearby Connection APIs.  It connects up between 2 devices and sends two messages.  It's still a little rough and needs much better comments.
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.
