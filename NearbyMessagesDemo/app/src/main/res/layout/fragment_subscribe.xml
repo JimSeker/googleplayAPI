@@ -1,0 +1,34 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="edu.cs4730.nearbymessagesdemo.SubscribeFragment">
+
+
+    <Button
+        android:id="@+id/fg_subscribe"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Forground Subscribe/unsubsribe."/>
+
+    <Button
+        android:id="@+id/bg_subscribe"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="background Subscribe/unsubscribe"/>
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/sub_output"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="Output:\n"
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
+    </android.support.v4.widget.NestedScrollView>
+
+</LinearLayout>
