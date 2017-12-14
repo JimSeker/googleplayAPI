@@ -33,6 +33,9 @@ See https://github.com/googlesamples/android-vision
 
 <b>NearbyConnectionDemo</b> is simple example of using the Nearby Connection APIs.  It connects up between 2 devices and sends two messages.  It's still a little rough and needs much better comments.
 
+<b>NearbyMessageDemo</b> is an example of using the Nearby (BLE) messages APIs.  It is setup in two fragments, one that subscribes (reads) BLE messages which should be good for just about messages, including beacons.  
+It will do background and foreground message reading.  The second fragment setups a simple publish message.  Best used on two phones/devices.  one publishes and the other subscribes.
+
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.
 
