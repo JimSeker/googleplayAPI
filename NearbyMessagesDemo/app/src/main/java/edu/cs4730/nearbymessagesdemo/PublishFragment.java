@@ -69,7 +69,7 @@ public class PublishFragment extends Fragment {
                     mActiveMessage = null;
                 }
             }).build();
-
+                //note this must be an activity, not context.
         Nearby.getMessagesClient(getActivity()).publish(mActiveMessage,options)
             .addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -93,6 +93,7 @@ public class PublishFragment extends Fragment {
     private void unpublish() {
         logthis("Unpublishing.");
         if (mActiveMessage != null) {
+            //note this must be an activity, not context.
             Nearby.getMessagesClient(getActivity()).unpublish(mActiveMessage);
             mActiveMessage = null;
             mIsPublish = false;
@@ -125,6 +126,7 @@ public class PublishFragment extends Fragment {
         return myView;
     }
 
+    //helper function to log and added to textview.
     public void logthis(String msg) {
         logger.append(msg + "\n");
         Log.d(TAG, msg);
