@@ -123,7 +123,8 @@ public class DiscoveryFragment extends Fragment {
     /** Stops discovery. */
     protected void stopDiscovering() {
         mIsDiscovering = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising();
+        Nearby.getConnectionsClient(getContext()).stopDiscovery();
+        logthis("Discovery Stopped.");
     }
 
 

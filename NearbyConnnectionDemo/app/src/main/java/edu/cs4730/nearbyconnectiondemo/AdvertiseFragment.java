@@ -180,6 +180,7 @@ public class AdvertiseFragment extends Fragment {
     public void stopAdvertising() {
         mIsAdvertising = false;
         Nearby.getConnectionsClient(getContext()).stopAdvertising() ;
+        logthis("Advertising stopped.");
     }
 
 
