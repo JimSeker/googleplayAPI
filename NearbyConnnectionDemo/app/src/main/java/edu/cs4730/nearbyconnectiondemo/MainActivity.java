@@ -12,9 +12,6 @@ import com.google.android.gms.nearby.connection.Strategy;
  *
  * https://developers.google.com/nearby/connections/overview
  *
- *  This example could be refactored into a class of nearby and then fragments declare and use it.
- *    Would clean up the example and great deal.
- *
  */
 
 public class MainActivity extends AppCompatActivity implements HelpFragment.OnFragmentInteractionListener {
@@ -25,7 +22,8 @@ public class MainActivity extends AppCompatActivity implements HelpFragment.OnFr
 
     /**
      * The connection strategy we'll use for Nearby Connections. In this case, we've decided on
-     * P2P_STAR, which is a combination of Bluetooth Classic and WiFi Hotspots.
+     * P2P_STAR, which is a combination of Bluetooth Classic and WiFi Hotspots.  this is 1 to many, so 1 advertise and many discovery.
+     * NOTE: in tests, the discovery changed the wifi to a hotspot on most occasions.  on disconnect, it changed back.
      */
     public static final Strategy STRATEGY = Strategy.P2P_STAR;
     //public static final Strategy STRATEGY = Strategy.P2P_CLUSTER;

@@ -43,7 +43,7 @@ public class AdvertiseFragment extends Fragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myView = inflater.inflate(R.layout.fragment_advertise, container, false);
@@ -60,7 +60,7 @@ public class AdvertiseFragment extends Fragment {
         myView.findViewById(R.id.end_advertise).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ConnectedEndPointId.compareTo("") !=0 ) { //connected to someone
+                if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
                     Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
                     ConnectedEndPointId = "";
                 }
@@ -73,7 +73,10 @@ public class AdvertiseFragment extends Fragment {
     }
 
     /**
-     * Callbacks for connections to other devices.
+     * Callbacks for connections to other devices.  These call backs are used when a connection is initiated
+     * and connection, and disconnect.
+     * <p>
+     * we auto accept any connection.  We with another callback that allows us to read the data.
      */
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
         new ConnectionLifecycleCallback() {
@@ -81,30 +84,22 @@ public class AdvertiseFragment extends Fragment {
             public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                 logthis("Connection Initiated :" + endpointId + " Name is " + connectionInfo.getEndpointName());
                 // Automatically accept the connection on both sides.
+                // setups the callbacks to read data from the other connection.
                 Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
                         public void onPayloadReceived(String endpointId, Payload payload) {
-                            //input makes sense, get a stream like below.  how to send???
-                            //To send payloads to a connected endpoint, call sendPayload().  not from this method.  should work else where.
-                            /*Stream
-                            Stream payloads are suitable when you want to send large amounts of data that is generated on the fly,
-                            such as an audio stream. Create a STREAM Payload by calling Payload.fromStream(), passing in either an
-                            InputStream or a ParcelFileDescriptor. On the recipient, call payload.asStream().asInputStream()
-                            or payload.asStream().asParcelFileDescriptor().*/
 
                             if (payload.getType() == Payload.Type.BYTES) {
                                 String stuff = new String(payload.asBytes());
                                 logthis("Received data is " + stuff);
                                 if (stuff.startsWith("Hi")) {
                                     send("Good to meet you Discovery");
-                                } else {
-
                                 }
                             } else if (payload.getType() == Payload.Type.FILE)
                                 logthis("We got a file.  not handled");
                             else if (payload.getType() == Payload.Type.STREAM)
-                              //payload.asStream().asInputStream()
+                                //payload.asStream().asInputStream()
                                 logthis("We got a stream, not handled");
                         }
 
@@ -117,20 +112,24 @@ public class AdvertiseFragment extends Fragment {
 
             @Override
             public void onConnectionResult(String endpointId, ConnectionResolution result) {
-                logthis("Connection Initiated :" + endpointId + " result is " + result.toString());
+                logthis("Connection accept :" + endpointId + " result is " + result.toString());
 
                 switch (result.getStatus().getStatusCode()) {
                     case ConnectionsStatusCodes.STATUS_OK:
                         // We're connected! Can now start sending and receiving data.
-                         ConnectedEndPointId = endpointId;
+                        ConnectedEndPointId = endpointId;
                         //if we don't then more can be added to conversation, when an List<string> of endpointIds to send to, instead a string.
                         // ... .add(endpointId);
+                        stopAdvertising();  //and comment this out to allow more then one connection.
+                        logthis("Status ok, sending Hi message");
                         send("Hi from Advertiser");
                         break;
                     case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                        logthis("Status rejected.  :(");
                         // The connection was rejected by one or both sides.
                         break;
                     case ConnectionsStatusCodes.STATUS_ERROR:
+                        logthis("Status error.");
                         // The connection broke before it was able to be accepted.
                         break;
                 }
@@ -143,13 +142,16 @@ public class AdvertiseFragment extends Fragment {
             }
         };
 
-
+    /**
+     *  Start advertising the nearby.  It sets the callback from above with what to once we get a connection
+     *  request.
+     */
     private void startAdvertising() {
 
         Nearby.getConnectionsClient(getContext())
             .startAdvertising(
                 UserNickName,    //human readable name for the endpoint.
-                MainActivity.ServiceId,  //unique identifer for advertise endpoints
+                MainActivity.ServiceId,  //unique identifier for advertise endpoints
                 mConnectionLifecycleCallback,  //callback notified when remote endpoints request a connection to this endpoint.
                 new AdvertisingOptions(MainActivity.STRATEGY))
             .addOnSuccessListener(
@@ -172,10 +174,17 @@ public class AdvertiseFragment extends Fragment {
                 });
     }
 
+    /**
+     * turn off advertising.  Note, you can not add success and failure listeners.
+     */
+    public void stopAdvertising() {
+        mIsAdvertising = false;
+        Nearby.getConnectionsClient(getContext()).stopAdvertising() ;
+    }
+
 
     /**
      * Sends a {@link Payload} to all currently connected endpoints.
-     *
      */
     protected void send(String data) {
 
@@ -217,12 +226,9 @@ public class AdvertiseFragment extends Fragment {
         stopAdvertising();
     }
 
-    public void stopAdvertising() {
-        mIsAdvertising = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising();
-    }
-
-
+    /**
+     * helper function to log and add to a textview.
+     */
     public void logthis(String msg) {
         logger.append(msg + "\n");
         Log.d(TAG, msg);

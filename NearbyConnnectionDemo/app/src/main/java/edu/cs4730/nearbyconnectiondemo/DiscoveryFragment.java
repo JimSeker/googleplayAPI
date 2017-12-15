@@ -26,7 +26,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 /**
- * A simple {@link Fragment} subclass.
+ * this is the Discovery side of the Nearby API.  (client)
+ * This is the side likely to change the wifi to connect to advertise device.
+ *
+ * Note, this code assumes one advertiser and that discovery connects to it.  There maybe many discovery connections to a single advertiser.
+ * If uses P2P_CLUSTER and they can many advertisers, then it will ned change ConnectedEndPointID to a list
+ * and comment out the stopDiscovery in the connection made section.
  */
 public class DiscoveryFragment extends Fragment {
     String TAG = "DiscoveryFragment";
@@ -42,7 +47,7 @@ public class DiscoveryFragment extends Fragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myView = inflater.inflate(R.layout.fragment_discovery, container, false);
@@ -72,7 +77,7 @@ public class DiscoveryFragment extends Fragment {
     }
 
     /**
-     * Sets the device to discovery mode.
+     * Sets the device to discovery mode.  Once an endpoint is found, it will initiate a connection.
      */
     protected void startDiscovering() {
         Nearby.getConnectionsClient(getContext()).
@@ -82,7 +87,9 @@ public class DiscoveryFragment extends Fragment {
                 new EndpointDiscoveryCallback() {  //callback when we discovery that endpoint.
                     @Override
                     public void onEndpointFound(String endpointId, DiscoveredEndpointInfo info) {
+                        //we found an end point.
                         logthis("We found an endpoint " + endpointId + " name is " + info.getEndpointName());
+                        //now make a initiate a connection to it.
                         makeConnection(endpointId);
                     }
 
@@ -113,7 +120,14 @@ public class DiscoveryFragment extends Fragment {
 
     }
 
-    //the connection callback, both discovery and advertise use the same one.
+    /** Stops discovery. */
+    protected void stopDiscovering() {
+        mIsDiscovering = false;
+        Nearby.getConnectionsClient(getContext()).stopAdvertising();
+    }
+
+
+    //the connection callback, both discovery and advertise use the same callback.
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
         new ConnectionLifecycleCallback() {
 
@@ -121,17 +135,11 @@ public class DiscoveryFragment extends Fragment {
             public void onConnectionInitiated(
                 String endpointId, ConnectionInfo connectionInfo) {
                 // Automatically accept the connection on both sides.
+                // setups the callbacks to read data from the other connection.
                 Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
                         public void onPayloadReceived(String endpointId, Payload payload) {
-                            //input makes sense, get a stream like below.  how to send???
-                            //To send payloads to a connected endpoint, call sendPayload().  not from this method.  should work else where.
-                            /*Stream
-                            Stream payloads are suitable when you want to send large amounts of data that is generated on the fly,
-                            such as an audio stream. Create a STREAM Payload by calling Payload.fromStream(), passing in either an
-                            InputStream or a ParcelFileDescriptor. On the recipient, call payload.asStream().asInputStream()
-                            or payload.asStream().asParcelFileDescriptor().*/
 
                             if (payload.getType() == Payload.Type.BYTES) {
                                 String stuff = new String(payload.asBytes());
@@ -158,13 +166,17 @@ public class DiscoveryFragment extends Fragment {
                 switch (result.getStatus().getStatusCode()) {
                     case ConnectionsStatusCodes.STATUS_OK:
                         // We're connected! Can now start sending and receiving data.
+                        stopDiscovering();
                         ConnectedEndPointId = endpointId;
+                        logthis("Status ok, sending Hi message");
                         send("Hi from Discovery");
                         break;
                     case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                        logthis("Status rejected.  :(");
                         // The connection was rejected by one or both sides.
                         break;
                     case ConnectionsStatusCodes.STATUS_ERROR:
+                        logthis("Status error.");
                         // The connection broke before it was able to be accepted.
                         break;
                 }
@@ -174,11 +186,16 @@ public class DiscoveryFragment extends Fragment {
             public void onDisconnected(String endpointId) {
                 // We've been disconnected from this endpoint. No more data can be
                 // sent or received.
+                logthis("Connection disconnected :" + endpointId);
                 ConnectedEndPointId = "";
             }
         };
 
 
+    /**
+     * Simple helper function to initiate a connect to the end point
+     * it uses the callback setup above this function.
+     */
 
     public void makeConnection(String endpointId) {
         Nearby.getConnectionsClient(getContext())
@@ -190,6 +207,7 @@ public class DiscoveryFragment extends Fragment {
                 new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unusedResult) {
+                        logthis("Successfully requested a connection");
                         // We successfully requested a connection. Now both sides
                         // must accept before the connection is established.
                     }
@@ -199,6 +217,8 @@ public class DiscoveryFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         // Nearby Connections failed to request the connection.
+                        logthis("failed requested a connection");
+                        e.printStackTrace();
                     }
                 });
 
@@ -248,13 +268,10 @@ public class DiscoveryFragment extends Fragment {
         stopDiscovering();
     }
 
-    /** Stops discovery. */
-    protected void stopDiscovering() {
-        mIsDiscovering = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising();
-    }
 
-
+    /**
+     * helper function to log and add to a textview.
+     */
     public void logthis(String msg) {
         logger.append(msg + "\n");
         Log.d(TAG, msg);

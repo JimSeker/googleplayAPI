@@ -19,8 +19,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 
 /**
- * this is a simple helper screen.  it will check on the course location permission and bluetooth as well.
- * and has two buttons to launch the advertise or discover fragment.
+ * this is a simple helper screen and has two buttons to launch the advertise or discover fragment.
+ * it will check on the course location permission and bluetooth as well.  The bluetooth code is not necessary,
+ * since nearby will turn ik on.
  */
 public class HelpFragment extends Fragment {
     String TAG = "HelpFragment";
@@ -39,7 +40,7 @@ public class HelpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView =  inflater.inflate(R.layout.fragment_help, container, false);
+        View myView = inflater.inflate(R.layout.fragment_help, container, false);
         logger = myView.findViewById(R.id.logger1);
 
 
@@ -58,7 +59,7 @@ public class HelpFragment extends Fragment {
             }
         });
 
-       // startbt();  //we don't need to turn on bluetooth, nearby will do it for us.
+        // startbt();  //we don't need to turn on bluetooth, nearby will do it for us.
         return myView;
     }
 
@@ -111,7 +112,7 @@ public class HelpFragment extends Fragment {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                 MainActivity.REQUEST_ACCESS_COURSE_LOCATION);
             logthis("We don't have permission to course location");
-        }  else {
+        } else {
             logthis("We have permission to course location");
         }
     }
