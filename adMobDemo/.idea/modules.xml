@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/adMobDemo.iml" filepath="$PROJECT_DIR$/adMobDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\seker\git\googleplayAPI\adMobDemo\app\app.iml" filepath="C:\Users\seker\git\googleplayAPI\adMobDemo\app\app.iml" />
     </modules>
   </component>
 </project>
