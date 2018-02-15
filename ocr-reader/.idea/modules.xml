@@ -3,9 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\seker\git\googleplayAPI\ocr-reader\app\app.iml" filepath="C:\Users\seker\git\googleplayAPI\ocr-reader\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/ocr-reader.iml" filepath="$PROJECT_DIR$/ocr-reader.iml" />
-      <module fileurl="file://C:\Users\seker\git\googleplayAPI\ocr-reader\ocr-reader.iml" filepath="C:\Users\seker\git\googleplayAPI\ocr-reader\ocr-reader.iml" />
     </modules>
   </component>
 </project>
