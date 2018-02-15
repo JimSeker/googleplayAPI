@@ -19,4 +19,14 @@
         android:id="@+id/button1"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
+
+     <Button
+         android:id="@+id/button2"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_alignParentLeft="true"
+         android:layout_alignParentStart="true"
+         android:layout_below="@+id/button1"
+         android:layout_marginTop="16dp"
+         android:text="Google Sign With Google Drive Demo"/>
 </RelativeLayout>
