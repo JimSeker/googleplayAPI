@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "edu.cs4730.facetrackermultidemo"
@@ -20,7 +19,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.android.gms:play-services-vision:11.8.0'
-    compile 'com.android.support:appcompat-v7:27.0.2'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.android.gms:play-services-vision:15.0.0'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    //not needed, but removes a issue with appcompat versions.
+    implementation 'com.android.support:support-v4:27.1.1'
 }
