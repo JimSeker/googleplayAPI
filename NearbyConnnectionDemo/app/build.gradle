@@ -20,6 +20,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.0.2'
-    implementation 'com.google.android.gms:play-services-nearby:11.8.0'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.google.android.gms:play-services-nearby:15.0.0'
+    //not needed, but remove a issue with appcompat versions.
+    implementation 'com.android.support:support-v4:27.1.1'
 }

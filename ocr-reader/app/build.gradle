@@ -20,8 +20,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-	compile 'com.android.support:support-v4:27.0.2'
-    compile 'com.google.android.gms:play-services-vision:11.8.0'
-    compile 'com.android.support:design:27.0.2'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.google.android.gms:play-services-vision:15.0.0'
+    implementation 'com.android.support:design:27.1.1'
 }

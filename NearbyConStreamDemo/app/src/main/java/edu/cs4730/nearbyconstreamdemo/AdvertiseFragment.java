@@ -290,7 +290,6 @@ public class AdvertiseFragment extends Fragment {
         myThread.start();
 
 
-
     }
 
     class sendPics implements Runnable {
