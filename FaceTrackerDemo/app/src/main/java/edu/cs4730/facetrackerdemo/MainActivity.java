@@ -92,10 +92,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
                 .build();
 
-        if (detector.isOperational()) {
-            Log.wtf(TAG, "Detector dependencies are not yet available.\n It will download soon");
-        }
-
         detector.setProcessor(
                 new LargestFaceFocusingProcessor(detector, new FaceTracker()));
 
