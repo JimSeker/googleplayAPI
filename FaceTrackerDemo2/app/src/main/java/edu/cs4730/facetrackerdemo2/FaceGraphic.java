@@ -14,9 +14,7 @@ import com.google.android.gms.vision.face.Landmark;
 import java.util.List;
 
 /**
- *
  * it will draw the eyes and mouth based on smiling and eye open.
- *
  */
 class FaceGraphic extends GraphicOverlay.Graphic {
 
@@ -88,8 +86,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
 //        Log.v(TAG, "Right eye is " + face.getIsRightEyeOpenProbability());
 //        Log.v(TAG, "simle is " + face.getIsSmilingProbability());
         sendmessage("Smile: " + face.getIsSmilingProbability() +
-                " Left: " + face.getIsLeftEyeOpenProbability() +
-                " Right:" + face.getIsRightEyeOpenProbability());
+            " Left: " + face.getIsLeftEyeOpenProbability() +
+            " Right:" + face.getIsRightEyeOpenProbability());
         // Draws a circle at the position of the detected face, with the face's track id below.
 
         int xl = 10;  //how big the x is.

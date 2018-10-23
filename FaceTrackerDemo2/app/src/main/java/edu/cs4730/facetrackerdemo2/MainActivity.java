@@ -5,11 +5,12 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.SurfaceView;
 import android.widget.TextView;
 
 import com.google.android.gms.vision.CameraSource;
@@ -21,7 +22,7 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
 
-/*
+/**
   * This example uses the face tracker (only one face though), so show if the eyes are open and
   * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
   * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mLogger = (TextView) findViewById(R.id.mylogger);
+        mLogger = findViewById(R.id.mylogger);
         //message handler for textivew.
         handler = new Handler(new Handler.Callback() {
             @Override
@@ -56,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mPreview = (CameraSourcePreview) findViewById(R.id.CameraView);
-        mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+        mPreview =  findViewById(R.id.CameraView);
+        mGraphicOverlay = findViewById(R.id.faceOverlay);
 
         createCameraSource();
 
@@ -70,9 +71,6 @@ public class MainActivity extends AppCompatActivity {
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
                 .build();
 
-        if (detector.isOperational()) {
-            Log.wtf(TAG, "Detector dependencies are not yet available.\n It will download soon");
-        }
         detector.setProcessor(
                 //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
                 new LargestFaceFocusingProcessor(detector, new GraphicFaceTracker(mGraphicOverlay)));
@@ -144,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
      * @see #requestPermissions(String[], int)
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
             // we have permission, so create the camerasource
