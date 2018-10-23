@@ -70,7 +70,9 @@ public class MainActivity extends AppCompatActivity {
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
                 .build();
 
-
+        if (detector.isOperational()) {
+            Log.wtf(TAG, "Detector dependencies are not yet available.\n It will download soon");
+        }
         detector.setProcessor(
                 //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
                 new LargestFaceFocusingProcessor(detector, new GraphicFaceTracker(mGraphicOverlay)));

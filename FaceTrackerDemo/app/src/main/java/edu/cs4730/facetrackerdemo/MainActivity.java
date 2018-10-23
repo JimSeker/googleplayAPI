@@ -86,10 +86,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public void createCameraSource() {
         //Setup the FaceDetector
         Context context = getApplicationContext();
+
         FaceDetector detector = new FaceDetector.Builder(context)
                 .setProminentFaceOnly(true)   //track only one face... makes it faster.
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
                 .build();
+
+        if (detector.isOperational()) {
+            Log.wtf(TAG, "Detector dependencies are not yet available.\n It will download soon");
+        }
 
         detector.setProcessor(
                 new LargestFaceFocusingProcessor(detector, new FaceTracker()));
