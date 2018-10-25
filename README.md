@@ -38,6 +38,7 @@ It will do background and foreground message reading.  The second fragment setup
 
 <b>NearbyConStreamDemo</b> is an example of file passing to create a 4 fps video "stream" from one device to the other device.  It takes pictures and sends them.  
 
+<b>Mapdemov2</b>  is a demo of how to use the maps V2.  There are three fragments first two show different types of maps.  third, how to draw on the maps.
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.

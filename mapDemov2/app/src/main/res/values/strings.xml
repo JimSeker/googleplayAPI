@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">mapDemov2</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="navigation_item_3">Drawn on Map</string>
+    <string name="navigation_item_2">Compass Map</string>
+    <string name="navigation_item_1">Basic Map</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Open</string>
+
+</resources>
