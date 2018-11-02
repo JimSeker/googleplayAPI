@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FbDatabaseAuthDemo</string>
+    <string name="title_activity_simple">SimpleActivity</string>
+    <string name="title_activity_list">ListActivity</string>
+</resources>

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "814389915783",
+    "firebase_url": "https://fbdatabaseauthdemo.firebaseio.com",
+    "project_id": "fbdatabaseauthdemo",
+    "storage_bucket": "fbdatabaseauthdemo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814389915783:android:6db8f3bc6f804515",
+        "android_client_info": {
+          "package_name": "edu.cs4730.fbdatabaseauthdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "814389915783-h2bcec7f6b9svgu0tuq21pq34ikjh4gh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.cs4730.fbdatabaseauthdemo",
+            "certificate_hash": "959c3e0026d20f7084b274d9851189a8c2e53d9b"
+          }
+        },
+        {
+          "client_id": "814389915783-f25m5qku1ju61sot1e6krounuvmn215c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgFj6pdAXG_e4P9gPYDz6FZVQJSA2i4oM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "814389915783-f25m5qku1ju61sot1e6krounuvmn215c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".SimpleActivity">
+
+
+    <Button
+        android:id="@+id/add_simple"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add simple data"/>
+    <Button
+        android:id="@+id/add_object"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add object data"/>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/logger"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Logger:\n"/>
+
+    </ScrollView>
+</LinearLayout>
