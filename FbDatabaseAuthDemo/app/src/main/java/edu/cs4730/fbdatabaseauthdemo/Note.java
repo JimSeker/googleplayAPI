@@ -1,5 +1,12 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@IgnoreExtraProperties
 public class Note {
 
     private String title;
@@ -39,4 +46,15 @@ public class Note {
     public void setNote(String note) {
         this.note = note;
     }
+
+    @Exclude
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("note", note);
+        result.put("title", title);
+
+        return result;
+    }
+
+
 }

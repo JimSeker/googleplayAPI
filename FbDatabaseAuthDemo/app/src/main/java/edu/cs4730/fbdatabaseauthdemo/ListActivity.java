@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,6 +30,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ListActivity extends AppCompatActivity {
 
@@ -50,13 +54,13 @@ public class ListActivity extends AppCompatActivity {
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView tv_title;
         TextView tv_note;
-
+        View myitemView;
 
         public MessageViewHolder(View v) {
             super(v);
             tv_title = itemView.findViewById(R.id.title);
             tv_note = itemView.findViewById(R.id.note);
-
+            myitemView = itemView;
         }
     }
 
@@ -119,8 +123,14 @@ public class ListActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(final MessageViewHolder viewHolder, int position, Note note) {
                 viewHolder.tv_title.setText(note.getTitle());
+                viewHolder.tv_title.setTag(note);  //since it's small.  larger, just use the id, which is the key.
                 viewHolder.tv_note.setText(note.getNote());
-
+                viewHolder.myitemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        addDialog((Note) viewHolder.tv_title.getTag());
+                    }
+                });
             }
         };
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -140,6 +150,32 @@ public class ListActivity extends AppCompatActivity {
 
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
+
+        //setup left/right swipes on the cardviews
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                //likely allows to for animations?  or moving items in the view I think.
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                //called when it has been animated off the screen.  So item is no longer showing.
+                //use ItemtouchHelper.X to find the correct one.
+                if (direction == ItemTouchHelper.RIGHT) {
+                    //Toast.makeText(getBaseContext(),"Right?", Toast.LENGTH_SHORT).show();
+                   Note mynote = (Note) ((MessageViewHolder) viewHolder).tv_title.getTag();
+                    //  this is the delete.
+                    //mFirebaseDatabaseReference.child("messages").child(mynote.getId()).removeValue();
+                    myChildRef.child(mynote.getId()).removeValue();
+                }
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+
+
     }
 
 
@@ -157,6 +193,45 @@ public class ListActivity extends AppCompatActivity {
         mFirebaseAdapter.startListening();
     }
 
+
+    void addDialog(final Note note) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
+        final EditText et_note =  textenter.findViewById(R.id.et_note);
+        et_note.setText(note.getNote());
+        final EditText et_title =  textenter.findViewById(R.id.et_title);
+        et_title.setText(note.getTitle());
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.Theme_AppCompat));
+        builder.setView(textenter).setTitle("Add");
+        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+
+                logthis("update title is " + et_title.getText().toString());
+                logthis("update note is " + et_note.getText().toString());
+                //myChildRef.push().setValue(new Note(et_title.getText().toString(), et_note.getText().toString()));
+                Note mynote = new Note(et_title.getText().toString(),  et_note.getText().toString());
+
+               // mFirebaseDatabaseReference.child("messages").child(note.getId()).setValue(mynote);
+                //OR since it's partially there already, use myChildRef
+                myChildRef.child(note.getId()).setValue(mynote);
+                //Toast.makeText(getBaseContext(), userinput.getText().toString(), Toast.LENGTH_LONG).show();
+
+            }
+        })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    logthis("dialog canceled");
+                    dialog.cancel();
+
+                }
+            });
+        //you can create the dialog or just use the now method in the builder.
+        //AlertDialog dialog = builder.create();
+        //dialog.show();
+        builder.show();
+    }
 
     void showDialog(String title) {
         LayoutInflater inflater = LayoutInflater.from(this);
