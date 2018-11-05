@@ -76,8 +76,6 @@ public class ListActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            //    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-            //        .setAction("Action", null).show();
                 showDialog("Add");
             }
         });
@@ -89,10 +87,11 @@ public class ListActivity extends AppCompatActivity {
 
         mRecyclerView = findViewById(R.id.list);
         mLinearLayoutManager = new LinearLayoutManager(this);
-        mLinearLayoutManager.setStackFromEnd(true);
+        // mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
+        //Following android doc and example.  It was not commented and I'm not sure what is going on here.
         SnapshotParser<Note> parser = new SnapshotParser<Note>() {
             @Override
             public Note parseSnapshot(DataSnapshot dataSnapshot) {
@@ -106,12 +105,16 @@ public class ListActivity extends AppCompatActivity {
 
         myChildRef = mFirebaseDatabaseReference.child("messages");
 
+
+        //Following android doc and example.  It was not commented and I'm not sure what is going on here.
         FirebaseRecyclerOptions<Note> options =
             new FirebaseRecyclerOptions.Builder<Note>()
                 .setQuery(myChildRef, parser)
                 .build();
 
-
+        /**
+         *  This is the adapter for the recyclerview.  but it's the firebase recycler adapter.
+         */
         mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, MessageViewHolder>(options) {
 
             @Override
@@ -128,11 +131,13 @@ public class ListActivity extends AppCompatActivity {
                 viewHolder.myitemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        addDialog((Note) viewHolder.tv_title.getTag());
+                        updateDialog((Note) viewHolder.tv_title.getTag());
                     }
                 });
             }
         };
+        //This must be the spot that gets the updates from the realtime database.
+        //Again, I'm not really sure what is going on here.
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
@@ -151,7 +156,7 @@ public class ListActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
 
-        //setup left/right swipes on the cardviews
+        //setup left/right swipes on the cardviews so I can delete data.
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -164,20 +169,17 @@ public class ListActivity extends AppCompatActivity {
                 //called when it has been animated off the screen.  So item is no longer showing.
                 //use ItemtouchHelper.X to find the correct one.
                 if (direction == ItemTouchHelper.RIGHT) {
-                    //Toast.makeText(getBaseContext(),"Right?", Toast.LENGTH_SHORT).show();
-                   Note mynote = (Note) ((MessageViewHolder) viewHolder).tv_title.getTag();
+                    Note mynote = (Note) ((MessageViewHolder) viewHolder).tv_title.getTag();
                     //  this is the delete.
                     //mFirebaseDatabaseReference.child("messages").child(mynote.getId()).removeValue();
+                    //or use this, since it already declared.
                     myChildRef.child(mynote.getId()).removeValue();
                 }
             }
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
         itemTouchHelper.attachToRecyclerView(mRecyclerView);
-
-
     }
-
 
 
     @Override
@@ -193,15 +195,17 @@ public class ListActivity extends AppCompatActivity {
         mFirebaseAdapter.startListening();
     }
 
-
-    void addDialog(final Note note) {
+    /**
+     * This creates a dialog to update the note.  It is passed to this method.
+     */
+    void updateDialog(final Note note) {
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
-        final EditText et_note =  textenter.findViewById(R.id.et_note);
+        final EditText et_note = textenter.findViewById(R.id.et_note);
         et_note.setText(note.getNote());
-        final EditText et_title =  textenter.findViewById(R.id.et_title);
+        final EditText et_title = textenter.findViewById(R.id.et_title);
         et_title.setText(note.getTitle());
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.Theme_AppCompat));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(textenter).setTitle("Add");
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
 
@@ -211,9 +215,9 @@ public class ListActivity extends AppCompatActivity {
                 logthis("update title is " + et_title.getText().toString());
                 logthis("update note is " + et_note.getText().toString());
                 //myChildRef.push().setValue(new Note(et_title.getText().toString(), et_note.getText().toString()));
-                Note mynote = new Note(et_title.getText().toString(),  et_note.getText().toString());
+                Note mynote = new Note(et_title.getText().toString(), et_note.getText().toString());
 
-               // mFirebaseDatabaseReference.child("messages").child(note.getId()).setValue(mynote);
+                // mFirebaseDatabaseReference.child("messages").child(note.getId()).setValue(mynote);
                 //OR since it's partially there already, use myChildRef
                 myChildRef.child(note.getId()).setValue(mynote);
                 //Toast.makeText(getBaseContext(), userinput.getText().toString(), Toast.LENGTH_LONG).show();
@@ -233,12 +237,15 @@ public class ListActivity extends AppCompatActivity {
         builder.show();
     }
 
+    /**
+     * Add dialog, with blanks.  then adds the data into the database.
+     */
     void showDialog(String title) {
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
-        final EditText et_note =  textenter.findViewById(R.id.et_note);
-        final EditText et_title =  textenter.findViewById(R.id.et_title);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.Theme_AppCompat));
+        final EditText et_note = textenter.findViewById(R.id.et_note);
+        final EditText et_title = textenter.findViewById(R.id.et_title);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(textenter).setTitle(title);
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
 
@@ -247,13 +254,14 @@ public class ListActivity extends AppCompatActivity {
 
                 logthis("title is " + et_title.getText().toString());
                 logthis("note is " + et_note.getText().toString());
+                //Note push is used only when added new data for child "notes".  ie needes a unique id.
                 myChildRef.push().setValue(new Note(et_title.getText().toString(), et_note.getText().toString()));
                 //Toast.makeText(getBaseContext(), userinput.getText().toString(), Toast.LENGTH_LONG).show();
             }
         })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                   logthis("dialog canceled");
+                    logthis("dialog canceled");
                     dialog.cancel();
 
                 }
