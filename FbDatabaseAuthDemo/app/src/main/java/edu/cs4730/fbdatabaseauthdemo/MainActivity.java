@@ -1,169 +1,92 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.MenuItem;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.android.material.navigation.NavigationView;
 
+public class MainActivity extends AppCompatActivity
+    implements NavigationView.OnNavigationItemSelectedListener {
 
-import java.util.Arrays;
+    //public variables to use my fragments
+    static final int RC_SIGN_IN = 9001;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
-
+    //local variables.
     private static String TAG = "MainActivity";
-    private static final int RC_SIGN_IN = 9001;
-
-
-    public static final String ANONYMOUS = "anonymous";
-    private String mPhotoUrl;
-    private String mUsername;
-
-   // private SharedPreferences mSharedPreferences;
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-
-    private SignInButton mSignInButton;
-    private TextView mSignInTV;
+    AuthFragment authFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Assign fields
-        mSignInButton = findViewById(R.id.sign_in_button);
-        mSignInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
-        mSignInTV = findViewById(R.id.acc_name);
-        findViewById(R.id.sign_out_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signOut();
-            }
-        });
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        mFirebaseAuth = FirebaseAuth.getInstance();
-
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                if (mFirebaseUser != null) {
-                    mUsername = mFirebaseUser.getDisplayName();
-                    if (mFirebaseUser.getPhotoUrl() != null) {
-                        mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
-                    }
-                    mSignInTV.setText(mUsername);
-                    mSignInButton.setEnabled(false);
-                } else {
-                    // user is not signed in.
-                    startActivityForResult(AuthUI.getInstance()  //see firebase UI for documentation.
-                            .createSignInIntentBuilder()
-                            .setIsSmartLockEnabled(false)
-                            .setAvailableProviders(Arrays.asList(
-                                new AuthUI.IdpConfig.EmailBuilder().build(),
-                                new AuthUI.IdpConfig.GoogleBuilder().build(),
-                                new AuthUI.IdpConfig.PhoneBuilder().build()
-                                )
-                            )
-                            .build(),
-                        RC_SIGN_IN);
-                }
-            }
-        };
+        authFragment = new AuthFragment();
 
 
-       // mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mUsername = ANONYMOUS;
-        mSignInTV.setText(mUsername);
 
-        findViewById(R.id.btn1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SimpleActivity.class));
-            }
-        });
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
-        findViewById(R.id.btn2).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, ListActivity.class));
-            }
-        });
+        NavigationView navigationView =  findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        //put the default first fragment into place.
+        getSupportFragmentManager().beginTransaction()
+            .add(R.id.container, authFragment).commit();
+
 
     }
 
-    @Override
-    public void onPause() {
-        mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-    }
-
-    private void signIn() {
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-    }
-    private void signOut() {
-        mFirebaseAuth.signOut();  //just signs out, but doesn't clear the user if they want to login with same name.
-        AuthUI.getInstance().signOut(this);  //clears username and everything from google signin
-        mFirebaseUser = null;
-        mUsername = ANONYMOUS;
-        mPhotoUrl = null;
-        mSignInTV.setText(mUsername);
-        mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        mSignInButton.setEnabled(true);
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        //to make this example simpler to read, the code is in the fragment and this calls the fragment
+        //which is using the same name, onActivityResult.
+
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-
-                Toast.makeText(MainActivity.this, "Authentication success.",
-                    Toast.LENGTH_SHORT).show();
-
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                mUsername = mFirebaseUser.getDisplayName();
-                mSignInTV.setText(mUsername);
-                mSignInButton.setEnabled(false);
-            } else {
-                // Google Sign In failed
-                Toast.makeText(MainActivity.this, "Authentication failed.",
-                    Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Google Sign In failed.");
-                mSignInButton.setEnabled(true);
-            }
+            authFragment.onActivityResult(requestCode, resultCode, data);
         }
     }
 
-
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed:" + connectionResult);
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        // Handle navigation view item clicks here.
+        int id = menuItem.getItemId();
+
+        if (id == R.id.nav_auth) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, authFragment).commit();
+        } else if (id == R.id.nav_dbsimple) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new DBSimpleFragment()).commit();
+        } else if (id == R.id.nav_dblist) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new DBListFragment()).commit();
+        } else if (id == R.id.nav_storage) {
+
+
+        }
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

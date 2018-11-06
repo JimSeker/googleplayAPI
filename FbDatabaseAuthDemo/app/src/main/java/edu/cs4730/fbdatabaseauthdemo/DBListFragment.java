@@ -1,25 +1,12 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+
 import android.content.DialogInterface;
 import android.os.Bundle;
 
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.firebase.ui.database.SnapshotParser;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ContextThemeWrapper;
-import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,13 +18,22 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.firebase.ui.database.SnapshotParser;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class ListActivity extends AppCompatActivity {
 
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class DBListFragment extends Fragment {
 
-    final static String TAG = "ListActivity";
+    final static String TAG = "DBListFragment";
 
     DatabaseReference mFirebaseDatabaseReference;
     DatabaseReference myChildRef;
@@ -48,15 +44,15 @@ public class ListActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
-    private FirebaseRecyclerAdapter<Note, MessageViewHolder> mFirebaseAdapter;
+    private FirebaseRecyclerAdapter<Note, NoteViewHolder> mFirebaseAdapter;
 
 
-    public static class MessageViewHolder extends RecyclerView.ViewHolder {
+    public static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView tv_title;
         TextView tv_note;
         View myitemView;
 
-        public MessageViewHolder(View v) {
+        public NoteViewHolder(View v) {
             super(v);
             tv_title = itemView.findViewById(R.id.title);
             tv_note = itemView.findViewById(R.id.note);
@@ -65,29 +61,31 @@ public class ListActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+    public DBListFragment() {
+        // Required empty public constructor
+    }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View myView = inflater.inflate(R.layout.fragment_dblist, container, false);
+        FloatingActionButton fab = myView.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showDialog("Add");
             }
         });
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
 
-        mRecyclerView = findViewById(R.id.list);
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        // mLinearLayoutManager.setStackFromEnd(true);
+        mRecyclerView = myView.findViewById(R.id.list);
+        mLinearLayoutManager = new LinearLayoutManager(getContext());
+        // mLinearLayoutManager.setStackFromEnd(true);  //causes the list to align at the bottom, instead of the top.
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
@@ -115,16 +113,16 @@ public class ListActivity extends AppCompatActivity {
         /**
          *  This is the adapter for the recyclerview.  but it's the firebase recycler adapter.
          */
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, MessageViewHolder>(options) {
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, NoteViewHolder>(options) {
 
             @Override
-            public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            public NoteViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new MessageViewHolder(inflater.inflate(R.layout.note_row, viewGroup, false));
+                return new NoteViewHolder(inflater.inflate(R.layout.note_row, viewGroup, false));
             }
 
             @Override
-            protected void onBindViewHolder(final MessageViewHolder viewHolder, int position, Note note) {
+            protected void onBindViewHolder(final NoteViewHolder viewHolder, int position, Note note) {
                 viewHolder.tv_title.setText(note.getTitle());
                 viewHolder.tv_title.setTag(note);  //since it's small.  larger, just use the id, which is the key.
                 viewHolder.tv_note.setText(note.getNote());
@@ -169,7 +167,7 @@ public class ListActivity extends AppCompatActivity {
                 //called when it has been animated off the screen.  So item is no longer showing.
                 //use ItemtouchHelper.X to find the correct one.
                 if (direction == ItemTouchHelper.RIGHT) {
-                    Note mynote = (Note) ((MessageViewHolder) viewHolder).tv_title.getTag();
+                    Note mynote = (Note) ((NoteViewHolder) viewHolder).tv_title.getTag();
                     //  this is the delete.
                     //mFirebaseDatabaseReference.child("messages").child(mynote.getId()).removeValue();
                     //or use this, since it already declared.
@@ -179,8 +177,10 @@ public class ListActivity extends AppCompatActivity {
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
         itemTouchHelper.attachToRecyclerView(mRecyclerView);
-    }
 
+
+        return myView;
+    }
 
     @Override
     public void onPause() {
@@ -199,15 +199,15 @@ public class ListActivity extends AppCompatActivity {
      * This creates a dialog to update the note.  It is passed to this method.
      */
     void updateDialog(final Note note) {
-        LayoutInflater inflater = LayoutInflater.from(this);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
         final EditText et_note = textenter.findViewById(R.id.et_note);
         et_note.setText(note.getNote());
         final EditText et_title = textenter.findViewById(R.id.et_title);
         et_title.setText(note.getTitle());
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.ThemeOverlay_AppCompat_Dialog));
-        builder.setView(textenter).setTitle("Add");
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.ThemeOverlay_AppCompat_Dialog));
+        builder.setView(textenter).setTitle("Update Note");
+        builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int id) {
@@ -241,11 +241,11 @@ public class ListActivity extends AppCompatActivity {
      * Add dialog, with blanks.  then adds the data into the database.
      */
     void showDialog(String title) {
-        LayoutInflater inflater = LayoutInflater.from(this);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
         final EditText et_note = textenter.findViewById(R.id.et_note);
         final EditText et_title = textenter.findViewById(R.id.et_title);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.ThemeOverlay_AppCompat_Dialog));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(textenter).setTitle(title);
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
 

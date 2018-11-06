@@ -1,9 +1,18 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+
 import android.os.Bundle;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -11,16 +20,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-
-public class SimpleActivity extends AppCompatActivity {
+/**
+ * A very simple example of how to use the realtime database.
+ */
+public class DBSimpleFragment extends Fragment {
 
     FirebaseDatabase database;
     final static String TAG = "SimpleActivity";
@@ -30,12 +34,18 @@ public class SimpleActivity extends AppCompatActivity {
     ChildEventListener myChildeventlistener;
     ValueEventListener myValueEventlistener;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_simple);
+    public DBSimpleFragment() {
+        // Required empty public constructor
+    }
 
-        logger = findViewById(R.id.logger);
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View myView =  inflater.inflate(R.layout.fragment_dbsimple, container, false);
+
+        logger = myView.findViewById(R.id.logger);
 
         database = FirebaseDatabase.getInstance();
         myChildRef = database.getReference().child("messages");
@@ -101,7 +111,7 @@ public class SimpleActivity extends AppCompatActivity {
         };
 
 
-        findViewById(R.id.add_object).setOnClickListener(new View.OnClickListener() {
+        myView.findViewById(R.id.add_object).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myChildRef.push().setValue(new Note("Test", "message test"));
@@ -110,13 +120,14 @@ public class SimpleActivity extends AppCompatActivity {
         });
 
 
-        findViewById(R.id.add_simple).setOnClickListener(new View.OnClickListener() {
+        myView.findViewById(R.id.add_simple).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 myRef.setValue("Hello, World!");   //don't use push, app crashes and corrupts the data.
             }
         });
+        return myView;
     }
 
 
