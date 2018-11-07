@@ -7,21 +7,24 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener {
+    implements NavigationView.OnNavigationItemSelectedListener   {
 
     //public variables to use my fragments
     static final int RC_SIGN_IN = 9001;
+    static final int RC_G_SIGN_IN = 9002;
 
     //local variables.
     private static String TAG = "MainActivity";
     AuthFragment authFragment;
+    AuthGoogleApiFragment authGoogleApiFragment;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,8 +35,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         authFragment = new AuthFragment();
-
-
+        authGoogleApiFragment = new AuthGoogleApiFragment();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -41,29 +43,16 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView =  findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         //put the default first fragment into place.
         getSupportFragmentManager().beginTransaction()
-            .add(R.id.container, authFragment).commit();
-
+           // .add(R.id.container, authFragment).commit();
+            .add(R.id.container, authGoogleApiFragment).commit();
 
     }
 
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        //to make this example simpler to read, the code is in the fragment and this calls the fragment
-        //which is using the same name, onActivityResult.
-
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
-            authFragment.onActivityResult(requestCode, resultCode, data);
-        }
-    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -80,9 +69,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_dblist) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new DBListFragment()).commit();
-        } else if (id == R.id.nav_storage) {
-
-
+        } else if (id == R.id.nav_authg) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, authGoogleApiFragment).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

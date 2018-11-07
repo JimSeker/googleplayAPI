@@ -22,9 +22,9 @@
 
             android:title="Storage"/>
         <item
-            android:id="@+id/nav_manage"
+            android:id="@+id/nav_authg"
 
-            android:title="Tools"/>
+            android:title="Authenication Google."/>
     </group>
 
 

@@ -1,5 +1,6 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -145,7 +146,7 @@ public class AuthFragment extends Fragment {
      * this is a helper function, that is called byt eh OnActivityResult function from MainActivity
      * since it isn't called to the fragments.
      */
-    public void oyActivityResult(int requestCode, int resultCode) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == MainActivity.RC_SIGN_IN) {
