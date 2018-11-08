@@ -13,12 +13,18 @@ import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
 
+/**
+ * The friendlychat code was use an an example in many places, but it so complex.
+ * https://github.com/firebase/friendlychat-android
+ */
+
 public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener   {
 
     //public variables to use my fragments
     static final int RC_SIGN_IN = 9001;
     static final int RC_G_SIGN_IN = 9002;
+    static final int RC_PHOTO_PICKER = 9003;
 
     //local variables.
     private static String TAG = "MainActivity";
@@ -72,6 +78,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_authg) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, authGoogleApiFragment).commit();
+        }else if (id == R.id.nav_storage) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new StorageFragment()).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
