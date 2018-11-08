@@ -106,7 +106,7 @@ public class StorageFragment extends Fragment {
             Log.wtf(TAG, "NEW filename is "+ filename);
             // Get a reference to store file at chat_photos/<FILENAME>
             //fix this so it's just the file name...
-            final StorageReference photoRef = mPhotosStorageReference.child(selectedImageUri.getLastPathSegment());
+            final StorageReference photoRef = mPhotosStorageReference.child(filename);
 
             // Upload file to Firebase Storage
             UploadTask uploadTask = photoRef.putFile(selectedImageUri);
@@ -127,7 +127,7 @@ public class StorageFragment extends Fragment {
                     if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
                         Log.wtf(TAG, "url is" + downloadUri.toString());
-                        myRef = database.getReference("simple");
+                        myRef = database.getReference("photo");
                     } else {
                         // Handle failures
                         // ...

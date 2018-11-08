@@ -23,8 +23,10 @@
             android:title="Storage"/>
         <item
             android:id="@+id/nav_authg"
-
             android:title="Authenication Google."/>
+        <item
+            android:id="@+id/nav_rc"
+            android:title="Remote Config"/>
     </group>
 
 

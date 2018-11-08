@@ -81,6 +81,9 @@ public class MainActivity extends AppCompatActivity
         }else if (id == R.id.nav_storage) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new StorageFragment()).commit();
+        }else if (id == R.id.nav_rc) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new RCFragment()).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
