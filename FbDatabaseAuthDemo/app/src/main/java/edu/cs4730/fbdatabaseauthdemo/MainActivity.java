@@ -8,7 +8,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
@@ -16,6 +15,9 @@ import com.google.android.material.navigation.NavigationView;
 /**
  * The friendlychat code was use an an example in many places, but it so complex.
  * https://github.com/firebase/friendlychat-android
+ *
+ * NOTE to test the console notifications (cloud messaging now), close the app.  It has service to
+ * caught it when the app is open as well.  But then you won't see the notification.
  */
 
 public class MainActivity extends AppCompatActivity
