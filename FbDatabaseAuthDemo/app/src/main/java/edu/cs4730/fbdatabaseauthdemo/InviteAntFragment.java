@@ -20,6 +20,10 @@ import static android.app.Activity.RESULT_OK;
 
 /**
  * This fragment show how to do invites and the custom Analytics
+ *
+ * Note, custom analytics may take up to 24 to show up in the console.
+ *
+ * Make sure the Dynamic Links is turned on first.
  */
 public class InviteAntFragment extends Fragment {
 
@@ -71,14 +75,14 @@ public class InviteAntFragment extends Fragment {
 
     private void sendInvitation() {
         Intent intent = new AppInviteInvitation.IntentBuilder("Notes Invite")
-            .setMessage("Please jion me in the notes app.")
+            .setMessage("Please join me in the notes app.")
             .setCallToActionText("Call to action")
             .build();
         startActivityForResult(intent, MainActivity.RC_INVITE);
     }
 
     /**
-     * this is a helper function, OnActivityResult from the authenication (used to be only the activity was called!)
+     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
