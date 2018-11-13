@@ -12,14 +12,11 @@
         <item
             android:id="@+id/nav_dbsimple"
             android:title="Database Simple"/>
-
         <item
             android:id="@+id/nav_dblist"
-
             android:title="Database List"/>
         <item
             android:id="@+id/nav_storage"
-
             android:title="Storage"/>
         <item
             android:id="@+id/nav_authg"
@@ -27,6 +24,9 @@
         <item
             android:id="@+id/nav_rc"
             android:title="Remote Config"/>
+        <item
+            android:id="@+id/nav_invite"
+            android:title="Invites and Analytics"/>
     </group>
 
 

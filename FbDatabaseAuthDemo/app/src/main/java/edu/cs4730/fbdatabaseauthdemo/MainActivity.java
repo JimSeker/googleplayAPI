@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity
     static final int RC_SIGN_IN = 9001;
     static final int RC_G_SIGN_IN = 9002;
     static final int RC_PHOTO_PICKER = 9003;
+    static final int RC_INVITE = 9004;
 
     //local variables.
     private static String TAG = "MainActivity";
@@ -86,6 +87,9 @@ public class MainActivity extends AppCompatActivity
         }else if (id == R.id.nav_rc) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new RCFragment()).commit();
+        }else if (id == R.id. nav_invite) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new InviteAntFragment()).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

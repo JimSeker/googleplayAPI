@@ -143,8 +143,8 @@ public class AuthFragment extends Fragment {
 
 
     /**
-     * this is a helper function, that is called byt eh OnActivityResult function from MainActivity
-     * since it isn't called to the fragments.
+     * this is a helper function, OnActivityResult from the authenication (used to be only the activity was called!)
+     *
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
