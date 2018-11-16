@@ -31,6 +31,11 @@ See https://github.com/googlesamples/android-vision
 
 <b>FirebaseMessageDemo</b> is a start at an example for Cloud Messaging.  It works pretty well.  The webcode needed is in the php directory of the project, you will need a webserver to get this project running.
 
+<b>fbDatabaseAuthDemo</b> Has multiple fragments to show firebase authentication, Google Authentication, Realtime Database (and firebase adapter for recyclerview), Storage, remote config, and invites (which sort of work).  There is code for notifications and analytics as well.
+
+<b>firebaseMLKit</b> is a first attempt at using the firebase ML kit to do image recognition.  It's using mostly google example code at this point.
+
+
 <b>NearbyConnectionDemo</b> is simple example of using the Nearby Connection APIs.  It connects up between 2 devices and sends two messages.  It's still a little rough and needs much better comments.
 
 <b>NearbyMessageDemo</b> is an example of using the Nearby (BLE) messages APIs.  It is setup in two fragments, one that subscribes (reads) BLE messages which should be good for just about messages, including beacons.  
