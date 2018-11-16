@@ -31,11 +31,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-/*
+/**
  * this activity is used to send the message to one or all devices.
  * To do this, it must pull a list of all the registered devices off the server and put it into the
  * spinner.
- *
+ * <p>
  * This sends a simple text message (in json).  But much more complex information can be send, like
  * images, etc.
  */
@@ -49,19 +49,19 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private EditText editTextTitle, editTextMessage;
 
-    private boolean isSendAllChecked ;
+    private boolean isSendAllChecked;
     private List<String> devices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
-        radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
-        spinner = (Spinner) findViewById(R.id.spinnerDevices);
-        buttonSendPush = (Button) findViewById(R.id.buttonSendPush);
+        radioGroup = findViewById(R.id.radioGroup);
+        spinner = findViewById(R.id.spinnerDevices);
+        buttonSendPush = findViewById(R.id.buttonSendPush);
 
-        editTextTitle = (EditText) findViewById(R.id.editTextTitle);
-        editTextMessage = (EditText) findViewById(R.id.editTextMessage);
+        editTextTitle = findViewById(R.id.editTextTitle);
+        editTextMessage = findViewById(R.id.editTextMessage);
 
 
         devices = new ArrayList<>();
@@ -72,65 +72,69 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         loadRegisteredDevices();
     }
 
-    //method to load all the devices from database on the backend server.
-    //see the php code in the directory for more details about the backend.
+    /**
+     * method to load all the devices from database on the backend server.
+     * see the php code in the directory for more details about the backend.
+     */
     private void loadRegisteredDevices() {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Fetching Devices...");
         progressDialog.show();
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, EndPoints.URL_FETCH_DEVICES,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        progressDialog.dismiss();
-                        JSONObject obj = null;
-                        try {
-                            obj = new JSONObject(response);
-                            if (!obj.getBoolean("error")) {
-                                JSONArray jsonDevices = obj.getJSONArray("devices");
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
+                    JSONObject obj = null;
+                    try {
+                        obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            JSONArray jsonDevices = obj.getJSONArray("devices");
 
-                                for (int i = 0; i < jsonDevices.length(); i++) {
-                                    JSONObject d = jsonDevices.getJSONObject(i);
-                                    devices.add(d.getString("name"));
-                                }
-
-                                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                                        SendActivity.this,
-                                        android.R.layout.simple_spinner_dropdown_item,
-                                        devices);
-
-                                spinner.setAdapter(arrayAdapter);
+                            for (int i = 0; i < jsonDevices.length(); i++) {
+                                JSONObject d = jsonDevices.getJSONObject(i);
+                                devices.add(d.getString("name"));
                             }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
 
+                            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                                SendActivity.this,
+                                android.R.layout.simple_spinner_dropdown_item,
+                                devices);
+
+                            spinner.setAdapter(arrayAdapter);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                }) {
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                }
+            }) {
 
         };
         MyVolley.getInstance(this).addToRequestQueue(stringRequest);
     }
 
-    //this method will send the push
-    //from here we will call sendMultiple() or sendSingle() push method
-    //depending on the selection
-    private void sendPush(){
-        if(isSendAllChecked){
+    /**
+     * this method will send the push
+     * from here we will call sendMultiple() or sendSingle() push method
+     * depending on the selection
+     */
+    private void sendPush() {
+        if (isSendAllChecked) {
             sendMultiplePush();
-        }else{
+        } else {
             sendSinglePush();
         }
     }
 
     //this method will send a message to all registered devices.
-    private void sendMultiplePush(){
+    private void sendMultiplePush() {
         final String title = editTextTitle.getText().toString();
         final String message = editTextMessage.getText().toString();
 
@@ -138,20 +142,20 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         progressDialog.show();
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_MULTIPLE_PUSH,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        progressDialog.dismiss();
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
 
-                        Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
 
-                    }
-                }) {
+                }
+            }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
@@ -166,7 +170,7 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
     }
 
     //this will send a message to only the device/token listed.
-    private void sendSinglePush(){
+    private void sendSinglePush() {
         final String title = editTextTitle.getText().toString();
         final String message = editTextMessage.getText().toString();
         final String name = spinner.getSelectedItem().toString();
@@ -175,20 +179,20 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         progressDialog.show();
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_SINGLE_PUSH,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        progressDialog.dismiss();
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
 
-                        Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
 
-                    }
-                }) {
+                }
+            }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();

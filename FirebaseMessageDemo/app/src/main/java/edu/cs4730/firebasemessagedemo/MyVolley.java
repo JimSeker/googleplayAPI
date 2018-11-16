@@ -8,7 +8,7 @@ import com.android.volley.toolbox.Volley;
 /**
  * Created by Seker on 4/18/2017.
  *
- *
+ *  use to send the http post methods.
  */
 
 public class MyVolley {

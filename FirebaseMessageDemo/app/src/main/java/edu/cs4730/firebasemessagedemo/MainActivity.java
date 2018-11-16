@@ -35,18 +35,17 @@ import java.util.Map;
 //   and https://www.androidtutorialpoint.com/firebase/firebase-cloud-messaging-tutorial/
 //   and https://firebase.google.com/docs/cloud-messaging/
 
-/*
- *  The mainactivity only registers the device with the back end server.  It only needs to be done
- *  once (unless the token changes, which I don't think it does).  The user then can push the button
- *  to move to the sendactivity.
- *
- *  honesty this code needs rewritten to use two fragments instead of two activities.
+/**
+ * The mainactivity only registers the device with the back end server.  It only needs to be done
+ * once (unless the token changes, which I don't think it does).  The user then can push the button
+ * to move to the sendactivity.
+ * <p>
+ * honesty this code needs rewritten to use two fragments instead of two activities.
  */
 
 
 public class MainActivity extends AppCompatActivity {
 
-    //defining views
     private Button buttonSendPush;
     private Button buttonRegister;
     private EditText editTextName;
@@ -58,11 +57,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //getting views from xml
-        //getting views from xml
-        editTextName = (EditText) findViewById(R.id.editTextName);
-        buttonRegister = (Button) findViewById(R.id.buttonRegister);
-        buttonSendPush = (Button) findViewById(R.id.buttonSendNotification);
+        //get the views
+        editTextName = findViewById(R.id.editTextName);
+        buttonRegister = findViewById(R.id.buttonRegister);
+        buttonSendPush = findViewById(R.id.buttonSendNotification);
 
         //adding listener to view
         buttonRegister.setOnClickListener(new View.OnClickListener() {
@@ -79,12 +77,14 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        //create channels for the notifications.
         createchannel();
     }
 
-
-    //This will send the token to the backend server (which is mysql/php/apache.  see
-    // the php directory in this project for the source code.
+    /**
+     * This will send the token to the backend server (which is mysql/php/apache.  see
+     * the php directory in this project for the source code.
+     */
     private void sendTokenToServer() {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Registering Device...");
@@ -138,8 +138,8 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(stringRequest);
     }
 
-    /*
-    * this is called when the device is already registered to verify that the name and token match.
+    /**
+     * this is called when the device is already registered to verify that the name and token match.
      */
     private void verifyRegistration(String name, String token) {
         progressDialog = new ProgressDialog(this);
@@ -161,8 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
                             for (int i = 0; i < jsonDevices.length(); i++) {
                                 JSONObject d = jsonDevices.getJSONObject(i);
-                                if (d.getString("name").compareTo(thisName)==0) {
-                                    if (d.getString("token").compareTo(thisToken)==0) {
+                                if (d.getString("name").compareTo(thisName) == 0) {
+                                    if (d.getString("token").compareTo(thisToken) == 0) {
                                         Toast.makeText(MainActivity.this, "Device already registered", Toast.LENGTH_LONG).show();
                                     } else {
                                         Toast.makeText(MainActivity.this, "Name registered doesn't make our Token.", Toast.LENGTH_LONG).show();
@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /*
+    /**
      * for API 26+ create notification channels
      */
     private void createchannel() {
