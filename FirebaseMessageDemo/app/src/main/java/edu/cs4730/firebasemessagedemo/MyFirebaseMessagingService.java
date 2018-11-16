@@ -30,6 +30,25 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
+
+    /**
+     * Replacement for the FirebaseInstanceID service, which was depreciated in 17.x
+     * <p>
+     * This is called on at least the first startup.  it generates a unique token that is
+     * used by the cloud messaging system.  definitely save the token for later use.
+     *
+     * @param token
+     */
+    @Override
+    public void onNewToken(String token) {
+        super.onNewToken(token);
+
+        Log.wtf(TAG, "FCM Token: " + token);
+        //store the token for later use in the app.
+        SharedPrefManager.getInstance(getApplicationContext()).saveDeviceToken(token);
+    }
+
+
     //This is called when we get a new push message.
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -53,6 +72,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         //scheduleJob();
         //
     }
+
     /**
      * Schedule a job using FirebaseJobDispatcher.     so if longer then 10 seconds, schedule the job.
      */
@@ -66,8 +86,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         dispatcher.schedule(myJob);
         // [END dispatch_job]
     }
-    //This method generates a notification on the device.
-    //If there is correctly formatted json, it will use it, other just display the message
+
+    /**
+     * This method generates a notification on the device.
+     * If there is correctly formatted json, it will use it, other just display the message
+     */
     private void sendNotification(String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
