@@ -10,8 +10,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.SurfaceHolder;
 
 import android.util.Log;
@@ -21,7 +23,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
-import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
@@ -55,11 +56,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //get the views first.
-        mPreview = (SurfaceView) findViewById(R.id.CameraView);
+        mPreview = findViewById(R.id.CameraView);
         //finally, setup the preview pieces
         mPreview.getHolder().addCallback(this);
 
-        mLogger = (TextView) findViewById(R.id.mylogger);
+        mLogger = findViewById(R.id.mylogger);
 
 
         //message handler for textivew.
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      * @see #requestPermissions(String[], int)
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         alreadyaskingpremission = false;
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");

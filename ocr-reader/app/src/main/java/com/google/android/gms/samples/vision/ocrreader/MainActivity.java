@@ -18,7 +18,6 @@ package com.google.android.gms.samples.vision.ocrreader;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -26,11 +25,13 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.api.CommonStatusCodes;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
  * recognizes text.
  */
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     // Use a compound button so either checkbox or switch widgets work.
     private CompoundButton autoFocus;

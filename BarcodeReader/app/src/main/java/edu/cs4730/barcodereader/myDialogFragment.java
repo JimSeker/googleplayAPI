@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.view.ContextThemeWrapper;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -56,14 +58,15 @@ public class myDialogFragment extends DialogFragment {
         }
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         // Inflate the layout for this fragment
         View myView = inflater.inflate(R.layout.fragment_my_dialog,  null);
-        tv_bc = (TextView) myView.findViewById(R.id.barcode);
+        tv_bc = myView.findViewById(R.id.barcode);
         tv_bc.setText(mParam1);
-        btn_amazon = (Button) myView.findViewById(R.id.btn_amazon);
+        btn_amazon = myView.findViewById(R.id.btn_amazon);
         btn_amazon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -76,7 +79,7 @@ public class myDialogFragment extends DialogFragment {
             }
         });
 
-        btn_web = (Button) myView.findViewById(R.id.btn_web);
+        btn_web = myView.findViewById(R.id.btn_web);
         btn_web.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
