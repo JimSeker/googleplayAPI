@@ -34,7 +34,7 @@ public class myMapFragment extends Fragment {
     String TAG = "mapfrag";
     List<objData> mylist = new ArrayList<objData>();  //just in case.
     objData current = null;
-
+     LatLng INITLOC = null;
     public myMapFragment() {
         // Required empty public constructor
     }
@@ -57,12 +57,17 @@ public class myMapFragment extends Fragment {
         //in a fragment  This method is deprecated and can return a null map.
         //map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
         //The new method here, will provide a non-null map.
+
         ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 map = googleMap;
+
+                if (INITLOC != null)
+                  map.moveCamera(CameraUpdateFactory.newLatLngZoom(INITLOC, 17));
+
                 // Zoom in, animating the camera.
-                map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+               // map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
 
                 // Sets the map type to be "hybrid"
                 map.setMapType(GoogleMap.MAP_TYPE_NORMAL); //normal map
@@ -74,13 +79,11 @@ public class myMapFragment extends Fragment {
                 map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
                     @Override
                     public void onPolylineClick(Polyline polyline) {
-                        Toast.makeText(getActivity(),getActivityString(polyline.getColor()) ,Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), getActivityString(polyline.getColor()), Toast.LENGTH_LONG).show();
                     }
                 });
             }
         });
-
-
 
 
         return myView;
@@ -88,15 +91,19 @@ public class myMapFragment extends Fragment {
 
     public void setupInitialloc(double lat, double lng) {
         // Move the camera instantly to current location.
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 17));
+        if (map != null)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 17));
+        else
+            INITLOC = new LatLng(41.312928, -105.587253);
+
     }
 
     public void updateMapDraw(objData objDataList) {
         Log.v(TAG, "map Update!");
         if (current == null) {
             map.addMarker(new MarkerOptions()
-                            .position(objDataList.myLatlng)
-                            .title("Start")
+                .position(objDataList.myLatlng)
+                .title("Start")
 
             );
             Log.v(TAG, "Added init marker");
@@ -104,10 +111,10 @@ public class myMapFragment extends Fragment {
         } else {
             //add a new line to map
             map.addPolyline(new PolylineOptions()
-                    .add(current.myLatlng,objDataList.myLatlng)   //line segment.
+                    .add(current.myLatlng, objDataList.myLatlng)   //line segment.
                     .color(getActivityColor(objDataList.act))  //make it red.
                     .clickable(true)  //for the listener.
-                    //.width(10)   //width of 10
+                //.width(10)   //width of 10
             );
             //move the camera to center it to it.
             map.moveCamera(CameraUpdateFactory.newLatLng(objDataList.myLatlng));
@@ -115,22 +122,24 @@ public class myMapFragment extends Fragment {
             current = objDataList;
         }
     }
+
     public void mileMarker(objData objDataList, String Title) {
         map.addMarker(new MarkerOptions()
-                        .position(new LatLng(
-                                objDataList.lat,
-                                objDataList.lng))
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                        .title(Title)
+            .position(new LatLng(
+                objDataList.lat,
+                objDataList.lng))
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            .title(Title)
         );
     }
+
     public void finishMap(objData objDataList) {
         //add a marker for the stop position.
         map.addMarker(new MarkerOptions()
-                .position(new LatLng(
-                        objDataList.lat,
-                        objDataList.lng))
-                .title("End " + objDataList.distance + " Miles")
+            .position(new LatLng(
+                objDataList.lat,
+                objDataList.lng))
+            .title("End " + objDataList.distance + " Miles")
         );
         //move the camera to center it to it.
         map.moveCamera(CameraUpdateFactory.newLatLng(objDataList.myLatlng));
@@ -164,7 +173,7 @@ public class myMapFragment extends Fragment {
                 return Color.GREEN;
             case DetectedActivity.TILTING:
                 //return "Tilting";
-               return Color.MAGENTA;
+                return Color.MAGENTA;
             case DetectedActivity.UNKNOWN:
                 //return "Unknown Activity";
                 return Color.RED;
@@ -176,6 +185,7 @@ public class myMapFragment extends Fragment {
                 return Color.WHITE;
         }
     }
+
     /**
      * Returns a human readable String corresponding to a map color
      */

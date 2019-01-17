@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     // for checking permissions.
     public static final int REQUEST_ACCESS_startLocationUpdates = 0;
     public static final int REQUEST_ACCESS_onConnected = 1;
-
+    static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
     String TAG = "MainActivity";
     ViewPager viewPager;
     myListFragment listfrag;
