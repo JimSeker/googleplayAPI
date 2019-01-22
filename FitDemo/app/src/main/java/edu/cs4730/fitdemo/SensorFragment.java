@@ -70,7 +70,7 @@ public class SensorFragment extends Fragment {
             }
         });
         View myView = inflater.inflate(R.layout.fragment_sensor, container, false);
-        logger = (TextView) myView.findViewById(R.id.logger);
+        logger = myView.findViewById(R.id.logger);
 
         return myView;
     }
