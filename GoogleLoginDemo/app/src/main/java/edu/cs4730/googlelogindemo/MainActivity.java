@@ -8,7 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
-/*
+/**
  * a demo for loging into google with the google play services
  * https://developers.google.com/identity/sign-in/android/start
  * https://github.com/googlesamples/google-services/tree/master/android/signin/app/src/main/java/com/google/samples/quickstart/signin
