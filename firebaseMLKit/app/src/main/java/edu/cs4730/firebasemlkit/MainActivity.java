@@ -6,6 +6,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+/**
+ * used this as the base for the example.
+ * https://github.com/firebase/quickstart-android/tree/master/mlkit
+ */
 public class MainActivity extends AppCompatActivity {
 
     @Override
