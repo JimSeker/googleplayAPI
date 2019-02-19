@@ -1,10 +1,6 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
-
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.net.wifi.hotspot2.PasspointConfiguration;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,14 +13,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -33,28 +27,26 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
-import static android.app.Activity.RESULT_OK;
-
 
 /**
- * A simple {@link Fragment} subclass.
+ * Uses the GoogleSignIn and GoogleSignInClient to sign into a google account
+ * It then signs into firebase with that account.  since google sign in doesn't sign into firebase.
  */
-public class AuthGoogleApiFragment extends Fragment implements
-    GoogleApiClient.OnConnectionFailedListener {
+public class AuthGoogleApiFragment extends Fragment {
 
     //local variables.
     private static String TAG = "AuthFragment";
     private TextView logger;
 
-    public static final String ANONYMOUS = "anonymous";
+    private static final String ANONYMOUS = "anonymous";
     private String mPhotoUrl;
     private String mUsername;
 
-    // private SharedPreferences mSharedPreferences;
+
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private GoogleApiClient mGoogleApiClient;
+
+    private GoogleSignInClient mGoogleSignInClient;
 
     private SignInButton mSignInButton;
     private TextView mSignInTV;
@@ -78,11 +70,8 @@ public class AuthGoogleApiFragment extends Fragment implements
             .requestEmail()
             .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
-            .enableAutoManage(getActivity() /* FragmentActivity */, this /* OnConnectionFailedListener */)
-            .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-            .build();
-
+        //get the sign in client.
+        mGoogleSignInClient = GoogleSignIn.getClient(getContext(), gso);
 
         // google sign in button and pieces.
         mSignInButton = myView.findViewById(R.id.g_sign_in_button);
@@ -131,15 +120,15 @@ public class AuthGoogleApiFragment extends Fragment implements
         logger.append(item + "\n");
     }
 
-    //start the signin to google authentication, when will then sign into firebase (in onactivityresult methed below)
+    //start the signin to google authentication, when we will then sign into firebase (in onactivityresult method below)
     private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, MainActivity.RC_G_SIGN_IN);
     }
 
     private void signOut() {
         //sign out of google
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient);
+        mGoogleSignInClient.signOut();
         //sign out firebase, don't know if this is necessary, but seems like a good idea.
         mFirebaseAuth.signOut();
 
@@ -152,12 +141,6 @@ public class AuthGoogleApiFragment extends Fragment implements
         logthis("Signed out");
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.wtf(TAG, "onConnectionFailed:" + connectionResult);
-    }
-
-
     /**
      * So this where the result will come back to from the sign in call.
      */
@@ -166,24 +149,25 @@ public class AuthGoogleApiFragment extends Fragment implements
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == MainActivity.RC_G_SIGN_IN) {
 
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if (result.isSuccess()) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
                 logthis("successful login, now firebase.");
                 // Google Sign In was successful, authenticate with Firebase
-                GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
-            } else {
-                // Google Sign In failed
-                Toast.makeText(getContext(), "Authentication failed.",
-                    Toast.LENGTH_SHORT).show();
-                logthis("Google Sign In failed.");
+
+            } catch (ApiException e) {
+                // The ApiException status code indicates the detailed failure reason.
+                // Please refer to the GoogleSignInStatusCodes class reference for more information.
+                Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                logthis("signInResult:failed code=" + e.getStatusCode());
                 mSignInButton.setEnabled(true);
             }
         }
     }
 
     /**
-     * This is a helper function, so with have authenicationed with google, but we still need to
+     * This is a helper function, so with have authentication with google, but we still need to
      * login to firebase.
      */
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
