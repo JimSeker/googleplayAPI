@@ -143,12 +143,11 @@ public class AuthFragment extends Fragment {
 
 
     /**
-     * this is a helper function, OnActivityResult from the authenication (used to be only the activity was called!)
+     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
      *
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == MainActivity.RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
 
