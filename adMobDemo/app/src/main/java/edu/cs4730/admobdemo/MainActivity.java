@@ -6,6 +6,10 @@ import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
+import com.google.ads.consent.ConsentInfoUpdateListener;
+import com.google.ads.consent.ConsentInformation;
+import com.google.ads.consent.ConsentStatus;
+import com.google.ads.consent.DebugGeography;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -29,13 +33,39 @@ public class MainActivity extends AppCompatActivity {
 
         //for the ad at the bottom of the mainactivity.
         AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("D1A4B2E34EF63965FDB3E19C432D0D82").build();
+
+        //adRequest.Builder.
+
 
         //for the Interstitial ad, which is launched via the button
         mInterstitialAd = new InterstitialAd(this);
+
         mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+
+        ConsentInformation consentInformation = ConsentInformation.getInstance(this);
+        consentInformation.addTestDevice("D1A4B2E34EF63965FDB3E19C432D0D82");
+        consentInformation.setDebugGeography(DebugGeography.DEBUG_GEOGRAPHY_EEA);
+        String[] publisherIds = {"pub-0123456789012345"};
+        consentInformation.requestConsentInfoUpdate(publisherIds, new ConsentInfoUpdateListener() {
+            @Override
+            public void onConsentInfoUpdated(ConsentStatus consentStatus) {
+                // User's consent status successfully updated.
+                Log.wtf(TAG, "consent status successfully updated.");
+            }
+
+            @Override
+            public void onFailedToUpdateConsentInfo(String errorDescription) {
+                // User's consent status failed to update.
+                Log.wtf(TAG, "consent status failed to update.");
+            }
+        });
+
+
+        mAdView.loadAd(adRequest);
+
+
+        mInterstitialAd.loadAd(adRequest);
 
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
