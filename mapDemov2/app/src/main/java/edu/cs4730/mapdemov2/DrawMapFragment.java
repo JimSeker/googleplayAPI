@@ -78,7 +78,6 @@ public class DrawMapFragment extends Fragment implements OnMapReadyCallback {
             ArrayList<Placemark> pm = ds.getPlacemarks();
             for (Iterator<Placemark> iter=pm.iterator();iter.hasNext();) {
                 Placemark p = (Placemark)iter.next();
-
                 PolygonOptions rectOptions = getCorr(p.coordinates);
                 //In maps v2, we can't store information say a title or description in the here anymore or in polygon either.
 
@@ -90,6 +89,9 @@ public class DrawMapFragment extends Fragment implements OnMapReadyCallback {
                 //Want a blue, but half transparent (so see map below), so alpha needs to be half of 256
                 rectOptions.fillColor(Color.argb(128, 0, 0, 255))	;
                 Polygon polygon = map.addPolygon(rectOptions);
+                //we can use the settag to store information about the this area, which can be retreived
+                // in the onPolygonClick listener.
+                polygon.setTag(p);
 
             }
         }
@@ -105,7 +107,8 @@ public class DrawMapFragment extends Fragment implements OnMapReadyCallback {
                 //main problem with a polygon is it stores no information other then how to draw it
                 //so the app now has to figure out where the polygon is and what to do with it.
                 Log.v("MapDrawn", "click listener called.");
-                Toast.makeText(getActivity(), "You clicked something?", Toast.LENGTH_LONG).show();
+                Placemark p = (Placemark) polygon.getTag();
+                Toast.makeText(getActivity(), "You clicked area: " + p.title, Toast.LENGTH_LONG).show();
 
             }
         });
