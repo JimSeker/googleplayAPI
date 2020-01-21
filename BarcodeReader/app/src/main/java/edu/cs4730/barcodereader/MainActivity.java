@@ -5,9 +5,11 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -23,7 +25,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
 
-/*
+/**
   This is a simple example to using the barcode via the vision api's.
   Point the camera at a barcode and it will ask you if you want to search amazon for the barcode
   or open a web page (assumes the web address is correctly formed with a http://bah.com
@@ -48,16 +50,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //get the views first.
-        mPreview = (SurfaceView) findViewById(R.id.CameraView);
+        mPreview = findViewById(R.id.CameraView);
         //finally, setup the preview pieces
         mPreview.getHolder().addCallback(this);
 
-        mLogger = (TextView) findViewById(R.id.logger);
+        mLogger = findViewById(R.id.logger);
 
         //handler to display a dialog about what to do with the barcode
         handler = new Handler(new Handler.Callback() {
             @Override
-            public boolean handleMessage(Message msg) {
+            public boolean handleMessage(@NonNull Message msg) {
 
                 Bundle stuff = msg.getData();
                 String bc = stuff.getString("barcode");
@@ -225,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     /*
-    *  methods needed for the surfaceView callback methods.
+     *  methods needed for the surfaceView callback methods.
      */
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
