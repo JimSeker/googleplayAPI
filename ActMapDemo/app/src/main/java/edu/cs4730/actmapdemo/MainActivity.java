@@ -11,8 +11,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
+
 import androidx.annotation.NonNull;
+
 import com.google.android.material.tabs.TabLayout;
+
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -21,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     // for checking permissions.
     public static final int REQUEST_ACCESS_startLocationUpdates = 0;
+    public static final int REQUEST_ACCESS_Activity_Updates = 2;
     public static final int REQUEST_ACCESS_onConnected = 1;
     static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
     String TAG = "MainActivity";
@@ -156,41 +161,42 @@ public class MainActivity extends AppCompatActivity {
             //now do the stetup and start it.
             createLocationRequest();
             startLocationUpdates();
-            setupActivityRec(true);
+            CheckPermActivity();//            setupActivityRec(true);
             mRequestingLocationUpdates = true;
             return true;
         } else if (id == R.id.action_stop) {
             //this should never happen.
             //noinspection StatementWithEmptyBody
-            if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                    (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
                 //I'm on not explaining why, just asking for permission.
                 //we don't have permission here to do anything with location, but it is started.  So ... can't stop it... odd possibility.
             } else {
                 //add end marker
                 mFusedLocationClient.getLastLocation()
-                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                if (location == null) {
-                                    Log.w(TAG, "onSuccess:null");
-                                    return;
-                                }
-                                Log.v(TAG, "getLastLocation");
-                                mapfrag.finishMap(new objData(
-                                        location.getLatitude(),
-                                        location.getLongitude(),
-                                        location.getTime(),
-                                        currentActivity
-                                ));
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            if (location == null) {
+                                Log.w(TAG, "onSuccess:null");
+                                return;
                             }
-                        })
-                        .addOnFailureListener(this, new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w(TAG, "getLastLocation:onFailure", e);
-                            }
-                        });
+                            Log.v(TAG, "getLastLocation");
+                            mapfrag.finishMap(new objData(
+                                location.getLatitude(),
+                                location.getLongitude(),
+                                location.getTime(),
+                                currentActivity
+                            ));
+                        }
+                    })
+                    .addOnFailureListener(this, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "getLastLocation:onFailure", e);
+                        }
+                    });
 
 
             }
@@ -203,15 +209,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /*
-        @Override
-        protected void onStop() {
-            setupActivityRec(false);
-            stopLocationUpdates();
-
-            super.onStop();
-        }
-    */
     @Override
     protected void onPause() {
         super.onPause();
@@ -224,8 +221,23 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         if (mRequestingLocationUpdates) {
-            setupActivityRec(true);
+            CheckPermActivity();
             startLocationUpdates();
+        }
+
+    }
+
+    //ask for permissions when we start, this is likely over kill, since I ask for this permission in other places as well.
+    public void CheckPermActivity() {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                MainActivity.REQUEST_ACCESS_Activity_Updates);
+
+        } else {
+            //We have permissions, so ...
+            setupActivityRec(true);
         }
 
     }
@@ -256,7 +268,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-
                 addData(locationResult.getLastLocation());
             }
         };
@@ -266,48 +277,47 @@ public class MainActivity extends AppCompatActivity {
     //two methods to start and stop location updates.
     protected void startLocationUpdates() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             //I'm on not explaining why, just asking for permission.
             Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_startLocationUpdates);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION},
+                MainActivity.REQUEST_ACCESS_startLocationUpdates);
             return;
         }
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-                    @SuppressLint("MissingPermission")
-                    @Override
-                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                        Log.i(TAG, "All location settings are satisfied.");
+            .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                @SuppressLint("MissingPermission")
+                @Override
+                public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                    Log.i(TAG, "All location settings are satisfied.");
 
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
+                    //noinspection MissingPermission
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                        mLocationCallback, Looper.myLooper());
 
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    mRequestingLocationUpdates = false;
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i(TAG, "Location settings are not satisfied. ");
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            String errorMessage = "Location settings are inadequate, and cannot be " +
+                                "fixed here. Fix in Settings.";
+                            Log.e(TAG, errorMessage);
+                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            mRequestingLocationUpdates = false;
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        mRequestingLocationUpdates = false;
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. ");
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                                mRequestingLocationUpdates = false;
-                        }
-
-
-                    }
-                });
+                }
+            });
     }
 
     protected void stopLocationUpdates() {
@@ -319,12 +329,12 @@ public class MainActivity extends AppCompatActivity {
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        mRequestingLocationUpdates = false;
-                    }
-                });
+            .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    mRequestingLocationUpdates = false;
+                }
+            });
     }
 
 
@@ -333,8 +343,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (gettingupdates) { //true to start it.
             Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-                    DETECTION_INTERVAL_IN_MILLISECONDS,
-                    getActivityDetectionPendingIntent());
+                DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent());
             task.addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void result) {
@@ -351,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
-                    getActivityDetectionPendingIntent());
+                getActivityDetectionPendingIntent());
             task.addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void result) {
@@ -364,7 +374,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(TAG, "Failed to disable activity recognition.");
                 }
             });
-
         }
     }
 
@@ -385,36 +394,37 @@ public class MainActivity extends AppCompatActivity {
 
     public void initialsetup() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             //I'm on not explaining why, just asking for permission.
             Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_onConnected);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION},
+                MainActivity.REQUEST_ACCESS_onConnected);
             return;
         }
 
         mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location == null) {
-                            Log.w(TAG, "onSuccess:null");
-                            return;
-                        }
-                        Log.v(TAG, "getLastLocation");
-                        mapfrag.setupInitialloc(location.getLatitude(), location.getLongitude());
-                        //initial spot maybe?
-                        if (mRequestingLocationUpdates)
-                            addData(location);
+            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location == null) {
+                        Log.w(TAG, "onSuccess:null");
+                        return;
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "getLastLocation:onFailure", e);
-                    }
-                });
+                    Log.v(TAG, "getLastLocation");
+                    mapfrag.setupInitialloc(location.getLatitude(), location.getLongitude());
+                    //initial spot maybe?
+                    if (mRequestingLocationUpdates)
+                        addData(location);
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "getLastLocation:onFailure", e);
+                }
+            });
 
     }
 
@@ -426,10 +436,10 @@ public class MainActivity extends AppCompatActivity {
         if (mlocation != null) {
 
             newData = new objData(
-                    mlocation.getLatitude(),
-                    mlocation.getLongitude(),
-                    mlocation.getTime(),
-                    currentActivity
+                mlocation.getLatitude(),
+                mlocation.getLongitude(),
+                mlocation.getTime(),
+                currentActivity
             );
 
             //figure distance info.
@@ -471,33 +481,36 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.v(TAG, "onRequest result called.");
-        boolean coarse = false, fine = false;
+        boolean coarse = false, fine = false, activity = false;
 
         //received result for GPS access
         for (int i = 0; i < grantResults.length; i++) {
             if ((permissions[i].compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                (grantResults[i] == PackageManager.PERMISSION_GRANTED))
                 coarse = true;
             else if ((permissions[i].compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                (grantResults[i] == PackageManager.PERMISSION_GRANTED))
                 fine = true;
+            else if ((permissions[i].compareTo(Manifest.permission.ACTIVITY_RECOGNITION) == 0) &&
+                (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                activity = true;
         }
         Log.v(TAG, "Received response for gps permission request.");
         // If request is cancelled, the result arrays are empty.
-        if (coarse && fine) {
-            // permission was granted
+        if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
             Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
-            //Toast.makeText(this, "GPS access granted", Toast.LENGTH_SHORT).show();
-            if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
-                startLocationUpdates();
-            } else if (requestCode == REQUEST_ACCESS_onConnected) {
-                initialsetup();
-            }
+           if (coarse && fine)
+               startLocationUpdates();
 
+        } else if (requestCode == REQUEST_ACCESS_onConnected) {
+            if (coarse && fine)
+                initialsetup();
+        }  if ((requestCode == REQUEST_ACCESS_Activity_Updates)  && (activity ) ) {
+                setupActivityRec(true);
         } else {
             // permission denied,    Disable this feature or close the app.
-            Log.v(TAG, "GPS permission was NOT granted.");
-            Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
+            Log.v(TAG, "permissions were NOT granted.");
+            Toast.makeText(this, "at least one permission access NOT granted", Toast.LENGTH_SHORT).show();
             finish();
         }
     }

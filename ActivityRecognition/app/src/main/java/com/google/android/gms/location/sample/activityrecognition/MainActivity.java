@@ -16,14 +16,18 @@
 
 package com.google.android.gms.location.sample.activityrecognition;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity
     implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     protected static final String TAG = "MainActivity";
-
+    public static final int REQUEST_ACCESS_Activity_Updates = 0;
     private Context mContext;
 
     /**
@@ -69,9 +73,9 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         // Get the UI widgets.
-        mRequestActivityUpdatesButton = (Button) findViewById(R.id.request_activity_updates_button);
-        mRemoveActivityUpdatesButton = (Button) findViewById(R.id.remove_activity_updates_button);
-        ListView detectedActivitiesListView = (ListView) findViewById(
+        mRequestActivityUpdatesButton = findViewById(R.id.request_activity_updates_button);
+        mRemoveActivityUpdatesButton =  findViewById(R.id.remove_activity_updates_button);
+        ListView detectedActivitiesListView = findViewById(
             R.id.detected_activities_listview);
 
         // Enable either the Request Updates button or the Remove Updates button depending on
@@ -89,12 +93,49 @@ public class MainActivity extends AppCompatActivity
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
     }
 
+
+    //ask for permissions when we start.
+    public void CheckPerm() {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                MainActivity.REQUEST_ACCESS_Activity_Updates);
+
+        } else {
+            // start what, I can't tell in google's code, so was in onresume?
+            PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+            updateDetectedActivitiesList();
+        }
+
+    }
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.v(TAG, "onRequest result called.");
+
+        if (requestCode == REQUEST_ACCESS_Activity_Updates) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //We have permissions, so ...
+                PreferenceManager.getDefaultSharedPreferences(this)
+                    .registerOnSharedPreferenceChangeListener(this);
+                updateDetectedActivitiesList();
+            } else {
+                // permission denied,    Disable this feature or close the app.
+                Log.v(TAG, "Activity permission was NOT granted.");
+                Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        PreferenceManager.getDefaultSharedPreferences(this)
-            .registerOnSharedPreferenceChangeListener(this);
-        updateDetectedActivitiesList();
+        CheckPerm();
+
     }
 
     @Override

@@ -1,12 +1,17 @@
 package edu.cs4730.activityrecognitiondemo;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.content.pm.PackageManager;
 import android.speech.tts.TextToSpeech;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -24,24 +29,24 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.List;
 
-//uses the singletop and a onNewIntent method so all the code is kept in this single
-//method.   it will say the most probable action and then anything at least 50%
-// for testing purposes inside, you can simple move the phone up and down slowly to get walking
-//pretty fast for running.  You don't actually have move for those.   walking as good pace and holding
-//the device study, which result in driving.   At least on a Moto G (v1) GPE device.
+/**
+ * uses the singletop and a onNewIntent method so all the code is kept in this single
+ * method.   it will say the most probable action and then anything at least 50%
+ * for testing purposes inside, you can simple move the phone up and down slowly to get walking
+ * pretty fast for running.  You don't actually have move for those.   walking as good pace and holding
+ * the device study, which result in driving.   At least on a Moto G (v1) GPE device.
+ * <p>
+ * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognition
+ * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
+ */
 
-
-//https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognition
-//https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
-
-
-public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnInitListener {
+public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     //for the speech part.
     private static final int REQ_TTS_STATUS_CHECK = 0;
     private TextToSpeech mTts;
-    private  String myUtteranceId = "txt2spk";
+    private String myUtteranceId = "txt2spk";
     private boolean canspeak = false;
-
+    public static final int REQUEST_ACCESS_Activity_Updates = 0;
     private Context mContext;
     /**
      * The desired time between activity detections. Larger values result in fewer activity
@@ -50,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
      * app may prefer to request less frequent updates.
      */
     public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;  //fastest rate which appear to be about 10 seconds.
-                                                                 //30 * 1000; // 30 seconds
+    //30 * 1000; // 30 seconds
     /**
      * The entry point for interacting with activity recognition.
      */
@@ -67,20 +72,16 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btn = (Button) findViewById(R.id.button);
+        btn = findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //do something...
-                if (!gettingupdates) {
-                    startActivityUpdates();
-                } else {
-                    stopActivityUpdates();
-                }
+                CheckPerm();
+
             }
         });
         mContext = this;
-        logger = (TextView) findViewById(R.id.logger);
+        logger = findViewById(R.id.logger);
         // Check to be sure that TTS exists and is okay to use
         Intent checkIntent = new Intent();
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
@@ -91,13 +92,33 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
     }
 
+    //ask for permissions when we start.
+    public void CheckPerm() {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            //I'm on not explaining why, just asking for permission.
+            Log.v(TAG, "asking for permissions");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                MainActivity.REQUEST_ACCESS_Activity_Updates);
+
+        } else {
+            //We have permissions, so ...
+            if (!gettingupdates) {
+                startActivityUpdates();
+            } else {
+                stopActivityUpdates();
+            }
+        }
+
+    }
+
+
     @Override
     protected void onResume() {
         super.onResume();
         // Register the broadcast receiver that informs this activity of the DetectedActivity
         // object broadcast sent by the intent service.
         if (!gettingupdates)
-            startActivityUpdates();
+            CheckPerm();
     }
 
     @Override
@@ -105,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
         Log.wtf(TAG, "onStop called.");
         // Unregister the broadcast receiver that was registered during onResume().
         if (gettingupdates)  //if turned on, stop them during pause.
-         stopActivityUpdates();
+            CheckPerm();
         super.onStop();
     }
 
@@ -118,16 +139,16 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
     public void startActivityUpdates() {
         Log.wtf(TAG, "start called.");
         Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-                DETECTION_INTERVAL_IN_MILLISECONDS,
-                getActivityDetectionPendingIntent());
+            DETECTION_INTERVAL_IN_MILLISECONDS,
+            getActivityDetectionPendingIntent());
 
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
                 Toast.makeText(mContext,
-                        "Activity updates enabled",
-                        Toast.LENGTH_SHORT)
-                        .show();
+                    "Activity updates enabled",
+                    Toast.LENGTH_SHORT)
+                    .show();
                 gettingupdates = true;
                 btn.setText("Stop Recognition");
             }
@@ -138,9 +159,9 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
             public void onFailure(@NonNull Exception e) {
                 Log.w(TAG, "Failed to enable activity updates");
                 Toast.makeText(mContext,
-                        "Failed to enable activity updates",
-                        Toast.LENGTH_SHORT)
-                        .show();
+                    "Failed to enable activity updates",
+                    Toast.LENGTH_SHORT)
+                    .show();
                 gettingupdates = false;
                 btn.setText("Start Recognition");
             }
@@ -155,14 +176,14 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
     public void stopActivityUpdates() {
         Log.wtf(TAG, "stop called.");
         Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
-                getActivityDetectionPendingIntent());
+            getActivityDetectionPendingIntent());
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
                 Toast.makeText(mContext,
-                        "Activity updates removed",
-                        Toast.LENGTH_SHORT)
-                        .show();
+                    "Activity updates removed",
+                    Toast.LENGTH_SHORT)
+                    .show();
                 gettingupdates = false;
                 btn.setText("Start Recognition");
             }
@@ -173,13 +194,12 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
             public void onFailure(@NonNull Exception e) {
                 Log.w(TAG, "Failed to enable activity recognition.");
                 Toast.makeText(mContext, "Failed to remove activity updates",
-                        Toast.LENGTH_SHORT).show();
+                    Toast.LENGTH_SHORT).show();
                 gettingupdates = true;  //I think this is true???
                 btn.setText("Stop Recognition");
             }
         });
     }
-
 
 
     /**
@@ -194,9 +214,10 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-
-    //we want to get the intent back here without starting another instanced
-    //so  we get the data here, hopefully.
+    /**
+     * we want to get the intent back here without starting another instanced
+     * so  we get the data here, hopefully.
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         Log.v(TAG, "onNewIntent");
@@ -207,22 +228,22 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
         if (probably.getConfidence() >= 50) {  //doc's say over 50% is likely, under is not sure at all.
             speech(getActivityString(probably.getType()));
         }
-        logger.append("Most Probable: " +getActivityString(probably.getType()) + " "+ probably.getConfidence()+"%\n" );
+        logger.append("Most Probable: " + getActivityString(probably.getType()) + " " + probably.getConfidence() + "%\n");
         //or we could go through the list, which is sorted by most likely to least likely.
         List<DetectedActivity> fulllist = result.getProbableActivities();
-        for (DetectedActivity da: fulllist) {
-            if (da.getConfidence() >=50) {
+        for (DetectedActivity da : fulllist) {
+            if (da.getConfidence() >= 50) {
                 logger.append("-->" + getActivityString(da.getType()) + " " + da.getConfidence() + "%\n");
                 speech(getActivityString(da.getType()));
 
             }
         }
+        super.onNewIntent(intent);
     }
 
     /**
      * Returns a human readable String corresponding to a detected activity type.
      */
-
     public static String getActivityString(int detectedActivityType) {
         switch (detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:
@@ -247,19 +268,19 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
     }
 
 
-    //simple method to do the speech
+    /**
+     * simple method to do the speech
+     */
     public void speech(String words) {
         //Speech is simple.  send the words to speech aloud via the
         //the text to speech end and add it to the end queue. (maybe others already in line.)
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //not sure what an utteranceId is supposed to be... we maybe able to setup a
-            //listener for "utterances" and check to see if they completed or something.
+        if (canspeak)
             mTts.speak(words, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
-        } else {  //below lollipop and use this method instead.
-            mTts.speak(words, TextToSpeech.QUEUE_ADD, null);
-        }
     }
-    //verify speech is available.
+
+    /**
+     * verify speech is available.
+     */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQ_TTS_STATUS_CHECK) {
             switch (resultCode) {
@@ -272,18 +293,41 @@ public class MainActivity extends AppCompatActivity implements  TextToSpeech.OnI
                 default:
                     Log.e(TAG, "Got a failure. TTS apparently not available");
             }
-        }
-        else {
+        } else {
             // Got something else
             Log.wtf(TAG, "Got something else in onActivityResult");
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onInit(int status) {
         // Now that the TTS engine is ready, we enable the button
-        if( status == TextToSpeech.SUCCESS) {
+        if (status == TextToSpeech.SUCCESS) {
             canspeak = true;
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.v(TAG, "onRequest result called.");
+
+        if (requestCode == REQUEST_ACCESS_Activity_Updates) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //We have permissions, so ...
+                if (!gettingupdates) {
+                    startActivityUpdates();
+                } else {
+                    stopActivityUpdates();
+                }
+            } else {
+                // permission denied,    Disable this feature or close the app.
+                Log.v(TAG, "Activity permission was NOT granted.");
+                Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
