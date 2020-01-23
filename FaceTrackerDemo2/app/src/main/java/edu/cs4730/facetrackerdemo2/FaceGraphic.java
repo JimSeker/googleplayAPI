@@ -79,6 +79,7 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     public void draw(Canvas canvas) {
         Face face = mFace;
         if (face == null) {
+            Log.e(TAG, "FACE IS NULL?!");
             return;
         }
         //send it back via a handler
@@ -89,7 +90,7 @@ class FaceGraphic extends GraphicOverlay.Graphic {
             " Left: " + face.getIsLeftEyeOpenProbability() +
             " Right:" + face.getIsRightEyeOpenProbability());
         // Draws a circle at the position of the detected face, with the face's track id below.
-
+        canvas.drawRect(0, 0, 30, 30, RedPaint);
         int xl = 10;  //how big the x is.
         //first get all the landmarks, we want the eyes and mounth, but there are more
         //https://developers.google.com/android/reference/com/google/android/gms/vision/face/Landmark
@@ -97,9 +98,13 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         float cx, cy;
         float lx = 0f, ly = 0f, mx = 0, my = 0, rx = 0, ry = 0;
         //loop through the list to find each one.  Note, they may not all be listed either.
+        if (myLandmark.isEmpty()) {
+            Log.e(TAG, "Error, no landmarks!");
+        }
         for (Landmark landmark : myLandmark) {
-
+            Log.d(TAG, "Found a landmark" + landmark.toString());
             if (landmark.getType() == Landmark.LEFT_EYE) {
+                Log.d(TAG, "LEFT EYE");
                 cx = translateX(landmark.getPosition().x);
                 cy = translateY(landmark.getPosition().y);
                 if (face.getIsLeftEyeOpenProbability() > .75) {  //open, so show circle
@@ -109,6 +114,7 @@ class FaceGraphic extends GraphicOverlay.Graphic {
                     canvas.drawLine(cx - xl, cy + xl, cx + xl, cy - xl, RedPaint);
                 }
             } else if (landmark.getType() == Landmark.RIGHT_EYE) {
+                Log.d(TAG, "RIGHT EYE");
                 cx = translateX(landmark.getPosition().x);
                 cy = translateY(landmark.getPosition().y);
                 if (face.getIsRightEyeOpenProbability() > .75) {  //open, so show circle
@@ -118,14 +124,17 @@ class FaceGraphic extends GraphicOverlay.Graphic {
                     canvas.drawLine(cx - xl, cy + xl, cx + xl, cy - xl, RedPaint);
                 }
             } else if (landmark.getType() == Landmark.LEFT_MOUTH) {
+                Log.d(TAG, "LEFT MOUTH");
                 lx = translateX(landmark.getPosition().x);
                 ly = translateY(landmark.getPosition().y);
                 //canvas.drawCircle(lx, ly, 10, paint);
             } else if (landmark.getType() == Landmark.RIGHT_MOUTH) {
+                Log.d(TAG, "RIGHT MOUTH");
                 rx = translateX(landmark.getPosition().x);
                 ry = translateY(landmark.getPosition().y);
                 //canvas.drawCircle(rx, ry, 10, paint);
             } else if (landmark.getType() == Landmark.BOTTOM_MOUTH) {
+                Log.d(TAG, "BOTTOM MOUTH");
                 mx = translateX(landmark.getPosition().x);
                 my = translateY(landmark.getPosition().y);
                 //canvas.drawCircle(mx, my, 10, paint);

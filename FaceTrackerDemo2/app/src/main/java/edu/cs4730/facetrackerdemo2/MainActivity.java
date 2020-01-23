@@ -68,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
         Context context = getApplicationContext();
         FaceDetector detector = new FaceDetector.Builder(context)
                 //.setProminentFaceOnly(true)   //track only one face... makes it faster.
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
+               // .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
+            .setClassificationType(FaceDetector.ALL_LANDMARKS)  //allows for eye and smile detection!
                 .build();
 
         detector.setProcessor(

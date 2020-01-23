@@ -61,6 +61,7 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     public void draw(Canvas canvas) {
         Face face = mFace;
         if (face == null) {
+
             return;
         }
 

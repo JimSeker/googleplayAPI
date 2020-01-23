@@ -180,6 +180,7 @@ public class GraphicOverlay extends View {
 
             for (Graphic graphic : mGraphics) {
                 graphic.draw(canvas);
+                System.out.println("Im drawing something?");
             }
         }
     }
