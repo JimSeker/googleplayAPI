@@ -3,8 +3,10 @@ package edu.cs4730.fitdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +26,7 @@ import java.util.List;
 
 /**
  * This fragment shows to add/cancel subscriptions so the phone can update the data.
- *
+ * <p>
  * This needs cleaned up and the async tasks need fixed so they can use the UI.  right now everything
  * uses Log.e instead of the standard logger (it works though).
  */
@@ -44,31 +46,31 @@ public class RecordFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myView = inflater.inflate(R.layout.fragment_record, container, false);
-        logger = (TextView) myView.findViewById(R.id.loggerr);
-        btn_show = (Button) myView.findViewById(R.id.btn_show);
+        logger = myView.findViewById(R.id.loggerr);
+        btn_show = myView.findViewById(R.id.btn_show);
         btn_show.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
-                    .listSubscriptions(DataType.TYPE_STEP_COUNT_DELTA)
+                    .listSubscriptions(DataType.TYPE_STEP_COUNT_DELTA)  //DataType.TYPE_ACTIVITY_SEGMENT is the example.
                     .addOnSuccessListener(new OnSuccessListener<List<Subscription>>() {
                         @Override
                         public void onSuccess(List<Subscription> subscriptions) {
                             for (Subscription sc : subscriptions) {
                                 DataType dt = sc.getDataType();
-                                logthis( "Active subscription for data type: " + dt.getName());
+                                logthis("Active subscription for data type: " + dt.getName());
                             }
                         }
                     });
 
             }
         });
-        btn_cancel = (Button) myView.findViewById(R.id.btn_cancel);
+        btn_cancel = myView.findViewById(R.id.btn_cancel);
         btn_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
-                    .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)
+                    .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)  //
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
@@ -129,7 +131,7 @@ public class RecordFragment extends Fragment {
 
 
     @Override
-    public  void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH) {
                 subscribe();

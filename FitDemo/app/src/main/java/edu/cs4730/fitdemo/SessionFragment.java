@@ -8,9 +8,9 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -82,9 +82,9 @@ public class SessionFragment extends Fragment {
                 return true;
             }
         });
-        logger = (TextView) myView.findViewById(R.id.loggersession);
+        logger = myView.findViewById(R.id.loggersession);
 
-        btn_View = (Button) myView.findViewById(R.id.btn_display_seesion);
+        btn_View = myView.findViewById(R.id.btn_display_seesion);
         btn_View.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,7 +92,7 @@ public class SessionFragment extends Fragment {
             }
         });
 
-        btn_Add = (Button) myView.findViewById(R.id.btn_add_session);
+        btn_Add = myView.findViewById(R.id.btn_add_session);
         btn_Add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,7 +100,7 @@ public class SessionFragment extends Fragment {
             }
         });
 
-        btn_Delete = (Button) myView.findViewById(R.id.btn_delete_session);
+        btn_Delete = myView.findViewById(R.id.btn_delete_session);
         btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,9 +78,9 @@ public class HistoryFragment extends Fragment {
                 return true;
             }
         });
-        logger = (TextView) myView.findViewById(R.id.loggerh);
+        logger = myView.findViewById(R.id.loggerh);
 
-        btn_ViewWeek = (Button) myView.findViewById(R.id.btn_view_week);
+        btn_ViewWeek = myView.findViewById(R.id.btn_view_week);
         btn_ViewWeek.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -87,7 +89,7 @@ public class HistoryFragment extends Fragment {
             }
         });
 
-        btn_ViewToday = (Button) myView.findViewById(R.id.btn_view_today);
+        btn_ViewToday = myView.findViewById(R.id.btn_view_today);
         btn_ViewToday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,7 +97,7 @@ public class HistoryFragment extends Fragment {
             }
         });
 
-        btn_AddSteps = (Button) myView.findViewById(R.id.btn_add_steps);
+        btn_AddSteps = myView.findViewById(R.id.btn_add_steps);
         btn_AddSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,7 +105,7 @@ public class HistoryFragment extends Fragment {
             }
         });
 
-        btn_UpdateSteps = (Button) myView.findViewById(R.id.btn_update_steps);
+        btn_UpdateSteps = myView.findViewById(R.id.btn_update_steps);
         btn_UpdateSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,7 +113,7 @@ public class HistoryFragment extends Fragment {
             }
         });
 
-        btn_DeleteSteps = (Button) myView.findViewById(R.id.btn_delete_steps);
+        btn_DeleteSteps = myView.findViewById(R.id.btn_delete_steps);
         btn_DeleteSteps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -292,17 +294,31 @@ public class HistoryFragment extends Fragment {
         DataSource dataSource = new DataSource.Builder()
             .setAppPackageName(getActivity())
             .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-            .setName("Step Count")
+            .setStreamName("Step Count")
             .setType(DataSource.TYPE_RAW)
             .build();
 
         int stepCountDelta = 10000;  //we will add 10,000 steps for yesterday.
-        DataSet dataSet = DataSet.create(dataSource);
 
+
+        /* before v17 it was this.
+        DataSet dataSet = DataSet.create(dataSource);
         DataPoint point = dataSet.createDataPoint()
             .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
         point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
+
         dataSet.add(point);
+*/
+        //version 18+
+        DataPoint point = DataPoint.builder(dataSource)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_STEPS, stepCountDelta)
+            .build();
+
+        DataSet dataSet = DataSet.builder(dataSource)
+            .add(point)
+            .build();
+
 
         // Now insert the new dataset view the client.
         Log.i(TAG, "Inserting the session in the History API");
@@ -327,8 +343,8 @@ public class HistoryFragment extends Fragment {
 
 
     /*
-    * This is a wrapper function to update yesterdays data and display this weeks data.
-    */
+     * This is a wrapper function to update yesterdays data and display this weeks data.
+     */
     private void UpdateAndDisplayWeek() {
 
         insertUpdateSteps().continueWithTask(new Continuation<Void, Task<DataReadResponse>>() {
@@ -355,17 +371,21 @@ public class HistoryFragment extends Fragment {
         DataSource dataSource = new DataSource.Builder()
             .setAppPackageName(getActivity())
             .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-            .setName("Step Count")
+            .setStreamName("Step Count")
             .setType(DataSource.TYPE_RAW)
             .build();
 
         int stepCountDelta = 20000;  //add another 20K steps to the data already there.
-        DataSet dataSet = DataSet.create(dataSource);
 
-        DataPoint point = dataSet.createDataPoint()
-            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
-        point.getValue(Field.FIELD_STEPS).setInt(stepCountDelta);
-        dataSet.add(point);
+        //create the point to update.
+        DataPoint point = DataPoint.builder(dataSource)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_STEPS, stepCountDelta)
+            .build();
+        //now add it to the new data set.
+        DataSet dataSet = DataSet.builder(dataSource)
+            .add(point)
+            .build();
 
         DataUpdateRequest updateRequest = new DataUpdateRequest.Builder().setDataSet(dataSet).setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS).build();
 
@@ -438,9 +458,9 @@ public class HistoryFragment extends Fragment {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            sendmessage( "Successfully deleted today's step count data.");
+                            sendmessage("Successfully deleted today's step count data.");
                         } else {
-                            sendmessage( "Failed to delete today's step count data." + task.getException());
+                            sendmessage("Failed to delete today's step count data." + task.getException());
                         }
                     }
                 });
