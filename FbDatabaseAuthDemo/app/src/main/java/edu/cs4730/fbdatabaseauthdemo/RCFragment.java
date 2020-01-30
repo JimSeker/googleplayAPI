@@ -57,18 +57,18 @@ public class RCFragment extends Fragment {
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         // Create Remote Config Setting to enable developer mode.
         // Fetching configs from the server is normally limited to 5 requests per hour.
-        // Enabling developer mode allows many more requests to be made per hour, so developers
+        // setting it to 5 minutes fetch interval (maybe 0L), so developers
         // can test different config values during development.
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-            .setDeveloperModeEnabled(BuildConfig.DEBUG)
+            .setMinimumFetchIntervalInSeconds(0L)  //3600L
             .build();
-        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+        mFirebaseRemoteConfig.setConfigSettingsAsync(configSettings);
 
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
         defaultConfigMap.put(NOTE_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+        mFirebaseRemoteConfig.setDefaultsAsync(defaultConfigMap);
         fetchConfig();
 
         return myView;
@@ -80,7 +80,7 @@ public class RCFragment extends Fragment {
         long cacheExpiration = 3600; // 1 hour in seconds
         // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
         // server. This should not be used in release builds.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().getMinimumFetchIntervalInSeconds() ==0L) {
             cacheExpiration = 0;
         }
         Log.d(TAG, "cache is " + cacheExpiration);
@@ -90,7 +90,7 @@ public class RCFragment extends Fragment {
                 public void onSuccess(Void aVoid) {
                     // Make the fetched config available
                     // via FirebaseRemoteConfig get<type> calls, e.g., getLong, getString.
-                    mFirebaseRemoteConfig.activateFetched();
+                    mFirebaseRemoteConfig.activate();
 
                     // Update the config's.  In our case, just display it.
                     applyRCvalue();

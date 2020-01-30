@@ -15,13 +15,13 @@ import com.google.android.material.navigation.NavigationView;
 /**
  * The friendlychat code was use an an example in many places, but it so complex.
  * https://github.com/firebase/friendlychat-android
- *
+ * <p>
  * NOTE to test the console notifications (cloud messaging now), close the app.  It has service to
  * caught it when the app is open as well.  But then you won't see the notification.
  */
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener   {
+    implements NavigationView.OnNavigationItemSelectedListener {
 
     //public variables to use my fragments
     static final int RC_SIGN_IN = 9001;
@@ -57,13 +57,11 @@ public class MainActivity extends AppCompatActivity
 
         //put the default first fragment into place.
         getSupportFragmentManager().beginTransaction()
-           // .add(R.id.container, authFragment).commit();
+            // .add(R.id.container, authFragment).commit();
             .add(R.id.container, authGoogleApiFragment).commit();
 
     }
 
-
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         // Handle navigation view item clicks here.
@@ -81,13 +79,13 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_authg) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, authGoogleApiFragment).commit();
-        }else if (id == R.id.nav_storage) {
+        } else if (id == R.id.nav_storage) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new StorageFragment()).commit();
-        }else if (id == R.id.nav_rc) {
+        } else if (id == R.id.nav_rc) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new RCFragment()).commit();
-        }else if (id == R.id. nav_invite) {
+        } else if (id == R.id.nav_invite) {
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new InviteAntFragment()).commit();
         }
