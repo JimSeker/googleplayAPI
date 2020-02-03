@@ -1,8 +1,10 @@
 package edu.cs4730.admobdemo;
 
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
 import android.util.Log;
 import android.view.View;
 
@@ -34,9 +36,6 @@ public class MainActivity extends AppCompatActivity {
         //for the ad at the bottom of the mainactivity.
         AdView mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().addTestDevice("D1A4B2E34EF63965FDB3E19C432D0D82").build();
-
-        //adRequest.Builder.
-
 
         //for the Interstitial ad, which is launched via the button
         mInterstitialAd = new InterstitialAd(this);
