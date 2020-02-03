@@ -4,12 +4,11 @@ import android.content.Context;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +32,6 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URI;
 
 /**
  * This is the advertise side of the Nearby API.  (server)
@@ -184,7 +182,8 @@ public class AdvertiseFragment extends Fragment {
                 UserNickName,    //human readable name for the endpoint.
                 MainActivity.ServiceId,  //unique identifier for advertise endpoints
                 mConnectionLifecycleCallback,  //callback notified when remote endpoints request a connection to this endpoint.
-                new AdvertisingOptions(MainActivity.STRATEGY))
+                new AdvertisingOptions.Builder().setStrategy(MainActivity.STRATEGY).build()
+            )
             .addOnSuccessListener(
                 new OnSuccessListener<Void>() {
                     @Override

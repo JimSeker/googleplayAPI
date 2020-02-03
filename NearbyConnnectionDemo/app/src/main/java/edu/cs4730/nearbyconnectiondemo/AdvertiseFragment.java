@@ -1,8 +1,8 @@
 package edu.cs4730.nearbyconnectiondemo;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -153,7 +153,8 @@ public class AdvertiseFragment extends Fragment {
                 UserNickName,    //human readable name for the endpoint.
                 MainActivity.ServiceId,  //unique identifier for advertise endpoints
                 mConnectionLifecycleCallback,  //callback notified when remote endpoints request a connection to this endpoint.
-                new AdvertisingOptions(MainActivity.STRATEGY))
+                new AdvertisingOptions.Builder().setStrategy(MainActivity.STRATEGY).build()
+            )
             .addOnSuccessListener(
                 new OnSuccessListener<Void>() {
                     @Override

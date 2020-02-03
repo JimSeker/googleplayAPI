@@ -4,9 +4,9 @@ package edu.cs4730.nearbyconstreamdemo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v4.util.SimpleArrayMap;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.collection.SimpleArrayMap;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,8 +31,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.util.BitSet;
 
 /**
  * this is the Discovery side of the Nearby API.  (client)
@@ -110,7 +108,8 @@ public class DiscoveryFragment extends Fragment {
                     }
                 },
 
-                new DiscoveryOptions(MainActivity.STRATEGY))  //options for discovery.
+                new DiscoveryOptions.Builder().setStrategy(MainActivity.STRATEGY).build()
+            )  //options for discovery.
             .addOnSuccessListener(
                 new OnSuccessListener<Void>() {
                     @Override

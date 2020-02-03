@@ -2,13 +2,16 @@ package edu.cs4730.nearbyconnectiondemo;
 
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
@@ -28,7 +31,7 @@ import com.google.android.gms.tasks.Task;
 /**
  * this is the Discovery side of the Nearby API.  (client)
  * This is the side likely to change the wifi to connect to advertise device.
- *
+ * <p>
  * Note, this code assumes one advertiser and that discovery connects to it.  There maybe many discovery connections to a single advertiser.
  * If uses P2P_CLUSTER and they can many advertisers, then it will ned change ConnectedEndPointID to a list
  * and comment out the stopDiscovery in the connection made section.
@@ -56,15 +59,15 @@ public class DiscoveryFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (mIsDiscovering)
-                  stopDiscovering();//in discovery mode, turn it off
+                    stopDiscovering();//in discovery mode, turn it off
                 else
-                  startDiscovering();
+                    startDiscovering();
             }
         });
         myView.findViewById(R.id.end_discovery).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ConnectedEndPointId.compareTo("") !=0 ) { //connected to someone
+                if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
                     Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
                     ConnectedEndPointId = "";
                 }
@@ -98,8 +101,8 @@ public class DiscoveryFragment extends Fragment {
                         logthis("End point lost  " + endpointId);
                     }
                 },
-
-                new DiscoveryOptions(MainActivity.STRATEGY))  //options for discovery.
+                new DiscoveryOptions.Builder().setStrategy(MainActivity.STRATEGY).build()
+            )  //options for discovery.
             .addOnSuccessListener(
                 new OnSuccessListener<Void>() {
                     @Override
@@ -120,7 +123,9 @@ public class DiscoveryFragment extends Fragment {
 
     }
 
-    /** Stops discovery. */
+    /**
+     * Stops discovery.
+     */
     protected void stopDiscovering() {
         mIsDiscovering = false;
         Nearby.getConnectionsClient(getContext()).stopDiscovery();
@@ -200,10 +205,10 @@ public class DiscoveryFragment extends Fragment {
 
     public void makeConnection(String endpointId) {
         Nearby.getConnectionsClient(getContext())
-           .requestConnection(
-            UserNickName,   //human readable name for the local endpoint.  if null/empty, uses device name or model.
-            endpointId,
-            mConnectionLifecycleCallback)
+            .requestConnection(
+                UserNickName,   //human readable name for the local endpoint.  if null/empty, uses device name or model.
+                endpointId,
+                mConnectionLifecycleCallback)
             .addOnSuccessListener(
                 new OnSuccessListener<Void>() {
                     @Override
@@ -227,7 +232,6 @@ public class DiscoveryFragment extends Fragment {
 
     /**
      * Sends a {@link Payload} to all currently connected endpoints.
-     *
      */
     protected void send(String data) {
 

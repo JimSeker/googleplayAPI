@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:text="Stop Publish"/>
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -29,6 +29,6 @@
             android:layout_height="fill_parent"
             android:text="Output:\n"
             android:textAppearance="?android:attr/textAppearanceMedium"/>
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
