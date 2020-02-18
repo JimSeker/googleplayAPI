@@ -37,6 +37,8 @@ See https://github.com/googlesamples/android-vision  NOTE Vision API is depricat
 
 <b>fbDatabaseAuthDemo</b> Has multiple fragments to show firebase authentication, Google Authentication, Realtime Database (and firebase adapter for recyclerview), Storage, remote config, and invites (which sort of work).  There is code for notifications and analytics as well.
 
+<b>firebaseFireStoreDemo</b> This uses firestore database instead of realtime and authenications to demo how the firestore db works.  You can have the same project with realtime and firestore. 
+
 <b>firebaseMLKit</b> is a first attempt at using the firebase ML kit to do image recognition.  It's using mostly google example code at this point.
 
 
