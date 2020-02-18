@@ -7,16 +7,22 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
 import android.util.Log;
 
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
-import com.firebase.jobdispatcher.Job;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Seker on 4/14/2017.
@@ -74,17 +80,34 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     /**
-     * Schedule a job using FirebaseJobDispatcher.     so if longer then 10 seconds, schedule the job.
+     * Schedule a job using Worker     so if longer then 10 seconds, schedule the job.
      */
     private void scheduleJob() {
-        // [START dispatch_job]
-        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(this));
-        Job myJob = dispatcher.newJobBuilder()
-            .setService(MyJobService.class)
-            .setTag("my-job-tag")
+
+        Data inputData = new Data.Builder()
+            .putString("some_key", "some_value")
             .build();
-        dispatcher.schedule(myJob);
-        // [END dispatch_job]
+        Constraints constraints = new Constraints.Builder()
+            // The Worker needs Network connectivity
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            // Needs the device to be charging
+            .setRequiresCharging(true)
+            .build();
+
+        OneTimeWorkRequest request =
+            // Tell which work to execute
+            new OneTimeWorkRequest.Builder(myWorker.class)
+                // Sets the input data for the ListenableWorker
+                .setInputData(inputData)
+                // If you want to delay the start of work by 60 seconds
+                .setInitialDelay(60, TimeUnit.SECONDS)
+                // Set additional constraints
+                .setConstraints(constraints)
+                .build();
+        //start up the work request finally.
+        WorkManager.getInstance(getApplicationContext())
+            .enqueueUniqueWork("my-unique-name", ExistingWorkPolicy.KEEP, request);
+
     }
 
     /**
