@@ -31,12 +31,10 @@ public class MainActivity extends AppCompatActivity {
     static final LatLng KIEL = new LatLng(53.551, 9.993);
     static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
 
-//    BasicMapFragment BasicMapFrag;
-//    CompassFragment CompassFrag;
-//    DrawMapFragment DrawMapFrag;
-//        BasicMapFrag = new BasicMapFragment();
-//        CompassFrag = new CompassFragment();
-//        DrawMapFrag = new DrawMapFragment();
+   BasicMapFragment BasicMapFrag;
+   CompassFragment CompassFrag;
+    DrawMapFragment DrawMapFrag;
+
 
     String TAG = "MainActivity";
 
@@ -77,6 +75,12 @@ public class MainActivity extends AppCompatActivity {
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
         };
+        BasicMapFrag = new BasicMapFragment();
+        CompassFrag = new CompassFragment();
+        DrawMapFrag = new DrawMapFragment();
+
+
+
         //To disable the icon for the drawer, change this to false
         //mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerlayout.addDrawerListener(mDrawerToggle);
@@ -94,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
                     //load fragment
                     if (!menuItem.isChecked()) {  //only need to do this if fragment is already loaded.
                         menuItem.setChecked(true);  //make sure to check/highlight the item.
-                        fragmentManager.beginTransaction().replace(R.id.container, new BasicMapFragment()).commit();
+                        //fragmentManager.beginTransaction().replace(R.id.container, new BasicMapFragment()).commit();
+                        fragmentManager.beginTransaction().replace(R.id.container, BasicMapFrag).commit();
                     }
                     mDrawerlayout.closeDrawers();  //close the drawer, since the user has selected it.
                     return true;
@@ -104,7 +109,8 @@ public class MainActivity extends AppCompatActivity {
                     if (!menuItem.isChecked()) {  //only need to do this if fragment is already loaded.
                         menuItem.setChecked(true); //make sure the item is checked/highlighted
                         Log.v(TAG, "fab fragment?");
-                        fragmentManager.beginTransaction().replace(R.id.container, new CompassFragment()).commit();
+                        //fragmentManager.beginTransaction().replace(R.id.container, new CompassFragment()).commit();
+                        fragmentManager.beginTransaction().replace(R.id.container, CompassFrag).commit();
                     }
                     //now close the nav drawer.
                     mDrawerlayout.closeDrawers();
@@ -113,7 +119,8 @@ public class MainActivity extends AppCompatActivity {
                     //load fragment
                     //if (!menuItem.isChecked()) {  //only need to do this if fragment is already loaded.
                     menuItem.setChecked(true);
-                    fragmentManager.beginTransaction().replace(R.id.container, new DrawMapFragment()).commit();
+                    //fragmentManager.beginTransaction().replace(R.id.container, new DrawMapFragment()).commit();
+                    fragmentManager.beginTransaction().replace(R.id.container, DrawMapFrag).commit();
                     //}
                     mDrawerlayout.closeDrawers();
                     return true;

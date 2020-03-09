@@ -70,6 +70,7 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
                 .icon(BitmapDescriptorFactory
                         .fromResource(R.drawable.ic_launcher))
         );
+
         Marker cheyenne = map.addMarker(new MarkerOptions().position(MainActivity.CHEYENNE)
                 .title("Cheyenne"));
 
