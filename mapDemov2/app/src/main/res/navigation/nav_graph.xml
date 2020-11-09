@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/basicMapFragment">
+
+    <fragment
+        android:id="@+id/basicMapFragment"
+        android:name="edu.cs4730.mapdemov2.BasicMapFragment"
+        android:label="BasicMapFragment" />
+    <fragment
+        android:id="@+id/drawMapFragment"
+        android:name="edu.cs4730.mapdemov2.DrawMapFragment"
+        android:label="DrawMapFragment" />
+    <fragment
+        android:id="@+id/compassFragment"
+        android:name="edu.cs4730.mapdemov2.CompassFragment"
+        android:label="CompassFragment" />
+</navigation>
