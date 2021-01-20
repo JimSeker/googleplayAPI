@@ -22,9 +22,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -64,7 +66,6 @@ public class MainActivity extends AppCompatActivity
     private DetectedActivitiesAdapter mAdapter;
 
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity
 
 
     //ask for permissions when we start.
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     public void CheckPerm() {
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
             //I'm on not explaining why, just asking for permission.

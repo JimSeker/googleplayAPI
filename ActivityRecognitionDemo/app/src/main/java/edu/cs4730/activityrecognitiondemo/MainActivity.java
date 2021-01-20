@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      * fastest possible rate. Getting frequent updates negatively impact battery life and a real
      * app may prefer to request less frequent updates.
      */
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;  //fastest rate which appear to be about 10 seconds.
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10;  //fastest rate which appear to be about 10 seconds.
     //30 * 1000; // 30 seconds
     /**
      * The entry point for interacting with activity recognition.
