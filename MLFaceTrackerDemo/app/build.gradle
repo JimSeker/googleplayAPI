@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 30
+
     defaultConfig {
         applicationId "edu.cs4730.mlfacetrackerdemo"
-        minSdkVersion 22
-        targetSdkVersion 29
+        minSdkVersion 24
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
@@ -22,7 +22,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.firebase:firebase-ml-vision:24.0.1'
-    implementation 'com.google.firebase:firebase-ml-vision-face-model:19.0.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    implementation 'com.google.firebase:firebase-ml-vision:24.0.1'  //24.1.0 produces an error internal to the library.
+   // implementation  'com.google.firebase:firebase-ml-model-interpreter:22.0.4'  //not needed, but produces the same error as 24.1.0 above
+    // implementation 'com.google.firebase:firebase-bom:26.3.0'  //no help.
+   //  implementation 'com.google.firebase:firebase-ml-vision-face-model:20.0.2'  depreciated and it seems I don't need it either.
 }
