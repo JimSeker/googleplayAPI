@@ -23,7 +23,7 @@ See https://github.com/googlesamples/android-vision  NOTE Vision API is depricat
 
 <b>FaceTrackerMultiDemo</b> is based on FaceTrackerDemo2, except it uses the multiprocessors, so more then one face can be analysed at the same time. NOTE Vision API is depricated for ML kit.  The landmarks have stopped working on my test phones.
 
-<b>MLFaceTrackerDemo</b> is the same as the FaceTracker2 and FaceTrackerMultiDemo, but is based on the ML Kit code..  Note this is firebase, so you need to add to a project you own.
+<b>MLFaceTrackerDemo</b> is the same as the FaceTracker2 and FaceTrackerMultiDemo, but is based on the ML Kit code..  Note this is firebase, so you need to add to a project you own.  also note, the newer libraries are just broken (24.1.0) and there are bug reports dating back 6 months.  
 
 <b>BarocdeReader</b> use the googlePlay vision APIs to find a barcode and ask if you want to search Amazon or open the web page.  This a very simple example.  
 
