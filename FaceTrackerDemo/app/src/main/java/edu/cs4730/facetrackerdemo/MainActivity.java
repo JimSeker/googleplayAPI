@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -14,6 +13,7 @@ import android.speech.tts.TextToSpeech.OnInitListener;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.view.SurfaceHolder;
 
 import android.util.Log;
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     }
     /*
-    *  methods needed for the surfaceView callback methods.
+     *  methods needed for the surfaceView callback methods.
      */
 
     @Override
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     /*
-    *  FaceDetector code
+     *  FaceDetector code
      */
     class FaceTracker extends Tracker<Face> {
         boolean RightEye, LeftEye, Smile;
@@ -292,14 +292,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     public void Speech(String text) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //not sure what an utteranceId is supposed to be... we maybe able to setup a
-            //listener for "utterances" and check to see if they completed or something.
-            mTts.speak(text, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
-        } else {  //below lollipop and use this method instead.
-            mTts.speak(text, TextToSpeech.QUEUE_ADD, null);
-        }
-
+        mTts.speak(text, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
     }
 
     public void sendmessage(String logthis) {
@@ -316,9 +309,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     /*
-    *  for the speech part of this code.
+     *  for the speech part of this code.
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (requestCode == REQ_TTS_STATUS_CHECK) {
             switch (resultCode) {
                 case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
@@ -331,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     Log.e(TAG, "Got a failure. TTS apparently not available");
             }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

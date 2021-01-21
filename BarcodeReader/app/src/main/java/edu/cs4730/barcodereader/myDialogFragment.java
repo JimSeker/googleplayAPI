@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -85,7 +87,8 @@ public class myDialogFragment extends DialogFragment {
             public void onClick(View v) {
                 dismiss();
 
-                String url = mParam1;
+                String url = "http://www.google.com/search?q="+mParam1;
+                Log.i("URL is", url);
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 startActivity(i);
