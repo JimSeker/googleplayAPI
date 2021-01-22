@@ -45,9 +45,8 @@ import java.util.List;
  * Live preview demo for ML Kit APIs.
  */
 @KeepName
-public final class LivePreviewActivity extends AppCompatActivity
+public final class MainActivity extends AppCompatActivity
     implements OnRequestPermissionsResultCallback,
-    //   OnItemSelectedListener,
     CompoundButton.OnCheckedChangeListener {
 
     private static final String FACE_DETECTION = "Face Detection";
@@ -122,7 +121,7 @@ public final class LivePreviewActivity extends AppCompatActivity
                     .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)   //can't use contour and landmarks together.
                     .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
                     .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)  //FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE
-                    //.enableTracking() //this is causing a pixel2 to die, so enable if you want to.
+                    .enableTracking() //this is causing a pixel2 to die, so enable if you want to.
                     .setMinFaceSize(0.1f);
 
 

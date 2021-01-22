@@ -19,7 +19,7 @@
             android:value="barcode,face,ocr,ica"/>
 
         <activity
-            android:name=".LivePreviewActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MlkitFaceTrackerDemo">
             <intent-filter>

@@ -70,7 +70,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
 
     public void sendmessage(String logthis) {
-        Log.wtf("graphics", logthis        );
+        //Log.wtf("graphics", logthis        );
         /*  until I get the main code working again.
 
         Bundle b = new Bundle();
@@ -112,44 +112,10 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float bottom = y + yOffset;
         canvas.drawRect(left, top, right, bottom, boxPaint);
 
-        /** contuor code here.
-         FirebaseVisionFaceContour contour = face.getContour(FirebaseVisionFaceContour.ALL_POINTS);
-         for (com.google.firebase.ml.vision.common.FirebaseVisionPoint point : contour.getPoints()) {
-         float px = translateX(point.getX());
-         float py = translateY(point.getY());
-         canvas.drawCircle(px, py, FACE_POSITION_RADIUS, facePositionPaint);
-         }
-         */
 
         sendmessage("Smile: " + face.getSmilingProbability() +
             " Left: " + face.getLeftEyeOpenProbability() +
             " Right:" + face.getRightEyeOpenProbability());
-/*
-    if (face.getSmilingProbability() >= 0) {
-      canvas.drawText(
-          "happiness: " + String.format("%.2f", face.getSmilingProbability()),
-          x + ID_X_OFFSET * 3,
-          y - ID_Y_OFFSET,
-          idPaint);
-    }
-
-    if (face.getRightEyeOpenProbability() >= 0) {
-      canvas.drawText(
-          "right1 eye: " + String.format("%.2f", face.getRightEyeOpenProbability()),
-          x - ID_X_OFFSET,
-          y,
-          idPaint);
-    }
-    if (face.getLeftEyeOpenProbability() >= 0) {
-      canvas.drawText(
-          "left eye: " + String.format("%.2f", face.getLeftEyeOpenProbability()),
-          x + ID_X_OFFSET * 6,
-          y,
-          idPaint);
-    }
-
- */
-
 
         float cx, cy;
         float lx = 0f, ly = 0f, mx = 0, my = 0, rx = 0, ry = 0;
@@ -157,7 +123,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
         FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
         if (leftEye != null && leftEye.getPosition() != null) {
-            Log.d(TAG, "LEFT EYE");
+    //        Log.d(TAG, "LEFT EYE");
             cx = translateX(leftEye.getPosition().x);
             cy = translateY(leftEye.getPosition().y);
             if (face.getLeftEyeOpenProbability() != null) {
@@ -172,7 +138,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
         FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
         if (rightEye != null && rightEye.getPosition() != null) {
-            Log.d(TAG, "RIGHT EYE");
+           // Log.d(TAG, "RIGHT EYE");
             cx = translateX(rightEye.getPosition().x);
             cy = translateY(rightEye.getPosition().y);
             if (face.getRightEyeOpenProbability() != null) {
@@ -190,15 +156,15 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         FaceLandmark bottommouth = face.getLandmark(FaceLandmark.MOUTH_BOTTOM);
         if (leftmouth != null && rightmouth != null && bottommouth != null &&
             leftmouth.getPosition() != null && rightmouth.getPosition() != null && bottommouth.getPosition() != null) {
-            Log.d(TAG, "LEFT MOUTH");
+       //     Log.d(TAG, "LEFT MOUTH");
             lx = translateX(leftmouth.getPosition().x);
             ly = translateY(leftmouth.getPosition().y);
 
-            Log.d(TAG, "RIGHT MOUTH");
+      //      Log.d(TAG, "RIGHT MOUTH");
             rx = translateX(rightmouth.getPosition().x);
             ry = translateY(rightmouth.getPosition().y);
 
-            Log.d(TAG, "BOTTOM MOUTH");
+      //      Log.d(TAG, "BOTTOM MOUTH");
             mx = translateX(bottommouth.getPosition().x );
             my = translateY(bottommouth.getPosition().y);
 
@@ -206,7 +172,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             //now draw the mouth.   First check if all points exists
             if (lx > 0.0f && rx > 0.0f && mx > 0.0f) {
                 //so first if one side of the mouth is higher, use that one.
-                Log.v(TAG, "Drawing mouth");
+      //          Log.v(TAG, "Drawing mouth");
                 if (ly < ry)  //left side is higher
                     ry = ly;
                 else

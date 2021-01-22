@@ -25,7 +25,6 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 
 import com.google.android.gms.common.images.Size;
-import edu.cs4730.mlkitfacetrackerdemo.preference.PreferenceUtils;
 
 import java.io.IOException;
 
