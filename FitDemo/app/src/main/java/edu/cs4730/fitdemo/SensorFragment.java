@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataPoint;
@@ -107,9 +109,31 @@ public class SensorFragment extends Fragment {
             REQUEST_OAUTH,
             GoogleSignIn.getLastSignedInAccount(getContext()),
             fitnessOptions);
+
     }
 
+    public void disconnect() {
+        //first clean up the session.
+        unregisterFitnessDataListener();
+        mlistener = null;
 
+        FitnessOptions fitnessOptions = getFitnessSignInOptions();
+        GoogleSignInOptions signInOptions = new com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder().addExtension(fitnessOptions).build();
+
+        //GoogleSignInClient client = GoogleSignIn.getClient(getContext(), signInOptions);
+        GoogleSignIn.getClient(getContext(), signInOptions)
+            .signOut();
+
+        //instead we could just revoke access, but signout should clear everything.
+//            .revokeAccess()
+//                .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                    @Override
+//                    public void onSuccess(Void aVoid) {
+//                        Log.d(TAG, "disconnected from google fit.");
+//                    }
+//                });
+
+    }
 
     public void logthis(String item) {
         logger.append(item + "\n");

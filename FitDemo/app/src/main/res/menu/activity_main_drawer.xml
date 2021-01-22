@@ -14,5 +14,9 @@
         android:id="@+id/nav_session"
         android:title="Session Demo" />
 
+    <item
+        android:id="@+id/nav_signout"
+        android:title="Sign out and reset" />
+
 
 </menu>

@@ -147,6 +147,7 @@ public class SessionFragment extends Fragment {
      */
     private void VerifySessionWrapper() {
         if (hasOAuthPermission()) {
+            Log.v(TAG, "we have permissions?");
             viewSessionData();
         } else {
             requestOAuthPermission();
@@ -308,7 +309,7 @@ public class SessionFragment extends Fragment {
         DataSource speedDataSource = new DataSource.Builder()
             .setAppPackageName(getActivity().getPackageName())
             .setDataType(DataType.TYPE_SPEED)
-            .setName(SAMPLE_SESSION_NAME + "- speed")
+            .setStreamName(SAMPLE_SESSION_NAME + "- speed")
             .setType(DataSource.TYPE_RAW)
             .build();
 
@@ -338,7 +339,7 @@ public class SessionFragment extends Fragment {
         DataSource activitySegmentDataSource = new DataSource.Builder()
             .setAppPackageName(getActivity().getPackageName())
             .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
-            .setName(SAMPLE_SESSION_NAME + "-activity segments")
+            .setStreamName(SAMPLE_SESSION_NAME + "-activity segments")
             .setType(DataSource.TYPE_RAW)
             .build();
         DataSet activitySegments = DataSet.create(activitySegmentDataSource);

@@ -24,13 +24,13 @@ import android.widget.Toast;
 
 /**
  * Most of the code is in the fragments.
- *
+ * <p>
  * But this activity is asking for the new ACTIVITY permission that started in API 29.  Not sure
  * what happens if this is run on a 28 device.
  */
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     FragmentManager fragmentManager;
     SensorFragment sensorFragment;
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -75,10 +75,11 @@ public class MainActivity extends AppCompatActivity
             //I'm on not explaining why, just asking for permission.
             Log.v(TAG, "asking for permissions");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                MainActivity.REQUEST_ACCESS_Activity_Updates);
+                    MainActivity.REQUEST_ACCESS_Activity_Updates);
 
         }
     }
+
     /**
      * Callback received when a permissions request has been completed.
      */
@@ -123,6 +124,12 @@ public class MainActivity extends AppCompatActivity
             fragmentManager.beginTransaction().replace(R.id.container, new SessionFragment()).commit();
         } else if (id == R.id.nav_history) {
             fragmentManager.beginTransaction().replace(R.id.container, new HistoryFragment()).commit();
+        } else if (id == R.id.nav_signout) {
+            sensorFragment.disconnect();
+            //reset, so it will login again.
+            sensorFragment = new SensorFragment();
+            fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
+
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
