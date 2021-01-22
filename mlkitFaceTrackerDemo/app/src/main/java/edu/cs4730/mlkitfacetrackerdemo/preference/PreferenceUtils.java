@@ -37,7 +37,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 /** Utility class to retrieve shared preferences. */
 public class PreferenceUtils {
 
-
+/*
   static void saveString(Context context, @StringRes int prefKeyId, @Nullable String value) {
     PreferenceManager.getDefaultSharedPreferences(context)
         .edit()
@@ -45,6 +45,7 @@ public class PreferenceUtils {
         .apply();
   }
 
+*/
   @Nullable
   public static SizePair getCameraPreviewSizePair(Context context, int cameraId) {
 
@@ -68,22 +69,8 @@ public class PreferenceUtils {
     }
   }
 
-  @RequiresApi(VERSION_CODES.LOLLIPOP)
-  @Nullable
-  public static android.util.Size getCameraXTargetResolution(Context context, int lensfacing) {
-    String prefKey =
-            lensfacing == CameraSelector.LENS_FACING_BACK
-                    ? context.getString(R.string.pref_key_camerax_rear_camera_target_resolution)
-                    : context.getString(R.string.pref_key_camerax_front_camera_target_resolution);
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    try {
-      return android.util.Size.parseSize(sharedPreferences.getString(prefKey, null));
-    } catch (Exception e) {
-      return null;
-    }
-  }
 
-
+  /*
   public static FaceDetectorOptions getFaceDetectorOptionsForLivePreview(Context context) {
     int landmarkMode =
         getModeTypePreferenceValue(
@@ -129,40 +116,29 @@ public class PreferenceUtils {
     return optionsBuilder.build();
   }
 
+*/
 
 
-
-  public static boolean shouldShowPoseDetectionInFrameLikelihoodLivePreview(Context context) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    String prefKey =
-        context.getString(R.string.pref_key_live_preview_pose_detector_show_in_frame_likelihood);
-    return sharedPreferences.getBoolean(prefKey, false);
-  }
-
-  public static boolean shouldShowPoseDetectionInFrameLikelihoodStillImage(Context context) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    String prefKey =
-        context.getString(R.string.pref_key_still_image_pose_detector_show_in_frame_likelihood);
-    return sharedPreferences.getBoolean(prefKey, false);
-  }
 
   /**
    * Mode type preference is backed by {@link android.preference.ListPreference} which only support
    * storing its entry value as string type, so we need to retrieve as string and then convert to
    * integer.
    */
+    /*
   private static int getModeTypePreferenceValue(
           Context context, @StringRes int prefKeyResId, int defaultValue) {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     String prefKey = context.getString(prefKeyResId);
     return Integer.parseInt(sharedPreferences.getString(prefKey, String.valueOf(defaultValue)));
   }
-
+*/
+  /*
   public static boolean isCameraLiveViewportEnabled(Context context) {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     String prefKey = context.getString(R.string.pref_key_camera_live_viewport);
     return sharedPreferences.getBoolean(prefKey, false);
   }
-
+*/
   private PreferenceUtils() {}
 }
