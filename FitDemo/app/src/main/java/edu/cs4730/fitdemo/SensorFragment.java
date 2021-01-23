@@ -169,7 +169,7 @@ public class SensorFragment extends Fragment {
 
     /** Finds available data sources and attempts to register on a specific {@link DataType}. */
     private void findFitnessDataSources() {
-        // [START find_data_sources]
+
         // Note: Fitness.SensorsApi.findDataSources() requires the ACCESS_FINE_LOCATION permission.
         Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
             .findDataSources(
@@ -202,7 +202,6 @@ public class SensorFragment extends Fragment {
                         Log.e(TAG, "failed", e);
                     }
                 });
-        // [END find_data_sources]
     }
 
 
