@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         applicationId "edu.cs4730.admobdemo"
-        minSdkVersion 22
-        targetSdkVersion 29
+        minSdkVersion 24
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
     }
@@ -20,10 +20,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'com.google.android.gms:play-services-ads:18.3.0'
-//    implementation 'com.google.firebase:firebase-ads:18.3.0'  //likely the same library as gp ads at this point.
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'com.google.android.gms:play-services-ads:19.7.0'
+//    implementation 'com.google.firebase:firebase-ads:19.7.0'  //likely the same library as gp ads at this point.
     implementation 'com.google.android.ads.consent:consent-library:1.0.8'
 
 }
