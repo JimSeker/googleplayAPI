@@ -3,6 +3,8 @@ package edu.cs4730.androidbeaconlibrary;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
+
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -45,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        myViewModel mModel = new androidx.lifecycle.ViewModelProvider(this).get(myViewModel.class);
+
         logger = findViewById(R.id.logger);
         logthis("App Starting");
         //check for permissions and start the beacons.
