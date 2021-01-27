@@ -9,6 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 
 import java.util.Collection;
 import java.util.List;
@@ -92,7 +94,39 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
             pos++;
         }
         if (entry != null) {
-            viewHolder.mName.setText(entry.toString());
+            String temp = "Nothing";
+            if (entry.getServiceUuid() == 0xfeaa && entry.getBeaconTypeCode() == 0x00) {
+                // This is a Eddystone-UID frame
+                Identifier namespaceId = entry.getId1();
+                Identifier instanceId = entry.getId2();
+                temp = "Eddystone -UID data" +
+                        "\nnamespace id: " + namespaceId +
+                        "\ninstance id: " + instanceId +
+                        "\n distance approximately " + entry.getDistance() + " meters away.";
+                if (entry.getExtraDataFields().size() > 0) {
+                    long telemetryVersion = entry.getExtraDataFields().get(0);
+                    long batteryMilliVolts = entry.getExtraDataFields().get(1);
+                    long pduCount = entry.getExtraDataFields().get(3);
+                    long uptime = entry.getExtraDataFields().get(4);
+                    temp += "telemetry version " + telemetryVersion +
+                            "\n has been up for : " + uptime + " seconds" +
+                            "\n has a battery level of " + batteryMilliVolts + " mV" +
+                            "\n and has transmitted " + pduCount + " advertisements.";
+                }
+                temp += "\nstring " + entry.toString();
+            } else if (entry.getServiceUuid() == 0xfeaa && entry.getBeaconTypeCode() == 0x10) {
+                String url = UrlBeaconUrlCompressor.uncompress(entry.getId1().toByteArray());
+
+                temp = "Eddystone-URL " +
+                        "\nurl: " + url +
+                        "\n distance approximately " + entry.getDistance() + " meters away.";
+            }    else {
+                temp = "Altbeacon " +
+                        "\nstring: " + entry.toString() +
+                        "\n distance approximately " + entry.getDistance() + " meters away.";
+            }
+
+            viewHolder.mName.setText(temp);
             viewHolder.mName.setTag(entry);  //sample data to show.
         }
     }

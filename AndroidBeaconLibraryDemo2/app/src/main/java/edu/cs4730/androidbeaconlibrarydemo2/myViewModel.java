@@ -31,7 +31,8 @@ public class myViewModel extends AndroidViewModel {
     }
 
     void setItem(String n) {
-        item.setValue(item.getValue() + item + "\n");
+
+        item.setValue(item.getValue() + n + "\n");
 
     }
 
