@@ -17,18 +17,27 @@ import edu.cs4730.androidbeaconlibrarydemo2.R;
 public class HomeFragment extends Fragment {
 
     TextView logger;
+    private myViewModel mViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_home, container, false);
-       logger = root.findViewById(R.id.logger);
+        logger = root.findViewById(R.id.logger);
+        mViewModel = new ViewModelProvider(getActivity()).get(myViewModel.class);
+        mViewModel.getItemLD().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (logger != null)
+                    logger.setText(s);
+            }
+        });
         return root;
     }
 
     public void logthis(String item) {
         if (logger != null)
-        logger.append(item + "\n");
+            logger.append(item + "\n");
     }
 
 }

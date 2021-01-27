@@ -2,50 +2,27 @@ package edu.cs4730.androidbeaconlibrarydemo2;
 
 import android.app.Application;
 
-import org.altbeacon.beacon.Beacon;
-
-import java.util.Collection;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-class DataViewModel extends AndroidViewModel {
-    private MutableLiveData<String> item;
-    public DataViewModel(@NonNull Application application) {
-        super(application);
-    }
+import org.altbeacon.beacon.Beacon;
 
-    /*
+import java.util.Collection;
+
+public class myViewModel extends AndroidViewModel {
     private MutableLiveData<String> item;
     private MutableLiveData<Collection<Beacon>> mlist;
 
-    public DataViewModel(Application application) {
+    public myViewModel(@NonNull Application application) {
         super(application);
         item = new MutableLiveData<String>();
+        item.setValue("start\n");
         mlist = new MutableLiveData<Collection<Beacon>>();
     }
 
-
-    MutableLiveData<Collection<Beacon>> getBeaconlist() {
-       // return mlist;
-        return null;
-    }
-
-    void setMlist(Collection<Beacon> n) {
-       // mlist.setValue(n);
-    }
-
-    Collection<Beacon> getMlist() {
-      //  return mlist.getValue();
-        return null;
-    }
-
-*/
     LiveData<String> getItemLD() {
-
         return item;
     }
 
@@ -58,5 +35,17 @@ class DataViewModel extends AndroidViewModel {
 
     }
 
+    MutableLiveData<Collection<Beacon>> getBeaconlist() {
+        return mlist;
+    }
+
+    void setMlist(Collection<Beacon> n) {
+        mlist.setValue(n);
+    }
+
+    Collection<Beacon> getMlist() {
+        return mlist.getValue();
+
+    }
 
 }

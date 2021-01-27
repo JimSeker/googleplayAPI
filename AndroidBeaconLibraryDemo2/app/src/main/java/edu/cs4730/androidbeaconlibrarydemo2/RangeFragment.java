@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class RangeFragment extends Fragment {
     TextView logger;
-    private DataViewModel mViewModel;
+    private myViewModel mViewModel;
     RecyclerView mRecyclerView;
     myAdapter mAdapter;
     String TAG = "RangeFragment";
@@ -49,21 +49,21 @@ public class RangeFragment extends Fragment {
 
 
         //setup the view model first.
-        mViewModel = new ViewModelProvider(getActivity()).get(DataViewModel.class);
-//        mViewModel.getBeaconlist().observe(getViewLifecycleOwner(), new Observer<Collection<Beacon>>() {
-//            @Override
-//            public void onChanged(@Nullable Collection<Beacon> data) {
-//                Log.v(TAG, "Data changed, updating!");
-//                mAdapter.setMyList(data);
-//            }
-//        });
-//
+        mViewModel = new ViewModelProvider(getActivity()).get(myViewModel.class);
+        mViewModel.getBeaconlist().observe(getViewLifecycleOwner(), new Observer<Collection<Beacon>>() {
+            @Override
+            public void onChanged(@Nullable Collection<Beacon> data) {
+                Log.v(TAG, "Data changed, updating!");
+                mAdapter.setMyList(data);
+            }
+        });
+
 
         return root;
     }
     public void logthis(String item) {
         if (logger != null)
-        logger.append(item + "\n");
+        logger.setText(item);
     }
 
 }

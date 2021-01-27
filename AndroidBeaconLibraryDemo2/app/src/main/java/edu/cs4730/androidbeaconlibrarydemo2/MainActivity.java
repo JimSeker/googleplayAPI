@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     private static final int PERMISSION_REQUESTS = 1;
     HomeFragment homeFrag;
     RangeFragment rangeFrag;
-    DataViewModel mViewModel;
+   myViewModel mViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
         //setup the view model first.
        //mViewModel =  ViewModelProvider(this).get(DataViewModel.class);
-        mViewModel = new androidx.lifecycle.ViewModelProvider(this).get(DataViewModel.class);
+        mViewModel = new androidx.lifecycle.ViewModelProvider(this).get(myViewModel.class);
 
 
 
@@ -121,9 +121,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
      */
     private void logthis(String item, int which) {
         Log.v(TAG, item);
-        if (which ==1)
-         mViewModel.setItem(item);
-        else if (which ==2) {
+        if (which ==1) {
+              mViewModel.setItem(item);
+        } else if (which ==2) {
             if (rangeFrag != null) {
                 rangeFrag.logthis(item);
             }
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 logthis("didRangeBeaconsInRegion called with beacon count:  " + beacons.size(), 2);
-        //        mViewModel.setMlist(beacons);
+                mViewModel.setMlist(beacons);
                 /*
                 for (Beacon beacon : beacons) {
                      if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {

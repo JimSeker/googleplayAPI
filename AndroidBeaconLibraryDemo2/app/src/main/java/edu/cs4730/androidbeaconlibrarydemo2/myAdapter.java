@@ -1,6 +1,7 @@
 package edu.cs4730.androidbeaconlibrarydemo2;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,6 +68,7 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
 
     public void setMyList(Collection<Beacon> myList) {
         this.myList = myList;
+        Log.wtf(TAG, "new data.");
         notifyDataSetChanged();
     }
     // Create new views (invoked by the layout manager)
@@ -87,6 +89,7 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
             if (pos == i) {
                 entry = beacon;
             }
+            pos++;
         }
         if (entry != null) {
             viewHolder.mName.setText(entry.toString());
