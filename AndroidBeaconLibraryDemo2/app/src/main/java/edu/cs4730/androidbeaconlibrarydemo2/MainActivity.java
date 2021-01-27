@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -36,12 +37,22 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     private static final int PERMISSION_REQUESTS = 1;
     HomeFragment homeFrag;
     RangeFragment rangeFrag;
-
+    DataViewModel mViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        //setup the view model first.
+       //mViewModel =  ViewModelProvider(this).get(DataViewModel.class);
+        mViewModel = new androidx.lifecycle.ViewModelProvider(this).get(DataViewModel.class);
+
+
+
+
+
         BottomNavigationView navView = findViewById(R.id.nav_view);
         navView.setOnNavigationItemSelectedListener(
                 new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -63,6 +74,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
                 }
         );
+
+
 
         logthis("App Starting", 0);
         //check for permissions and start the beacons.
@@ -108,13 +121,15 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
      */
     private void logthis(String item, int which) {
         Log.v(TAG, item);
-        if (which == 1) { //home
-            if (homeFrag != null)
-                homeFrag.logthis(item);
-        } else if (which == 2) //range?
-            if (rangeFrag != null)
+        if (which ==1)
+         mViewModel.setItem(item);
+        else if (which ==2) {
+            if (rangeFrag != null) {
                 rangeFrag.logthis(item);
+            }
+        }
     }
+
 
     /**
      * This is the beacon "listener" piece.  called from the "this" in bind/unbind.
@@ -171,8 +186,10 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 logthis("didRangeBeaconsInRegion called with beacon count:  " + beacons.size(), 2);
+        //        mViewModel.setMlist(beacons);
+                /*
                 for (Beacon beacon : beacons) {
-                    if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
+                     if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
                         // This is a Eddystone-UID frame
                         Identifier namespaceId = beacon.getId1();
                         Identifier instanceId = beacon.getId2();
@@ -205,8 +222,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
                         logthis("found a beacon, (not eddy) " + beacon.toString() + " and is approximately " + beacon.getDistance() + " meters away", 2);
                     }
-
                 }
+
+                */
             }
         });
 
