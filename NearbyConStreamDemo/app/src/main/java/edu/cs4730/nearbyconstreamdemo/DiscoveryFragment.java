@@ -150,7 +150,7 @@ public class DiscoveryFragment extends Fragment {
                 String endpointId, ConnectionInfo connectionInfo) {
                 // Automatically accept the connection on both sides.
                 // setups the callbacks to read data from the other connection.
-                Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
+                Nearby.getConnectionsClient(getActivity()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
                         public void onPayloadReceived(String endpointId, Payload payload) {
