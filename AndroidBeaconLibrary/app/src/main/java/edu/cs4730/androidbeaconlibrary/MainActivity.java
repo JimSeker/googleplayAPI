@@ -48,8 +48,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        myViewModel mModel = new androidx.lifecycle.ViewModelProvider(this).get(myViewModel.class);
-
         logger = findViewById(R.id.logger);
         logthis("App Starting");
         //check for permissions and start the beacons.
@@ -70,6 +68,27 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         beaconManager.unbind(this);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        beaconManager = null;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (beaconManager == null) {
+            beaconManager = BeaconManager.getInstanceForApplication(this);
+            //added eddystone, since I'm moving from google's beacons to altbeacon.  RedBeacon can broadcast both.
+            // Detect the main identifier (UID) frame:
+            beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
+            // Detect the telemetry (TLM) frame:
+            beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_TLM_LAYOUT));
+            // Detect the URL frame:
+            beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
+        }
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -172,11 +191,11 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                     } else if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
                         // This is a Eddystone-URL frame
                         String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-                        logthis( "I see a beacon transmitting a url: " + url +
+                        logthis("I see a beacon transmitting a url: " + url +
                                 " approximately " + beacon.getDistance() + " meters away.");
                     } else {
                         //no clue what we found here.
-                        logthis("found a beacon, (not eddy) " + beacon.toString() + " and is approximately "+beacon.getDistance() + "meters away");
+                        logthis("found a beacon, (not eddy) " + beacon.toString() + " and is approximately " + beacon.getDistance() + "meters away");
                     }
 
                 }
