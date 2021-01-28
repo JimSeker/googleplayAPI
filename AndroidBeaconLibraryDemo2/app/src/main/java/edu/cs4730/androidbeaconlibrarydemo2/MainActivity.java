@@ -1,6 +1,7 @@
 package edu.cs4730.androidbeaconlibrarydemo2;
 
 import android.content.Context;
+
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -20,11 +21,10 @@ import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
+
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,14 +44,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         //setup the view model first.
-       //mViewModel =  ViewModelProvider(this).get(DataViewModel.class);
-        mViewModel = new androidx.lifecycle.ViewModelProvider(this).get(myViewModel.class);
-
-
-
-
+        mViewModel = new ViewModelProvider(this).get(myViewModel.class);
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         navView.setOnNavigationItemSelectedListener(
@@ -139,40 +133,35 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     public void onBeaconServiceConnect() {
         beaconManager.removeAllMonitorNotifiers();
         beaconManager.addMonitorNotifier(new MonitorNotifier() {
+            //Called when at least one beacon in a Region is visible.
             @Override
             public void didEnterRegion(Region region) {
-
-                logthis("I just saw an beacon.", 1);
+                logthis("I can see at least one or more beacons.", 1);
                 // all the region variables appear to be null, because I set them that way?
-                logthis("uniqueID is " + region.getUniqueId(), 1);
-                //should always be "myMonitoringUniqueId"  see start below.
-//                logthis("bluetooth addreess is " + region.getBluetoothAddress());
-//                logthis("string? is " + region.toString());
-//                logthis(
-//                        "I detected a beacon in the region with namespace id " + region.getId1() +
-//                                " and instance id: " + region.getId2()
-//                );
-//                logthis("id3 is " + region.getId3());
+                logthis("the region ID is " + region.getUniqueId(), 1);
+                //should always be "myMonitoringUniqueId"  see startMonitoringBeaconsInRegion below, since I set it to that.
+                //I could add more regions, based on different args.  my are all null to find everything.  I need to see how find altbeacons vs eddystones.
             }
-
+            //Called when no beacons in a Region are visible.
             @Override
             public void didExitRegion(Region region) {
-                logthis("I no longer see an beacon", 1);
+                logthis("I no longer see any beacons", 1);
 
             }
-
+            //Called with a state value of MonitorNotifier.INSIDE when at least one beacon in a Region is visible.
             @Override
             public void didDetermineStateForRegion(int state, Region region) {
-                logthis("I have just switched from seeing/not seeing beacons: " + state, 1);
+                String stat = (state ==MonitorNotifier.INSIDE) ? "Inside" : "Outside";
+                logthis("I have just switched from seeing/not seeing beacons: " + stat, 1);
 
             }
         });
 
         try {
             beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
-            logthis("beacon monitor listener has been added.", 2);
+            logthis("beacon monitor listener has been added.", 1);
         } catch (RemoteException e) {
-            logthis("FAILED beacon monitor listener has been added." + e.toString(), 2);
+            logthis("FAILED beacon monitor listener has been added." + e.toString(), 1);
         }
 
         //Now add a ranged beacon info
@@ -182,49 +171,12 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+
         beaconManager.addRangeNotifier(new RangeNotifier() {
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 logthis("didRangeBeaconsInRegion called with beacon count:  " + beacons.size(), 2);
                 mViewModel.setMlist(beacons);
-                /*
-                for (Beacon beacon : beacons) {
-                     if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
-                        // This is a Eddystone-UID frame
-                        Identifier namespaceId = beacon.getId1();
-                        Identifier instanceId = beacon.getId2();
-                        logthis("I see a beacon transmitting namespace id: " + namespaceId +
-                                " and instance id: " + instanceId +
-                                " approximately " + beacon.getDistance() + " meters away.", 2);
-
-                        // Do we have telemetry data?
-                        if (beacon.getExtraDataFields().size() > 0) {
-                            long telemetryVersion = beacon.getExtraDataFields().get(0);
-                            long batteryMilliVolts = beacon.getExtraDataFields().get(1);
-                            long pduCount = beacon.getExtraDataFields().get(3);
-                            long uptime = beacon.getExtraDataFields().get(4);
-
-                            logthis(
-                                    "The above beacon is sending telemetry version " + telemetryVersion +
-                                            ", has been up for : " + uptime + " seconds" +
-                                            ", has a battery level of " + batteryMilliVolts + " mV" +
-                                            ", and has transmitted " + pduCount + " advertisements.", 2);
-                            logthis("string " + beacon.toString(),2);
-                        }
-
-                    } else if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
-                        // This is a Eddystone-URL frame
-                        String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-                        logthis("I see a beacon transmitting a url: " + url +
-                                " approximately " + beacon.getDistance() + " meters away.", 2);
-                    } else {
-                        //no clue what we found here.
-
-                        logthis("found a beacon, (not eddy) " + beacon.toString() + " and is approximately " + beacon.getDistance() + " meters away", 2);
-                    }
-                }
-
-                */
             }
         });
 

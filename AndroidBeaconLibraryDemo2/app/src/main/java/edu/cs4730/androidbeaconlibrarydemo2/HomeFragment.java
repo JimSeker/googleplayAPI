@@ -1,6 +1,7 @@
 package edu.cs4730.androidbeaconlibrarydemo2;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ public class HomeFragment extends Fragment {
 
     TextView logger;
     private myViewModel mViewModel;
+    String TAG = "RangeFragment";
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -28,16 +30,12 @@ public class HomeFragment extends Fragment {
         mViewModel.getItemLD().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
+                Log.wtf(TAG, "new data");
                 if (logger != null)
                     logger.setText(s);
             }
         });
         return root;
-    }
-
-    public void logthis(String item) {
-        if (logger != null)
-            logger.append(item + "\n");
     }
 
 }
