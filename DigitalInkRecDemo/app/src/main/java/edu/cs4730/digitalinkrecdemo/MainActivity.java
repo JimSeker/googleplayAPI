@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +19,8 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.mlkit.common.MlKitException;
+import com.google.mlkit.common.model.DownloadConditions;
+import com.google.mlkit.common.model.RemoteModelManager;
 import com.google.mlkit.vision.digitalink.DigitalInkRecognition;
 import com.google.mlkit.vision.digitalink.DigitalInkRecognitionModel;
 import com.google.mlkit.vision.digitalink.DigitalInkRecognitionModelIdentifier;
@@ -25,6 +28,10 @@ import com.google.mlkit.vision.digitalink.DigitalInkRecognizer;
 import com.google.mlkit.vision.digitalink.DigitalInkRecognizerOptions;
 import com.google.mlkit.vision.digitalink.Ink;
 import com.google.mlkit.vision.digitalink.RecognitionResult;
+
+/**
+ * https://developers.google.com/ml-kit/vision/digital-ink-recognition 
+ */
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     Ink.Stroke.Builder strokeBuilder;
     Paint paint;
     DigitalInkRecognizer recognizer;
+    final String TAG = "mainactivity";
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -105,8 +113,23 @@ public class MainActivity extends AppCompatActivity {
         }
         if (modelIdentifier != null) {
             DigitalInkRecognitionModel model = DigitalInkRecognitionModel.builder(modelIdentifier).build();
+
+            RemoteModelManager remoteModelManager = RemoteModelManager.getInstance();
+            remoteModelManager
+                .download(model, new DownloadConditions.Builder().build())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i(TAG, "Model downloaded");
+                        recognizer = DigitalInkRecognition.getClient(DigitalInkRecognizerOptions.builder(model).build());
+                    }
+                })
+                .addOnFailureListener(
+                    e -> Log.e(TAG, "Error while downloading a model: " + e));
+
+
             // Get a recognizer for the language
-            recognizer = DigitalInkRecognition.getClient(DigitalInkRecognizerOptions.builder(model).build());
+           // recognizer = DigitalInkRecognition.getClient(DigitalInkRecognizerOptions.builder(model).build());
         } else {
             recognizer = null;
         }
