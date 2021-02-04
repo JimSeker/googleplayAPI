@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         translator = Translation.getClient(options);
+
+        getLifecycle().addObserver(translator); //ensures the translator is closed when not needed.
+
         logthis("Translating " + text + " to german");
         //we need ot make sure it has been downloaded (not about 30MB is the size too.
         //so use WIFI!!!
