@@ -35,7 +35,7 @@ import com.google.mlkit.vision.digitalink.RecognitionResult;
 
 public class MainActivity extends AppCompatActivity {
 
-    final int boardsize = 480;
+    final int boardsize = 1000;
     Bitmap theboard;
     Canvas theboardc;
     float startx, starty;
