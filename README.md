@@ -2,13 +2,14 @@
 
 <b>legacy/</b> older examples that are no longer updated.
 
+<B>mlkit</b>  is the new ML kit (not firebase ML cloud APIs) examples.   https://developers.google.com/ml-kit 
+
 <b>ActMapDemo</b> combines LocationAware, ActivityRecognition, and Google Maps together in an example where it use the location to draw on a map the path the user is 
 going.  The line changes color to show the different activities (ie walking, running, driving, etc).  A key is needed on the map for the colors though.
 
 <b>AcitivtyRecognition</b> is google's example code from https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition and will should likely be removed from this repo
 
 <b>ActivityRecognitionDemo</b> uses the Activity Recognition API provide in the GooglePlay APIs.  This example show the mostl likel activity (and speech), plus any activities that "it" thinks are at least 50% likely.  
-
 
 <b>GoogleLoginDemo</b> is a example of how to use the new login APIs.  This example is so very basic that is doesn't do anything other then login.  As note, if you run this example of two devices with the same user and login on one device, then start the activity on the second device, it will already be logged in.
 
@@ -23,7 +24,7 @@ See https://github.com/googlesamples/android-vision  NOTE Vision API is depricat
 
 <b>FaceTrackerMultiDemo</b> is based on FaceTrackerDemo2, except it uses the multiprocessors, so more then one face can be analysed at the same time. NOTE Vision API is depricated for ML kit.  The landmarks have stopped working on my test phones.
 
-<b>MLFaceTrackerDemo</b> is the same as the FaceTracker2 and FaceTrackerMultiDemo, but is based on the ML Kit code..  Note this is firebase, so you need to add to a project you own.  also note, the newer libraries are just broken (24.1.0) and there are bug reports dating back 6 months.  
+<b>MLFaceTrackerDemo</b> is the same as the FaceTracker2 and FaceTrackerMultiDemo, but is based on the ML  code.  Note this is firebase (cloud api), so you need to add to a project you own.  also note, the newer libraries are just broken (24.1.0) and there are bug reports dating back 6 months.  
 
 <b>BarocdeReader</b> use the googlePlay vision APIs to find a barcode and ask if you want to search Amazon or open the web page.  This a very simple example.  
 
@@ -39,8 +40,7 @@ See https://github.com/googlesamples/android-vision  NOTE Vision API is depricat
 
 <b>firebaseFireStoreDemo</b> This uses firestore database instead of realtime and authenications to demo how the firestore db works.  You can have the same project with realtime and firestore. 
 
-<b>firebaseMLKit</b> is a first attempt at using the firebase ML kit to do image recognition.  It's using mostly google example code at this point.
-
+<b>firebaseMLKit</b> is a first attempt at using the firebase ML kit to do image recognition.  It's not the new ML kit, but the firebase cloud APIs. It's using mostly google example code at this point.
 
 <b>NearbyConnectionDemo</b> is simple example of using the Nearby Connection APIs.  It connects up between 2 devices and sends two messages.  It's still a little rough and needs much better comments.
 
