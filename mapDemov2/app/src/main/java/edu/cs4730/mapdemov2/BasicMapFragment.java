@@ -73,7 +73,6 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
 
         Marker cheyenne = map.addMarker(new MarkerOptions().position(MainActivity.CHEYENNE)
                 .title("Cheyenne"));
-
         // Move the camera instantly to hamburg with a zoom of 15.
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(MainActivity.LARAMIE, 15));
 
