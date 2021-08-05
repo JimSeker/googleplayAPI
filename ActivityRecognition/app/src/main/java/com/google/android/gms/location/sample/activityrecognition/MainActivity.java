@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity
 
         // Get the UI widgets.
         mRequestActivityUpdatesButton = findViewById(R.id.request_activity_updates_button);
-        mRemoveActivityUpdatesButton =  findViewById(R.id.remove_activity_updates_button);
+        mRemoveActivityUpdatesButton = findViewById(R.id.remove_activity_updates_button);
         ListView detectedActivitiesListView = findViewById(
             R.id.detected_activities_listview);
 
@@ -96,7 +97,6 @@ public class MainActivity extends AppCompatActivity
 
 
     //ask for permissions when we start.
-    @RequiresApi(api = Build.VERSION_CODES.Q)
     public void CheckPerm() {
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
             //I'm on not explaining why, just asking for permission.
@@ -112,11 +112,13 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
     /**
      * Callback received when a permissions request has been completed.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         Log.v(TAG, "onRequest result called.");
 
         if (requestCode == REQUEST_ACCESS_Activity_Updates) {
@@ -131,6 +133,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
             }
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
