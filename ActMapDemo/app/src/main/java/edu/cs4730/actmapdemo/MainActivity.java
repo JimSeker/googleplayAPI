@@ -243,10 +243,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest = LocationRequest.create()
+            .setInterval(1000)
+            .setFastestInterval(500)
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     /**
@@ -480,6 +480,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         Log.v(TAG, "onRequest result called.");
         boolean coarse = false, fine = false, activity = false;
 
@@ -499,20 +500,22 @@ public class MainActivity extends AppCompatActivity {
         // If request is cancelled, the result arrays are empty.
         if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
             Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
-           if (coarse && fine)
-               startLocationUpdates();
+            if (coarse && fine)
+                startLocationUpdates();
 
         } else if (requestCode == REQUEST_ACCESS_onConnected) {
             if (coarse && fine)
                 initialsetup();
-        }  if ((requestCode == REQUEST_ACCESS_Activity_Updates)  && (activity ) ) {
-                setupActivityRec(true);
+        }
+        if ((requestCode == REQUEST_ACCESS_Activity_Updates) && (activity)) {
+            setupActivityRec(true);
         } else {
             // permission denied,    Disable this feature or close the app.
             Log.v(TAG, "permissions were NOT granted.");
             Toast.makeText(this, "at least one permission access NOT granted", Toast.LENGTH_SHORT).show();
             finish();
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 
