@@ -1,8 +1,13 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
@@ -51,6 +56,8 @@ public class AuthGoogleApiFragment extends Fragment {
     private SignInButton mSignInButton;
     private TextView mSignInTV;
 
+    ActivityResultLauncher<Intent> myActivityResultLauncher;
+
     public AuthGoogleApiFragment() {
         // Required empty public constructor
     }
@@ -92,6 +99,33 @@ public class AuthGoogleApiFragment extends Fragment {
         });
 
 
+        //using the new startActivityForResult method.
+        myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                        try {
+                            GoogleSignInAccount account = task.getResult(ApiException.class);
+                            logthis("successful login, now firebase.");
+                            // Google Sign In was successful, authenticate with Firebase
+                            firebaseAuthWithGoogle(account);
+
+                        } catch (ApiException e) {
+                            // The ApiException status code indicates the detailed failure reason.
+                            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+                            Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                            logthis("signInResult:failed code=" + e.getStatusCode());
+                            mSignInButton.setEnabled(true);
+                        }
+                    }
+                }
+            });
+
+
         mUsername = ANONYMOUS;
 
         // Initialize Firebase Auth
@@ -123,7 +157,7 @@ public class AuthGoogleApiFragment extends Fragment {
     //start the signin to google authentication, when we will then sign into firebase (in onactivityresult method below)
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, MainActivity.RC_G_SIGN_IN);
+        myActivityResultLauncher.launch(signInIntent);
     }
 
     private void signOut() {
@@ -139,31 +173,6 @@ public class AuthGoogleApiFragment extends Fragment {
         //remove the listener or it will require the user to sign in again.  Not the action I want to here.
         mSignInButton.setEnabled(true);
         logthis("Signed out");
-    }
-
-    /**
-     * So this where the result will come back to from the sign in call.
-     */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == MainActivity.RC_G_SIGN_IN) {
-
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                logthis("successful login, now firebase.");
-                // Google Sign In was successful, authenticate with Firebase
-                firebaseAuthWithGoogle(account);
-
-            } catch (ApiException e) {
-                // The ApiException status code indicates the detailed failure reason.
-                // Please refer to the GoogleSignInStatusCodes class reference for more information.
-                Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
-                logthis("signInResult:failed code=" + e.getStatusCode());
-                mSignInButton.setEnabled(true);
-            }
-        }
     }
 
     /**
@@ -196,5 +205,4 @@ public class AuthGoogleApiFragment extends Fragment {
                 }
             });
     }
-
 }

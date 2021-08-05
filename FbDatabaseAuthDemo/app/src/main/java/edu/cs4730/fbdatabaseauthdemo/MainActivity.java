@@ -24,8 +24,6 @@ public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener {
 
     //public variables to use my fragments
-    static final int RC_SIGN_IN = 9001;
-    static final int RC_G_SIGN_IN = 9002;
     static final int RC_PHOTO_PICKER = 9003;
     static final int RC_INVITE = 9004;
 

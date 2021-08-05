@@ -1,8 +1,13 @@
 package edu.cs4730.firebasefirestoredemo;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,10 +36,9 @@ import java.util.Map;
 /**
  * This is a simple example using the default data example from google.
  * It does require a google login in order to work (both read and write)
- *
+ * <p>
  * This example will have you login first and you can read/write.  If you logout, then
  * you will not be to read/write the data anymore.
- *
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView logger;
     private SignInButton mSignInButton;
     Button SignOutButton, addData_btn, listData_btn;
+
+    ActivityResultLauncher<Intent> myActivityResultLauncher;
 
     //firestore and auth pieces.
     FirebaseFirestore db;
@@ -70,18 +76,39 @@ public class MainActivity extends AppCompatActivity {
                     mSignInButton.setEnabled(false);
                 } else {
                     // user is not signed in.
-                    startActivityForResult(AuthUI.getInstance()  //see firebase UI for documentation.
-                            .createSignInIntentBuilder()
-                            .setIsSmartLockEnabled(false)
-                            .setAvailableProviders(Arrays.asList(
-                                new AuthUI.IdpConfig.GoogleBuilder().build()
-                                )
-                            )
-                            .build(),
-                        MainActivity.RC_SIGN_IN);
+                    myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(Arrays.asList(
+                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                            new AuthUI.IdpConfig.PhoneBuilder().build())
+                        )
+                        .build());
                 }
             }
         };
+
+        //using the new startActivityForResult method.
+        myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        Toast.makeText(MainActivity.this, "Authentication success.", Toast.LENGTH_SHORT).show();
+                        logthis("Google Sign In success.");
+                        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+                        logthis("username is" + mFirebaseUser.getDisplayName());
+                        mSignInButton.setEnabled(false);
+                    } else {
+                        // Google Sign In failed
+                        logthis("Google Sign In failed.");
+                        mSignInButton.setEnabled(true);
+                    }
+                }
+            });
 
 
         logger = findViewById(R.id.logger);
@@ -166,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    logthis( "Error adding document"+ e);
+                    logthis("Error adding document" + e);
                 }
             });
 
@@ -184,20 +211,20 @@ public class MainActivity extends AppCompatActivity {
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                 @Override
                 public void onSuccess(DocumentReference documentReference) {
-                   logthis("DocumentSnapshot added with ID: " + documentReference.getId());
+                    logthis("DocumentSnapshot added with ID: " + documentReference.getId());
                 }
             })
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    logthis( "Error adding document" + e);
+                    logthis("Error adding document" + e);
                 }
             });
     }
 
     /**
-    * This is the code that the tab shows you to list the data in the firestore database.
-    */
+     * This is the code that the tab shows you to list the data in the firestore database.
+     */
     void readdata() {
         db.collection("users")
             .get()
@@ -206,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                           logthis(document.getId() + " => " + document.getData());
+                            logthis(document.getId() + " => " + document.getData());
                         }
                     } else {
                         logthis("Error getting documents." + task.getException());
@@ -216,28 +243,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
-     */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == MainActivity.RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-
-                Toast.makeText(this, "Authentication success.", Toast.LENGTH_SHORT).show();
-                logthis("Google Sign In success.");
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                logthis("username is" + mFirebaseUser.getDisplayName());
-                mSignInButton.setEnabled(false);
-            } else {
-                // Google Sign In failed
-                logthis("Google Sign In failed.");
-                mSignInButton.setEnabled(true);
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+//    /**
+//     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
+//     */
+//    @Override
+//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//
+//        if (requestCode == MainActivity.RC_SIGN_IN) {
+//            if (resultCode == RESULT_OK) {
+//
+//                Toast.makeText(this, "Authentication success.", Toast.LENGTH_SHORT).show();
+//                logthis("Google Sign In success.");
+//                mFirebaseUser = mFirebaseAuth.getCurrentUser();
+//                logthis("username is" + mFirebaseUser.getDisplayName());
+//                mSignInButton.setEnabled(false);
+//            } else {
+//                // Google Sign In failed
+//                logthis("Google Sign In failed.");
+//                mSignInButton.setEnabled(true);
+//            }
+//        }
+//        super.onActivityResult(requestCode, resultCode, data);
+//    }
 
     //helper function to log and added to textview.
     public void logthis(String msg) {

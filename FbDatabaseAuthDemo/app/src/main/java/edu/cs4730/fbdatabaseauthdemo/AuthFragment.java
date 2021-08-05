@@ -1,11 +1,17 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +24,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static android.app.Activity.RESULT_OK;
@@ -44,6 +51,7 @@ public class AuthFragment extends Fragment {
     private SignInButton mSignInButton;
     private TextView mSignInTV;
 
+    ActivityResultLauncher<Intent> myActivityResultLauncher;
 
     public AuthFragment() {
         // Required empty public constructor
@@ -72,6 +80,32 @@ public class AuthFragment extends Fragment {
             }
         });
 
+        //using the new startActivityForResult method.
+        myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        Toast.makeText(getContext(), "Authentication success.", Toast.LENGTH_SHORT).show();
+                        logthis("Google Sign In success.");
+                        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+                        mUsername = mFirebaseUser.getDisplayName();
+                        logthis("username is" + mUsername);
+                        mSignInTV.setText(mUsername);
+                        mSignInButton.setEnabled(false);
+                    } else {
+                        // Google Sign In failed
+                        Toast.makeText(getContext(), "Authentication failed.",
+                            Toast.LENGTH_SHORT).show();
+                        logthis("Google Sign In failed.");
+                        mSignInButton.setEnabled(true);
+                    }
+                }
+            });
+
+
         mFirebaseAuth = FirebaseAuth.getInstance();
 
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -87,30 +121,26 @@ public class AuthFragment extends Fragment {
                     mSignInButton.setEnabled(false);
                 } else {
                     // user is not signed in.
-                    startActivityForResult(AuthUI.getInstance()  //see firebase UI for documentation.
-                            .createSignInIntentBuilder()
-                            .setIsSmartLockEnabled(false)
-                            .setAvailableProviders(Arrays.asList(
-                                new AuthUI.IdpConfig.EmailBuilder().build(),
-                                new AuthUI.IdpConfig.GoogleBuilder().build(),
-                                new AuthUI.IdpConfig.PhoneBuilder().build()
-                                )
+                    myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(Arrays.asList(
+                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                            new AuthUI.IdpConfig.PhoneBuilder().build()
                             )
-                            .build(),
-                        MainActivity.RC_SIGN_IN);
+                        )
+                        .build());
                 }
             }
         };
-
 
         // mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
         mSignInTV.setText(mUsername);
 
-
         return myView;
     }
-
 
     @Override
     public void onResume() {
@@ -141,35 +171,11 @@ public class AuthFragment extends Fragment {
         super.onPause();
     }
 
-
     /**
-     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
-     *
+     * this is a helper function
      */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == MainActivity.RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-
-                Toast.makeText(getContext(), "Authentication success.", Toast.LENGTH_SHORT).show();
-                logthis("Google Sign In success.");
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                mUsername = mFirebaseUser.getDisplayName();
-                logthis ("username is" + mUsername);
-                mSignInTV.setText(mUsername);
-                mSignInButton.setEnabled(false);
-            } else {
-                // Google Sign In failed
-                Toast.makeText(getContext(), "Authentication failed.",
-                    Toast.LENGTH_SHORT).show();
-                logthis("Google Sign In failed.");
-                mSignInButton.setEnabled(true);
-            }
-        }
-    }
-
     void logthis(String item) {
-        Log.d(TAG,  item);
+        Log.d(TAG, item);
         logger.append(item + "\n");
     }
 }
