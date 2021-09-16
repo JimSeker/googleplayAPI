@@ -40,6 +40,8 @@ import java.util.Map;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 
+import edu.cs4730.mlfacetrackerdemo.common.FrameMetadata;
+import edu.cs4730.mlfacetrackerdemo.common.GraphicOverlay;
 import edu.cs4730.mlfacetrackerdemo.common.VisionImageProcessor;
 
 /**
