@@ -1,32 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:showIn="navigation_view">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
 
 
     <group android:checkableBehavior="single">
 
         <item
             android:id="@+id/nav_auth"
-            android:title="Authenication"/>
+            android:title="Authenication" />
         <item
             android:id="@+id/nav_dbsimple"
-            android:title="Database Simple"/>
+            android:title="Database Simple" />
         <item
             android:id="@+id/nav_dblist"
-            android:title="Database List"/>
+            android:title="Database List" />
         <item
             android:id="@+id/nav_storage"
-            android:title="Storage"/>
+            android:title="Storage" />
         <item
             android:id="@+id/nav_authg"
-            android:title="Authenication Google."/>
+            android:title="Authentication Google." />
         <item
             android:id="@+id/nav_rc"
-            android:title="Remote Config"/>
-        <item
-            android:id="@+id/nav_invite"
-            android:title="Invites and Analytics"/>
+            android:title="Remote Config" />
     </group>
 
 
