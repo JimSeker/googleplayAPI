@@ -2,6 +2,8 @@
 
 <b>legacy/</b> older examples that are no longer updated.
 
+<b>FirebaseAPI</a> Are examples using the Firebase APIs.
+
 <B>mlkit</b>  is the new ML kit (not firebase ML cloud APIs) examples.   https://developers.google.com/ml-kit 
 
 <b>NearBy</b> is the NearBy protocols
