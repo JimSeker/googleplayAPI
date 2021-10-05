@@ -29,6 +29,11 @@ import java.util.List;
  * <p>
  * This needs cleaned up and the async tasks need fixed so they can use the UI.  right now everything
  * uses Log.e instead of the standard logger (it works though).
+ *
+ * with the new rules for fit, even testing doesn't work.  go to your fit in the console.cloud.google.com and you need
+ * to chan ge the published status in the Oauth consent screen to testing then add your users to even test.
+ * 
+ *
  */
 public class RecordFragment extends Fragment {
 
@@ -51,7 +56,7 @@ public class RecordFragment extends Fragment {
         btn_show.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+                Fitness.getRecordingClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
                     .listSubscriptions(DataType.TYPE_STEP_COUNT_DELTA)  //DataType.TYPE_ACTIVITY_SEGMENT is the example.
                     .addOnSuccessListener(new OnSuccessListener<List<Subscription>>() {
                         @Override

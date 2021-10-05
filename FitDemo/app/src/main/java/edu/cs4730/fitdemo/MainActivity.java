@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         Log.v(TAG, "onRequest result called.");
 
         if (requestCode == REQUEST_ACCESS_Activity_Updates) {
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
             }
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
