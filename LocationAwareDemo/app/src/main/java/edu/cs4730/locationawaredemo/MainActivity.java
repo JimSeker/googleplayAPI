@@ -158,10 +158,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void createLocationRequest() {
+        mLocationRequest = LocationRequest.create()
+            .setInterval(10000)
+            .setFastestInterval(5000)
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
+            .setMaxWaitTime(10000);
+        /* depreciated.
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+         */
     }
 
     /**
@@ -170,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     private void createLocationCallback() {
         mLocationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
                 mLastLocation = locationResult.getLastLocation();
@@ -198,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
                     @SuppressLint("MissingPermission")
                     @Override
-                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                    public void onSuccess(@NonNull LocationSettingsResponse locationSettingsResponse) {
                         Log.i(TAG, "All location settings are satisfied.");
 
                         //noinspection MissingPermission
@@ -348,16 +356,17 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         Log.v(TAG, "onRequest result called.");
         boolean coarse = false, fine = false;
 
         //received result for GPS access
         for (int i = 0; i < grantResults.length; i++) {
             if ((permissions[i].compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                (grantResults[i] == PackageManager.PERMISSION_GRANTED))
                 coarse = true;
             else if ((permissions[i].compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
+                (grantResults[i] == PackageManager.PERMISSION_GRANTED))
                 fine = true;
         }
         Log.v(TAG, "Received response for gps permission request.");
@@ -366,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
             // permission was granted
             Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
             Toast.makeText(this, "GPS access granted",
-                    Toast.LENGTH_SHORT).show();
+                Toast.LENGTH_SHORT).show();
             if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
                 startLocationUpdates();
             } else if (requestCode == REQUEST_ACCESS_onConnected) {
@@ -379,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
             finish();
         }
-
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
     }
 
