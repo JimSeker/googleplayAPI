@@ -48,9 +48,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
+        //I'm seeing real adds, if I don't add this.  and sometimes I still see real ads.  be careful not to click them.
+        ConsentInformation.getInstance(getApplicationContext()).addTestDevice("9BCDD15FA3A2C5CDFBB1E0C13599604B");
 
-        //MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713");  //19.5.0 version.
+        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
         MobileAds.initialize(this, new OnInitializationCompleteListener() { //19.7.0+ version.
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
         ConsentInformation consentInformation = ConsentInformation.getInstance(this);
         consentInformation.addTestDevice("D1A4B2E34EF63965FDB3E19C432D0D82");
+
         consentInformation.setDebugGeography(DebugGeography.DEBUG_GEOGRAPHY_EEA);
         String[] publisherIds = {"pub-0123456789012345"};
         consentInformation.requestConsentInfoUpdate(publisherIds, new ConsentInfoUpdateListener() {
@@ -129,77 +131,74 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /**
+                 * Now the interstitialad setup and display if possible.
+                 */
+                InterstitialAd.load(getApplicationContext(),
+                    String.valueOf(R.string.fullscreen_ad_unit_id),
+                    adRequest,
+                    new InterstitialAdLoadCallback() {
+                        @Override
+                        public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                            String TAG = "InterstitialAdload";
+                            // The mInterstitialAd reference will be null until
+                            // an ad is loaded.  so this is the spot where we can now have the ad and it can be displayed.
+                            mInterstitialAd = interstitialAd;
+                            Toast.makeText(MainActivity.this, "onAdLoaded()", Toast.LENGTH_SHORT).show();
+                            //now we can setup the full screen pieces.
+                            mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                                @Override
+                                public void onAdDismissedFullScreenContent() {
+                                    // Called when fullscreen content is dismissed.
+                                    Log.d("TAG", "The ad was dismissed.");
+                                }
 
-                showInterstitialAd();
+                                @Override
+                                public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                    // Called when fullscreen content failed to show.
+                                    Log.d("TAG", "The ad failed to show.");
+                                }
+
+                                @Override
+                                public void onAdShowedFullScreenContent() {
+                                    // Called when fullscreen content is shown.
+                                    // Make sure to set your reference to null so you don't
+                                    // show it a second time.
+                                    mInterstitialAd = null;
+                                    Log.d("TAG", "The ad was shown.");
+                                }
+                            });
+
+                            //add is loaded and ready to show.
+                            Log.i(TAG, "onAdLoaded");
+
+                            //now show the add.
+                            mInterstitialAd.show(MainActivity.this);
+
+                        }
+
+                        @Override
+                        public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                            // Handle the error
+                            String error =
+                                String.format(
+                                    "domain: %s, code: %d, message: %s",
+                                    loadAdError.getDomain(), loadAdError.getCode(), loadAdError.getMessage());
+                            Log.i("InterstitialAd fail", error);
+                            Toast.makeText(MainActivity.this, "onAdFailedtoLoad() see log", Toast.LENGTH_SHORT).show();
+                            mInterstitialAd = null;
+                        }
+                    });
+
             }
         });
 
     }
 
-
-    void showInterstitialAd() {
-
-        //for the Interstitial ad, which is launched via the button
-        //"ca-app-pub-3940256099942544/1033173712"  test add.
-        InterstitialAd.load(this,
-            String.valueOf(R.string.fullscreen_ad_unit_id),
-            adRequest,
-            new InterstitialAdLoadCallback() {
-                @Override
-                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                    String TAG = "InterstitialAdload";
-                    // The mInterstitialAd reference will be null until
-                    // an ad is loaded.
-                    mInterstitialAd = interstitialAd;
-                    Toast.makeText(MainActivity.this, "onAdLoaded()", Toast.LENGTH_SHORT).show();
-                    //now we can setup the full screen pieces.
-                    mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                        @Override
-                        public void onAdDismissedFullScreenContent() {
-                            // Called when fullscreen content is dismissed.
-                            Log.d("TAG", "The ad was dismissed.");
-                        }
-
-                        @Override
-                        public void onAdFailedToShowFullScreenContent(AdError adError) {
-                            // Called when fullscreen content failed to show.
-                            Log.d("TAG", "The ad failed to show.");
-                        }
-
-                        @Override
-                        public void onAdShowedFullScreenContent() {
-                            // Called when fullscreen content is shown.
-                            // Make sure to set your reference to null so you don't
-                            // show it a second time.
-                            mInterstitialAd = null;
-                            Log.d("TAG", "The ad was shown.");
-                        }
-                    });
-
-                    //add is loaded and ready to show.
-                    Log.i(TAG, "onAdLoaded");
-
-                    //now show the add.
-                    mInterstitialAd.show(MainActivity.this);
-
-                }
-
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    // Handle the error
-                    String error =
-                        String.format(
-                            "domain: %s, code: %d, message: %s",
-                            loadAdError.getDomain(), loadAdError.getCode(), loadAdError.getMessage());
-                    Log.i("InterstitialAd fail", error);
-                    mInterstitialAd = null;
-                }
-            });
-
-    }
 
     /**
      * Called when leaving the activity

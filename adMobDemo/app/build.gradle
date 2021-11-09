@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "edu.cs4730.admobdemo"
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
     }
@@ -25,5 +25,14 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:20.4.0'
     //implementation 'com.google.firebase:firebase-ads:20.4.0'  //likely the same library as gp ads at this point.
     implementation 'com.google.android.ads.consent:consent-library:1.0.8'
+    // For apps targeting Android 12, add WorkManager dependency.
+    //https://developers.google.com/admob/android/quick-start
+    constraints {
+        implementation('androidx.work:work-runtime:2.7.0') {
+            because '''androidx.work:work-runtime:2.1.0 pulled from play-services-ads
+                   has a bug using PendingIntent without FLAG_IMMUTABLE or
+                   FLAG_MUTABLE and will fail in apps targeting S+.'''
+        }
+    }
 
 }
