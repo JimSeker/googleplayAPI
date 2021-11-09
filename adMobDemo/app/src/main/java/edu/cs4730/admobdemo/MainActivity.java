@@ -30,8 +30,8 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 /**
- * api 19.7.0 is a trans version to API 20 for the ads and many things are depreciated.
- * I'm attempting to use the newer methods.
+ * Ads works.  but currently it can't be API31, because underneath there is a pendingintent that is
+ * not correct.
  */
 
 
