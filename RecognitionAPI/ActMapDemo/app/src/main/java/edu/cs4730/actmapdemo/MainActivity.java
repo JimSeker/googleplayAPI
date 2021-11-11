@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
      * fastest possible rate. Getting frequent updates negatively impact battery life and a real
      * app may prefer to request less frequent updates.
      */
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 1*1000;
 
 
     @Override
@@ -388,7 +388,11 @@ public class MainActivity extends AppCompatActivity {
 
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+           return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_MUTABLE);
+        } else {
+            return  PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
     }
 
 

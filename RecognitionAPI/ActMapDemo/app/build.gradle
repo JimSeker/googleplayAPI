@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "edu.cs4730.actmapdemo"
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
@@ -28,6 +28,6 @@ dependencies {
     // Dependency for Google location aware stuff.
     //see https://developers.google.com/android/guides/setup for the whole list.
     implementation 'com.google.android.gms:play-services-location:18.0.0'
-    implementation 'com.google.android.gms:play-services-maps:17.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.0.0'
     implementation 'com.google.android.gms:play-services-base:17.6.0'
 }

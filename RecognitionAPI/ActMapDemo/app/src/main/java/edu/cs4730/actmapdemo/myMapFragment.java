@@ -63,7 +63,8 @@ public class myMapFragment extends Fragment {
             public void onMapReady(GoogleMap googleMap) {
                 map = googleMap;
 
-                if (INITLOC != null)
+                INITLOC = new LatLng(41.312928, -105.587253);
+                //if (INITLOC != null)
                   map.moveCamera(CameraUpdateFactory.newLatLngZoom(INITLOC, 17));
 
                 // Zoom in, animating the camera.
