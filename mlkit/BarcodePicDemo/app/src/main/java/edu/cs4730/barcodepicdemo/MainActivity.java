@@ -1,9 +1,14 @@
 package edu.cs4730.barcodepicdemo;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -43,7 +48,7 @@ import java.util.List;
  * This is an example of using the mlkit barcode scanner with a picture.
  * It's pretty simple, but workable example.  It takes picture via an intent
  * and then it can be processed via another button.
- *
+ * <p>
  * Note, likely the intent should turn down the image size, it really don't need to be that high of resolution.
  */
 
@@ -52,12 +57,11 @@ public class MainActivity extends AppCompatActivity {
     Button takePicture, processImage;
     ImageView iv;
     TextView logger;
-    final static int CAPTURE_FILE = 2;
     String imagefile;
     Bitmap imagebmp;
     Canvas imageCanvas;
     Paint myColor;
-
+    ActivityResultLauncher<Intent> myActivityResultLauncher;
     BarcodeScannerOptions options;
 
     @Override
@@ -96,14 +100,34 @@ public class MainActivity extends AppCompatActivity {
         myColor.setStyle(Paint.Style.STROKE);
         myColor.setStrokeWidth(10);
         myColor.setTextSize(myColor.getTextSize() * 10);
-
+        myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent data = result.getData();
+                        Log.wtf("CAPTURE FILE", "we got a file?");
+                        imagebmp = loadAndRotateImage(imagefile);
+                        if (imagebmp != null) {
+                            imageCanvas = new Canvas(imagebmp);
+                            iv.setImageBitmap(imagebmp);
+                            processImage.setEnabled(true);
+                            logger.setText("Image should have loaded correctly");
+                        } else {
+                            logger.setText("Image failed to load or was canceled.");
+                        }
+                    }
+                }
+            });
     }
 
     public void getPicture() {
         //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-      //  File mediaFile = new File(storageDir.getPath() +File.separator + "IMG_" + timeStamp+ ".jpg");
-        File mediaFile = new File(storageDir.getPath() +File.separator + "IMG_working.jpg");
+        //  File mediaFile = new File(storageDir.getPath() +File.separator + "IMG_" + timeStamp+ ".jpg");
+        File mediaFile = new File(storageDir.getPath() + File.separator + "IMG_working.jpg");
         Uri photoURI = FileProvider.getUriForFile(this,
             "edu.cs4730.barcodepicdemo.fileprovider",
             mediaFile);
@@ -113,12 +137,12 @@ public class MainActivity extends AppCompatActivity {
         // Uri photoURI = getUriForFile(this, "edu.cs4730.piccapture3.fileprovider",mediaFile);
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-        startActivityForResult(intent, CAPTURE_FILE);
+        myActivityResultLauncher.launch(intent);
     }
 
     public void procesor() {
-        if (imagebmp == null)  return;
-       // InputImage image = InputImage.fromBitmap(bitmap, rotationDegree);
+        if (imagebmp == null) return;
+        // InputImage image = InputImage.fromBitmap(bitmap, rotationDegree);
         InputImage image = InputImage.fromBitmap(imagebmp, 0);
         BarcodeScanner scanner = BarcodeScanning.getClient();
         // Or, to specify the formats to recognize:
@@ -128,8 +152,10 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(List<Barcode> barcodes) {
                     // Task completed successfully
-                    if (barcodes == null) { logger.setText("No barcodes found.");}
-                    for (Barcode barcode: barcodes) {
+                    if (barcodes == null) {
+                        logger.setText("No barcodes found.");
+                    }
+                    for (Barcode barcode : barcodes) {
                         logger.setText("Success: " + barcode.getDisplayValue());
                         //lets draw a box around it, since we using the bmp, no scaling is needed either.  a camera image would need to be scaled.
                         Rect rect = barcode.getBoundingBox();
@@ -150,23 +176,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        //the picture is stored in the intent in the data key.
-        //get the picture and show it in an the imagview.
-        Log.wtf("CAPTURE FILE", "we got a file?");
-        imagebmp = loadAndRotateImage(imagefile);
-        if (imagebmp != null) {
-            imageCanvas = new Canvas(imagebmp);
-            iv.setImageBitmap(imagebmp);
-            processImage.setEnabled(true);
-            logger.setText("Image should have loaded correctly");
-        } else {
-            logger.setText("Image failed to load or was canceled.");
-        }
-
-    }
 
     /**
      * loads and rotates a file as needed, based on the orientation found in the file
