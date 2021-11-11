@@ -65,13 +65,16 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
         //it's already handled.
     void subscribeToSleep() {
-        PendingIntent pi = PendingIntent.getBroadcast(
-            getApplicationContext(),
-            0,
-            new Intent(getApplicationContext(), SleepReceiver.class),
-            PendingIntent.FLAG_CANCEL_CURRENT
-        );
-
+        PendingIntent pi;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
+                PendingIntent.FLAG_MUTABLE);
+        } else {
+            pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
+                PendingIntent.FLAG_CANCEL_CURRENT);
+        }
         ActivityRecognition.getClient(getApplicationContext()).requestSleepSegmentUpdates(
             pi,
             SleepSegmentRequest.getDefaultSleepSegmentRequest()
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                                    @Override
                                    public void onSuccess(Void aVoid) {
                                        logthis("Successfully subscribed to sleep data");
+                                       logthis("Note, all data goes the logcat, not the screen.");
                                        subscribe.setEnabled(false);
                                        unsubscribe.setEnabled(true);
                                    }
@@ -97,12 +101,16 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     void unsubscriptToSleep() {
-        PendingIntent pi = PendingIntent.getBroadcast(
-            getApplicationContext(),
-            0,
-            new Intent(getApplicationContext(), SleepReceiver.class),
-            PendingIntent.FLAG_CANCEL_CURRENT
-        );
+        PendingIntent pi;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
+                PendingIntent.FLAG_MUTABLE);
+        } else {
+            pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
+                PendingIntent.FLAG_CANCEL_CURRENT);
+        }
         ActivityRecognition.getClient(getApplicationContext()).removeActivityUpdates(
             pi
         ).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -130,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
     public void CheckPerm() {
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
             //I'm on not explaining why, just asking for permission.
-            logthis("asking for permissions");
+            //logthis("asking for permissions");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
                 MainActivity.REQUEST_ACCESS_Activity_Updates);
 
@@ -146,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         Log.v(TAG, "onRequest result called.");
 
         if (requestCode == REQUEST_ACCESS_Activity_Updates) {
@@ -159,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
             }
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     void logthis(String item) {
