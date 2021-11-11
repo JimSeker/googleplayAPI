@@ -7,6 +7,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.speech.tts.TextToSpeech;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -54,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      * fastest possible rate. Getting frequent updates negatively impact battery life and a real
      * app may prefer to request less frequent updates.
      */
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10;  //fastest rate which appear to be about 10 seconds.
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 1*1000;  //fastest rate which appear to be about 10 seconds.
     //30 * 1000; // 30 seconds
     /**
      * The entry point for interacting with activity recognition.
@@ -82,11 +86,26 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         });
         mContext = this;
         logger = findViewById(R.id.logger);
+        //using the new startActivityForResult method.
+        ActivityResultLauncher<Intent> myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    // if (result.getResultCode() == Activity.RESULT_OK) {
+                    if (result.getResultCode() == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                        // TTS is up and running
+                        mTts = new TextToSpeech(getApplicationContext(), MainActivity.this);
+                        Log.v(TAG, "Pico is installed okay");
+                    } else
+                        Log.e(TAG, "Got a failure. TTS apparently not available");
+                }
+            });
         // Check to be sure that TTS exists and is okay to use
         Intent checkIntent = new Intent();
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
-        startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+        myActivityResultLauncher.launch(checkIntent);
 
         //setup the client activity piece.
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
@@ -150,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                     Toast.LENGTH_SHORT)
                     .show();
                 gettingupdates = true;
+                Log.wtf(TAG, "Success, activity updates enabled.");
                 btn.setText("Stop Recognition");
             }
         });
@@ -157,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         task.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Failed to enable activity updates");
+                Log.wtf(TAG, "Failed to enable activity updates");
                 Toast.makeText(mContext,
                     "Failed to enable activity updates",
                     Toast.LENGTH_SHORT)
@@ -211,7 +231,12 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE);
+        } else {
+            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+       // return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -220,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      */
     @Override
     protected void onNewIntent(Intent intent) {
-        Log.v(TAG, "onNewIntent");
+        Log.wtf(TAG, "onNewIntent");
 
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
         //get most probable activity
@@ -276,28 +301,6 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         //the text to speech end and add it to the end queue. (maybe others already in line.)
         if (canspeak)
             mTts.speak(words, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
-    }
-
-    /**
-     * verify speech is available.
-     */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQ_TTS_STATUS_CHECK) {
-            switch (resultCode) {
-                case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
-                    // TTS is up and running
-                    mTts = new TextToSpeech(this, this);
-                    Log.v(TAG, "Pico is installed okay");
-                    break;
-                case TextToSpeech.Engine.CHECK_VOICE_DATA_FAIL:
-                default:
-                    Log.e(TAG, "Got a failure. TTS apparently not available");
-            }
-        } else {
-            // Got something else
-            Log.wtf(TAG, "Got something else in onActivityResult");
-        }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
