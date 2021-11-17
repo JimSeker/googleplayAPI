@@ -124,7 +124,7 @@ public class SessionFragment extends Fragment {
      */
     private boolean hasRuntimePermissions() {
         int permissionState =
-                ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -136,9 +136,9 @@ public class SessionFragment extends Fragment {
         // Request permission. It's possible this can be auto answered if device policy
         // sets the permission in a given state or the user denied the permission
         // previously and checked "Never ask again".
-        ActivityCompat.requestPermissions(getActivity(),
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                REQUEST_PERMISSIONS_REQUEST_CODE);
+        ActivityCompat.requestPermissions(requireActivity(),
+            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+            REQUEST_PERMISSIONS_REQUEST_CODE);
 
     }
 
@@ -161,7 +161,7 @@ public class SessionFragment extends Fragment {
      */
     private boolean hasOAuthPermission() {
         FitnessOptions fitnessOptions = getFitnessSignInOptions();
-        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions);
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(requireContext()), fitnessOptions);
     }
 
     /**
@@ -170,10 +170,10 @@ public class SessionFragment extends Fragment {
     private void requestOAuthPermission() {
         FitnessOptions fitnessOptions = getFitnessSignInOptions();
         GoogleSignIn.requestPermissions(
-                this,
-                REQUEST_OAUTH,
-                GoogleSignIn.getLastSignedInAccount(getContext()),
-                fitnessOptions);
+            this,
+            REQUEST_OAUTH,
+            GoogleSignIn.getLastSignedInAccount(requireContext()),
+            fitnessOptions);
     }
 
     /**
@@ -181,9 +181,11 @@ public class SessionFragment extends Fragment {
      */
     private FitnessOptions getFitnessSignInOptions() {
         return FitnessOptions.builder()
-                .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_WRITE)
-                .addDataType(DataType.TYPE_SPEED, FitnessOptions.ACCESS_WRITE)
-                .build();
+            .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_WRITE)
+            .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
+            .addDataType(DataType.TYPE_SPEED, FitnessOptions.ACCESS_WRITE)
+            .addDataType(DataType.TYPE_SPEED, FitnessOptions.ACCESS_READ)
+            .build();
     }
 
     @Override
@@ -218,42 +220,42 @@ public class SessionFragment extends Fragment {
 
         // Build a session read request
         readRequest = new SessionReadRequest.Builder()
-                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                .read(DataType.TYPE_SPEED)
-                .setSessionName(SAMPLE_SESSION_NAME)
-                .build();
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .read(DataType.TYPE_SPEED)
+            .setSessionName(SAMPLE_SESSION_NAME)
+            .build();
 
         // Invoke the Sessions API to fetch the session with the query and wait for the result
         // of the read request. Note: Fitness.SessionsApi.readSession() requires the
         // ACCESS_FINE_LOCATION permission.
-        return Fitness.getSessionsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
-                .readSession(readRequest)
-                .addOnSuccessListener(new OnSuccessListener<SessionReadResponse>() {
-                    @Override
-                    public void onSuccess(SessionReadResponse sessionReadResponse) {
-                        // Get a list of the sessions that match the criteria to check the result.
-                        List<Session> sessions = sessionReadResponse.getSessions();
-                        sendmessage("Session read was successful. Number of returned sessions is: "
-                                + sessions.size());
+        return Fitness.getSessionsClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
+            .readSession(readRequest)
+            .addOnSuccessListener(new OnSuccessListener<SessionReadResponse>() {
+                @Override
+                public void onSuccess(SessionReadResponse sessionReadResponse) {
+                    // Get a list of the sessions that match the criteria to check the result.
+                    List<Session> sessions = sessionReadResponse.getSessions();
+                    sendmessage("Session read was successful. Number of returned sessions is: "
+                        + sessions.size());
 
-                        for (Session session : sessions) {
-                            // Process the session
-                            showSession(session);
+                    for (Session session : sessions) {
+                        // Process the session
+                        showSession(session);
 
-                            // Process the data sets for this session
-                            List<DataSet> dataSets = sessionReadResponse.getDataSet(session);
-                            for (DataSet dataSet : dataSets) {
-                                showDataSet(dataSet);
-                            }
+                        // Process the data sets for this session
+                        List<DataSet> dataSets = sessionReadResponse.getDataSet(session);
+                        for (DataSet dataSet : dataSets) {
+                            showDataSet(dataSet);
                         }
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        sendmessage("Failed to read session");
-                    }
-                });
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    sendmessage("Failed to read session");
+                }
+            });
     }
 
 
@@ -306,82 +308,82 @@ public class SessionFragment extends Fragment {
 
         // Create a data source
         DataSource speedDataSource = new DataSource.Builder()
-                .setAppPackageName(getActivity().getPackageName())
-                .setDataType(DataType.TYPE_SPEED)
-                .setStreamName(SAMPLE_SESSION_NAME + "- speed")
-                .setType(DataSource.TYPE_RAW)
-                .build();
+            .setAppPackageName(requireActivity().getPackageName())
+            .setDataType(DataType.TYPE_SPEED)
+            .setStreamName(SAMPLE_SESSION_NAME + "- speed")
+            .setType(DataSource.TYPE_RAW)
+            .build();
 
         float runSpeedMps = 10;
         float walkSpeedMps = 3;
 
         ArrayList<DataPoint> list = new ArrayList<>();
         DataPoint firstRunSpeed = DataPoint.builder(speedDataSource)
-                .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS)
-                .setField(Field.FIELD_SPEED, runSpeedMps)
-                .build();
+            .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_SPEED, runSpeedMps)
+            .build();
         list.add(firstRunSpeed);
         DataPoint walkSpeed = DataPoint.builder(speedDataSource)
-                .setTimeInterval(startWalkTime, endWalkTime, TimeUnit.MILLISECONDS)
-                .setField(Field.FIELD_SPEED, walkSpeedMps)
-                .build();
+            .setTimeInterval(startWalkTime, endWalkTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_SPEED, walkSpeedMps)
+            .build();
         list.add(walkSpeed);
         DataPoint secondRunSpeed = DataPoint.builder(speedDataSource)
-                .setTimeInterval(endWalkTime, endTime, TimeUnit.MILLISECONDS)
-                .setField(Field.FIELD_SPEED, runSpeedMps)
-                .build();
+            .setTimeInterval(endWalkTime, endTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_SPEED, runSpeedMps)
+            .build();
         list.add(secondRunSpeed);
         // Create a data set of the run speeds to include in the session.
         DataSet speedDataSet = DataSet.builder(speedDataSource)
-                .addAll(list)
-                .build();
+            .addAll(list)
+            .build();
 
         // Create a second DataSet of ActivitySegments to indicate the runner took a 10-minute walk
         // in the middle of the run.
         DataSource activitySegmentDataSource = new DataSource.Builder()
-                .setAppPackageName(getActivity().getPackageName())
-                .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
-                .setStreamName(SAMPLE_SESSION_NAME + "-activity segments")
-                .setType(DataSource.TYPE_RAW)
-                .build();
+            .setAppPackageName(requireActivity().getPackageName())
+            .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
+            .setStreamName(SAMPLE_SESSION_NAME + "-activity segments")
+            .setType(DataSource.TYPE_RAW)
+            .build();
 
         list.clear();
 
         list.add(DataPoint.builder(activitySegmentDataSource)
-                .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS)
-                .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.RUNNING)
-                .build()
+            .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS)
+            .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.RUNNING)
+            .build()
         );
         list.add(DataPoint.builder(activitySegmentDataSource)
-                .setTimeInterval(startWalkTime, endWalkTime, TimeUnit.MILLISECONDS)
-                .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.WALKING)
-                .build()
+            .setTimeInterval(startWalkTime, endWalkTime, TimeUnit.MILLISECONDS)
+            .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.WALKING)
+            .build()
         );
         list.add(DataPoint.builder(activitySegmentDataSource)
-                .setTimeInterval(endWalkTime, endTime, TimeUnit.MILLISECONDS)
-                .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.RUNNING)
-                .build()
+            .setTimeInterval(endWalkTime, endTime, TimeUnit.MILLISECONDS)
+            .setActivityField(Field.FIELD_ACTIVITY, FitnessActivities.RUNNING)
+            .build()
         );
         DataSet activitySegments = DataSet.builder(activitySegmentDataSource)
-                .addAll(list)
-                .build();
+            .addAll(list)
+            .build();
 
         // Create a session with metadata about the activity.
         Session session = new Session.Builder()
-                .setName(SAMPLE_SESSION_NAME)
-                .setDescription("Long run around Shoreline Park")
-                .setIdentifier("UniqueIdentifierHere")
-                .setActivity(FitnessActivities.RUNNING)
-                .setStartTime(startTime, TimeUnit.MILLISECONDS)
-                .setEndTime(endTime, TimeUnit.MILLISECONDS)
-                .build();
+            .setName(SAMPLE_SESSION_NAME)
+            .setDescription("Long run around Shoreline Park")
+            .setIdentifier("UniqueIdentifierHere")
+            .setActivity(FitnessActivities.RUNNING)
+            .setStartTime(startTime, TimeUnit.MILLISECONDS)
+            .setEndTime(endTime, TimeUnit.MILLISECONDS)
+            .build();
 
         // Build a session insert request
         SessionInsertRequest insertRequest = new SessionInsertRequest.Builder()
-                .setSession(session)
-                .addDataSet(speedDataSet)
-                .addDataSet(activitySegments)
-                .build();
+            .setSession(session)
+            .addDataSet(speedDataSet)
+            .addDataSet(activitySegments)
+            .build();
         return insertRequest;
     }
 
@@ -398,22 +400,22 @@ public class SessionFragment extends Fragment {
         // calling await() to avoid hanging that can occur from the service being shutdown
         // because of low memory or other conditions.
         sendmessage("Inserting the session in the session API");
-        return Fitness.getSessionsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
-                .insertSession(insertRequest)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // At this point, the session has been inserted and can be read.
-                        sendmessage("Session insert was successful!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        sendmessage("There was a problem inserting the session: " +
-                                e.getLocalizedMessage());
-                    }
-                });
+        return Fitness.getSessionsClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
+            .insertSession(insertRequest)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    // At this point, the session has been inserted and can be read.
+                    sendmessage("Session insert was successful!");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    sendmessage("There was a problem inserting the session: " +
+                        e.getLocalizedMessage());
+                }
+            });
     }
 
 
@@ -436,28 +438,28 @@ public class SessionFragment extends Fragment {
 
         // Create a delete request object, providing a data type and a time interval
         DataDeleteRequest request = new DataDeleteRequest.Builder()
-                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-                .addDataType(DataType.TYPE_SPEED)
-                .deleteAllSessions() // Or specify a particular session here
-                .build();
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .addDataType(DataType.TYPE_SPEED)
+            .deleteAllSessions() // Or specify a particular session here
+            .build();
 
         // Delete request using HistoryClient and specify listeners that will check the result.
-        Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
-                .deleteData(request)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.i(TAG, "Successfully deleted today's sessions");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // The deletion will fail if the requesting app tries to delete data
-                        // that it did not insert.
-                        Log.i(TAG, "Failed to delete today's sessions");
-                    }
-                });
+        Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
+            .deleteData(request)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Log.i(TAG, "Successfully deleted today's sessions");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    // The deletion will fail if the requesting app tries to delete data
+                    // that it did not insert.
+                    Log.i(TAG, "Failed to delete today's sessions");
+                }
+            });
         viewSessionData();
     }
 
@@ -491,7 +493,7 @@ public class SessionFragment extends Fragment {
             sendmessage("\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for (Field field : dp.getDataType().getFields()) {
                 sendmessage("\tField: " + field.getName() +
-                        " Value: " + dp.getValue(field));
+                    " Value: " + dp.getValue(field));
             }
         }
     }

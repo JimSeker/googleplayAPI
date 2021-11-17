@@ -140,7 +140,7 @@ public class HistoryFragment extends Fragment {
      */
     private boolean hasOAuthPermission() {
         FitnessOptions fitnessOptions = getFitnessSignInOptions();
-        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions);
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(requireContext()), fitnessOptions);
     }
 
     /**
@@ -151,7 +151,7 @@ public class HistoryFragment extends Fragment {
         GoogleSignIn.requestPermissions(
             this,
             REQUEST_OAUTH,
-            GoogleSignIn.getLastSignedInAccount(getContext()),
+            GoogleSignIn.getLastSignedInAccount(requireContext()),
             fitnessOptions);
     }
 
@@ -161,7 +161,9 @@ public class HistoryFragment extends Fragment {
     private FitnessOptions getFitnessSignInOptions() {
         return FitnessOptions.builder()
             .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_WRITE)
+            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
             .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_WRITE)
+            .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
             .build();
     }
 
@@ -178,7 +180,7 @@ public class HistoryFragment extends Fragment {
     // A note, that step count doesn't actually require authentication, so it can be easily used for wear
     private Task<DataSet> displayTodayData() {
         Log.i(TAG, "Reading History API results for today of Steps");
-        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        return Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
             .addOnSuccessListener(new OnSuccessListener<DataSet>() {
                 @Override
@@ -227,7 +229,7 @@ public class HistoryFragment extends Fragment {
 
 
         // Now we can return the task object which will run.
-        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        return Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             //.readSession(readRequest)
             .readData(readRequest)
             .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
@@ -292,7 +294,7 @@ public class HistoryFragment extends Fragment {
         long startTime = cal.getTimeInMillis();
 
         DataSource dataSource = new DataSource.Builder()
-            .setAppPackageName(getActivity())
+            .setAppPackageName(requireActivity())
             .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
             .setStreamName("Step Count")
             .setType(DataSource.TYPE_RAW)
@@ -322,7 +324,7 @@ public class HistoryFragment extends Fragment {
 
         // Now insert the new dataset view the client.
         Log.i(TAG, "Inserting the session in the History API");
-        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        return Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .insertData(dataSet)
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
@@ -369,7 +371,7 @@ public class HistoryFragment extends Fragment {
         long startTime = cal.getTimeInMillis();
 
         DataSource dataSource = new DataSource.Builder()
-            .setAppPackageName(getActivity())
+            .setAppPackageName(requireActivity())
             .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
             .setStreamName("Step Count")
             .setType(DataSource.TYPE_RAW)
@@ -391,7 +393,7 @@ public class HistoryFragment extends Fragment {
 
         // Now insert the new dataset view the client.
         Log.i(TAG, "Inserting the session in the History API");
-        return Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        return Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .updateData(updateRequest)
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
@@ -451,7 +453,7 @@ public class HistoryFragment extends Fragment {
             .build();
 
         // Delete request using HistoryClient and specify listeners that will check the result.
-        Fitness.getHistoryClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        Fitness.getHistoryClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .deleteData(request)
             .addOnCompleteListener(
                 new OnCompleteListener<Void>() {

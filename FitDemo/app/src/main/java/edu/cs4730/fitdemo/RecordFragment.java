@@ -118,7 +118,7 @@ public class RecordFragment extends Fragment {
 
     public void subscribe() {
         //connect to the step count.
-        Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        Fitness.getRecordingClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override

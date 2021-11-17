@@ -98,7 +98,7 @@ public class SensorFragment extends Fragment {
     /** Checks if user's account has OAuth permission to Fitness API. */
     private boolean hasOAuthPermission() {
         FitnessOptions fitnessOptions = getFitnessSignInOptions();
-        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions);
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(requireContext()), fitnessOptions);
     }
 
     /** Launches the Google SignIn activity to request OAuth permission for the user. */
@@ -107,7 +107,7 @@ public class SensorFragment extends Fragment {
         GoogleSignIn.requestPermissions(
             this,
             REQUEST_OAUTH,
-            GoogleSignIn.getLastSignedInAccount(getContext()),
+            GoogleSignIn.getLastSignedInAccount(requireContext()),
             fitnessOptions);
 
     }
@@ -121,7 +121,7 @@ public class SensorFragment extends Fragment {
         GoogleSignInOptions signInOptions = new com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder().addExtension(fitnessOptions).build();
 
         //GoogleSignInClient client = GoogleSignIn.getClient(getContext(), signInOptions);
-        GoogleSignIn.getClient(getContext(), signInOptions)
+        GoogleSignIn.getClient(requireContext(), signInOptions)
             .signOut();
 
         //instead we could just revoke access, but signout should clear everything.
@@ -171,7 +171,7 @@ public class SensorFragment extends Fragment {
     private void findFitnessDataSources() {
 
         // Note: Fitness.SensorsApi.findDataSources() requires the ACCESS_FINE_LOCATION permission.
-        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        Fitness.getSensorsClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .findDataSources(
                 new DataSourcesRequest.Builder()
                     //.setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
@@ -221,7 +221,7 @@ public class SensorFragment extends Fragment {
             }
         };
 
-        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        Fitness.getSensorsClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .add(
                 new SensorRequest.Builder()
                     .setDataSource(dataSource) // Optional but recommended for custom data sets.
@@ -255,7 +255,7 @@ public class SensorFragment extends Fragment {
         // Waiting isn't actually necessary as the unregister call will complete regardless,
         // even if called from within onStop, but a callback can still be added in order to
         // inspect the results.
-        Fitness.getSensorsClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+        Fitness.getSensorsClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
             .remove(mlistener)
             .addOnCompleteListener(
                 new OnCompleteListener<Boolean>() {

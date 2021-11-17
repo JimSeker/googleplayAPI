@@ -30,7 +30,7 @@ import android.widget.Toast;
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+    implements NavigationView.OnNavigationItemSelectedListener {
 
     FragmentManager fragmentManager;
     SensorFragment sensorFragment;
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -71,12 +71,22 @@ public class MainActivity extends AppCompatActivity
 
     //ask for permissions when we start.
     public void CheckPerm() {
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-            //I'm on not explaining why, just asking for permission.
-            Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            if ( (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) ||
+                (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) )  {
+                //I'm on not explaining why, just asking for permission.
+                Log.v(TAG, "android 12 asking for permissions");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION, Manifest.permission.ACCESS_FINE_LOCATION},
                     MainActivity.REQUEST_ACCESS_Activity_Updates);
 
+            }
+        } else {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                //I'm on not explaining why, just asking for permission.
+                Log.v(TAG, "below android 12 asking for permissions");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                    MainActivity.REQUEST_ACCESS_Activity_Updates);
+            }
         }
     }
 
