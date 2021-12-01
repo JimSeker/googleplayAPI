@@ -183,7 +183,7 @@ public class AuthGoogleApiFragment extends Fragment {
         Log.wtf(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mFirebaseAuth.signInWithCredential(credential)
-            .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
+            .addOnCompleteListener(requireActivity(), new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
