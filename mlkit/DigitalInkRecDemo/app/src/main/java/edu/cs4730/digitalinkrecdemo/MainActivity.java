@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap theboard;
     Canvas theboardc;
     float startx, starty;
-    Button button;
+    Button button, clear;
     ImageView iv;
     TextView logger;
     Ink.Builder inkBuilder;
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button = findViewById(R.id.button);
+        clear = findViewById(R.id.button2);
         iv = findViewById(R.id.imageView);
         logger = findViewById(R.id.logger);
 
@@ -105,6 +106,14 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+        clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                inkBuilder = Ink.builder();  //clear the builder.
+                theboardc.drawColor(Color.WHITE);  //background color for the board.
+                iv.setImageBitmap(theboard);
+            }
+        });
         DigitalInkRecognitionModelIdentifier modelIdentifier = null;
         try {
             modelIdentifier = DigitalInkRecognitionModelIdentifier.fromLanguageTag("en-US");
@@ -143,13 +152,13 @@ public class MainActivity extends AppCompatActivity {
                         .addOnSuccessListener(new OnSuccessListener<RecognitionResult>() {
                             @Override
                             public void onSuccess(RecognitionResult result) {
-                                logger.append("result is " + result.getCandidates().get(0).getText());
+                                logger.append("\nresult is " + result.getCandidates().get(0).getText());
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                logger.append("Failed to recognize.");
+                                logger.append("\nFailed to recognize.");
                             }
                         });
                 }
