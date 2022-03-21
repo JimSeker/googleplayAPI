@@ -14,6 +14,7 @@ public class myWorker extends Worker {
         super(appContext, params);
     }
 
+    @NonNull
     @Override
     public ListenableWorker.Result doWork() {
         // Do your work here.

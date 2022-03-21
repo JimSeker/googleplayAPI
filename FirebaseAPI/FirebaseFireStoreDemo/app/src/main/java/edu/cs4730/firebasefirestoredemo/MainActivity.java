@@ -43,8 +43,6 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     final static String TAG = "MainActivity";
-    static final int RC_SIGN_IN = 9001;
-    static final int RC_G_SIGN_IN = 9002;
 
     private TextView logger;
     private SignInButton mSignInButton;
@@ -241,30 +239,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
     }
-
-
-//    /**
-//     * this is a helper function, OnActivityResult from the authentication (used to be only the activity was called!)
-//     */
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//
-//        if (requestCode == MainActivity.RC_SIGN_IN) {
-//            if (resultCode == RESULT_OK) {
-//
-//                Toast.makeText(this, "Authentication success.", Toast.LENGTH_SHORT).show();
-//                logthis("Google Sign In success.");
-//                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-//                logthis("username is" + mFirebaseUser.getDisplayName());
-//                mSignInButton.setEnabled(false);
-//            } else {
-//                // Google Sign In failed
-//                logthis("Google Sign In failed.");
-//                mSignInButton.setEnabled(true);
-//            }
-//        }
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
 
     //helper function to log and added to textview.
     public void logthis(String msg) {

@@ -25,10 +25,9 @@ public class MainActivity extends AppCompatActivity
 
     //public variables to use my fragments
     static final int RC_PHOTO_PICKER = 9003;
-    static final int RC_INVITE = 9004;
 
     //local variables.
-    private static String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
     AuthFragment authFragment;
     AuthGoogleApiFragment authGoogleApiFragment;
 

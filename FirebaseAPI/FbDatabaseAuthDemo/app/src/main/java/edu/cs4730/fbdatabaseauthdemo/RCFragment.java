@@ -17,8 +17,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
-import org.w3c.dom.Text;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,11 +31,6 @@ public class RCFragment extends Fragment {
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 140;
 
     TextView rc_value;
-
-    public RCFragment() {
-        // Required empty public constructor
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -80,7 +73,7 @@ public class RCFragment extends Fragment {
         long cacheExpiration = 3600; // 1 hour in seconds
         // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
         // server. This should not be used in release builds.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().getMinimumFetchIntervalInSeconds() ==0L) {
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().getMinimumFetchIntervalInSeconds() == 0L) {
             cacheExpiration = 0;
         }
         Log.d(TAG, "cache is " + cacheExpiration);
@@ -108,7 +101,7 @@ public class RCFragment extends Fragment {
     }
 
     void applyRCvalue() {
-       long note_msg_length = mFirebaseRemoteConfig.getLong(NOTE_LENGTH_KEY);
+        long note_msg_length = mFirebaseRemoteConfig.getLong(NOTE_LENGTH_KEY);
         rc_value.setText(String.valueOf(note_msg_length));
     }
 

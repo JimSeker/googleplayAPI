@@ -4,6 +4,7 @@ package edu.cs4730.fbdatabaseauthdemo;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.fragment.app.Fragment;
@@ -60,12 +61,6 @@ public class DBListFragment extends Fragment {
         }
     }
 
-
-    public DBListFragment() {
-        // Required empty public constructor
-    }
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -91,6 +86,7 @@ public class DBListFragment extends Fragment {
 
         //Following android doc and example.  It was not commented and I'm not sure what is going on here.
         SnapshotParser<Note> parser = new SnapshotParser<Note>() {
+            @NonNull
             @Override
             public Note parseSnapshot(DataSnapshot dataSnapshot) {
                 Note note = dataSnapshot.getValue(Note.class);
@@ -115,14 +111,15 @@ public class DBListFragment extends Fragment {
          */
         mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, NoteViewHolder>(options) {
 
+            @NonNull
             @Override
-            public NoteViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
                 return new NoteViewHolder(inflater.inflate(R.layout.note_row, viewGroup, false));
             }
 
             @Override
-            protected void onBindViewHolder(final NoteViewHolder viewHolder, int position, Note note) {
+            protected void onBindViewHolder(@NonNull final NoteViewHolder viewHolder, int position, @NonNull Note note) {
                 viewHolder.tv_title.setText(note.getTitle());
                 viewHolder.tv_title.setTag(note);  //since it's small.  larger, just use the id, which is the key.
                 viewHolder.tv_note.setText(note.getNote());
@@ -157,13 +154,13 @@ public class DBListFragment extends Fragment {
         //setup left/right swipes on the cardviews so I can delete data.
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 //likely allows to for animations?  or moving items in the view I think.
                 return false;
             }
 
             @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 //called when it has been animated off the screen.  So item is no longer showing.
                 //use ItemtouchHelper.X to find the correct one.
                 if (direction == ItemTouchHelper.RIGHT) {
@@ -199,13 +196,13 @@ public class DBListFragment extends Fragment {
      * This creates a dialog to update the note.  It is passed to this method.
      */
     void updateDialog(final Note note) {
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
         final EditText et_note = textenter.findViewById(R.id.et_note);
         et_note.setText(note.getNote());
         final EditText et_title = textenter.findViewById(R.id.et_title);
         et_title.setText(note.getTitle());
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.ThemeOverlay_AppCompat_Dialog));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(textenter).setTitle("Update Note");
         builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
 
@@ -241,11 +238,11 @@ public class DBListFragment extends Fragment {
      * Add dialog, with blanks.  then adds the data into the database.
      */
     void showDialog(String title) {
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
         final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
         final EditText et_note = textenter.findViewById(R.id.et_note);
         final EditText et_title = textenter.findViewById(R.id.et_title);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.ThemeOverlay_AppCompat_Dialog));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(textenter).setTitle(title);
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
 

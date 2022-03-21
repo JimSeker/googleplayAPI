@@ -6,6 +6,8 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import androidx.annotation.NonNull;
+
 /**
  *   this is the id and message service (combined in 17).
  *   see https://stackoverflow.com/questions/51123197/firebaseinstanceidservice-is-deprecated for more info.
@@ -25,7 +27,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      */
 
     @Override
-    public void onNewToken(String token) {
+    public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
 
         Log.d(TAG, "FCM Token: " + token);

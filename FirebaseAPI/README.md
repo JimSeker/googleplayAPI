@@ -8,7 +8,7 @@
 
 `FirebaseMessageDemo` is a start at an example for Cloud Messaging.  It works pretty well.  The webcode needed is in the php directory of the project, you will need a webserver to get this project running.
 
-`MLFaceTrackerDemo` is the same as the FaceTracker2 and FaceTrackerMultiDemo in the visionAPI/, but is based on the ML  code.  Note this is firebase (cloud api), so you need to add to a project you own.  also note, the newer libraries are just broken (24.1.0) and there are bug reports dating back 6 months.   Note: the library is actually depreciated at this point.  so likely it will stop working too.
+`MLFaceTrackerDemo` is the same as the FaceTracker2 and FaceTrackerMultiDemo in the visionAPI/, but is based on the ML  code.  Note this is firebase (cloud api), so you need to add to a project you own.  also note, the newer libraries are just broken (24.1.0) and there are bug reports dating back 6 months.   Note: the library is actually depreciated at this point.  so likely it will stop working too.  Still works, but it set at API 30.
 
 
 ---

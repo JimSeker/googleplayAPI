@@ -40,7 +40,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 public class AuthGoogleApiFragment extends Fragment {
 
     //local variables.
-    private static String TAG = "AuthFragment";
+    private static final String TAG = "AuthFragment";
     private TextView logger;
 
     private static final String ANONYMOUS = "anonymous";
@@ -78,7 +78,7 @@ public class AuthGoogleApiFragment extends Fragment {
             .build();
 
         //get the sign in client.
-        mGoogleSignInClient = GoogleSignIn.getClient(getContext(), gso);
+        mGoogleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
 
         // google sign in button and pieces.
         mSignInButton = myView.findViewById(R.id.g_sign_in_button);

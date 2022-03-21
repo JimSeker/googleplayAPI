@@ -66,11 +66,6 @@ public class StorageFragment extends Fragment {
     boolean havepic = false;
     String imageurl = "";
 
-    public StorageFragment() {
-        // Required empty public constructor
-    }
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -108,7 +103,7 @@ public class StorageFragment extends Fragment {
         myRef = FirebaseDatabase.getInstance().getReference().child("photos").child(mUsername);
         myValueEventlistener = new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 havepic = true;
@@ -119,7 +114,7 @@ public class StorageFragment extends Fragment {
             }
 
             @Override
-            public void onCancelled(DatabaseError error) {
+            public void onCancelled(@NonNull DatabaseError error) {
                 // Failed to read value
                 Log.w(TAG, "Failed to read simple value.", error.toException());
                 havepic = false;
@@ -230,6 +225,4 @@ public class StorageFragment extends Fragment {
         super.onResume();
         myRef.addValueEventListener(myValueEventlistener);
     }
-
-
 }

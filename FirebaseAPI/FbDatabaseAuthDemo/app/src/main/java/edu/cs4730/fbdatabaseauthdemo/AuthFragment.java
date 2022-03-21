@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,10 +23,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-
-import static android.app.Activity.RESULT_OK;
 
 
 /**
@@ -154,7 +150,7 @@ public class AuthFragment extends Fragment {
 
     private void signOut() {
         mFirebaseAuth.signOut();  //just signs out, but doesn't clear the user if they want to login with same name.
-        AuthUI.getInstance().signOut(getContext());  //clears username and everything from google signin
+        AuthUI.getInstance().signOut(requireContext());  //clears username and everything from google signin
         mFirebaseUser = null;
         mUsername = ANONYMOUS;
         mPhotoUrl = null;
