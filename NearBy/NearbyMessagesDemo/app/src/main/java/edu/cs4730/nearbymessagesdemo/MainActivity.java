@@ -9,6 +9,10 @@ import android.os.Bundle;
  *  A simple example of using nearby messages.
  * https://developers.google.com/nearby/messages/android/get-started
  *
+ * I'm not sure the works anymore.  I don't appear to need any permissions, but doesn't work.
+ * It just maybe that this deprecated and won't work.  But I've added lots of permissions as well.  still doesn't work.
+ * 
+ *
  */
 
 public class MainActivity extends AppCompatActivity implements HelpFragment.OnFragmentInteractionListener{

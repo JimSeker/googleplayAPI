@@ -95,14 +95,14 @@ public class SubscribeFragment extends Fragment {
          SubscribeOptions options = new SubscribeOptions.Builder()
             .setStrategy(Strategy.BLE_ONLY)
             .build();
-        Nearby.getMessagesClient(getActivity()).subscribe(mMessageListener, options);
+        Nearby.getMessagesClient(requireActivity()).subscribe(mMessageListener, options);
         mIsSubscribing = true;
     }
 
     // Subscribe to receive messages.
     private void unsubscribe() {
         logthis("Unsubscribe.");
-        Nearby.getMessagesClient(getActivity()).unsubscribe(mMessageListener);
+        Nearby.getMessagesClient(requireActivity()).unsubscribe(mMessageListener);
         mIsSubscribing = false;
     }
 
@@ -112,19 +112,20 @@ public class SubscribeFragment extends Fragment {
         SubscribeOptions options = new SubscribeOptions.Builder()
             .setStrategy(Strategy.BLE_ONLY)
             .build();
-        Nearby.getMessagesClient(getActivity()).subscribe(getPendingIntent(), options);
+        Nearby.getMessagesClient(requireActivity()).subscribe(getPendingIntent(), options);
         mIsBGSubscribing = true;
     }
 
     private PendingIntent getPendingIntent() {
+      //  return PendingIntent.getBroadcast(getContext(), 0, new Intent(getContext(), BeaconMessageReceiver.class),  PendingIntent.FLAG_UPDATE_CURRENT);
         return PendingIntent.getBroadcast(getContext(), 0, new Intent(getContext(), BeaconMessageReceiver.class),
-            PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent.FLAG_MUTABLE);
     }
 
     // Subscribe to receive messages.
     private void unsubscribeBG() {
         logthis("Unsubscribe  for background updates..");
-        Nearby.getMessagesClient(getActivity()).unsubscribe(getPendingIntent());
+        Nearby.getMessagesClient(requireActivity()).unsubscribe(getPendingIntent());
         mIsBGSubscribing = false;
     }
 
