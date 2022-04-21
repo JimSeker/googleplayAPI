@@ -2,7 +2,7 @@
 
 `legacy/` older examples that are no longer updated.
 
-`FirebaseAPI/</a> Are examples using the Firebase APIs.
+`FirebaseAPI/` Are examples using the Firebase APIs.
 
 `mlkit/`  is the new ML kit (not firebase ML cloud APIs) examples.   https://developers.google.com/ml-kit 
 
