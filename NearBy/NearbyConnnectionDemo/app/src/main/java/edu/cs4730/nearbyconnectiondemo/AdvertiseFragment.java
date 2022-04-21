@@ -1,8 +1,10 @@
 package edu.cs4730.nearbyconnectiondemo;
 
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +24,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
+import java.util.concurrent.Callable;
 
 /**
  * This is the advertise side of the Nearby API.  (server)
@@ -60,10 +64,11 @@ public class AdvertiseFragment extends Fragment {
         myView.findViewById(R.id.end_advertise).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
-                    Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
-                    ConnectedEndPointId = "";
-                }
+                if (ConnectedEndPointId != null)
+                    if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
+                        Nearby.getConnectionsClient(requireContext()).disconnectFromEndpoint(ConnectedEndPointId);
+                        ConnectedEndPointId = "";
+                    }
                 if (mIsAdvertising) {
                     stopAdvertising();
                 }
@@ -81,14 +86,14 @@ public class AdvertiseFragment extends Fragment {
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
         new ConnectionLifecycleCallback() {
             @Override
-            public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+            public void onConnectionInitiated(@NonNull String endpointId, ConnectionInfo connectionInfo) {
                 logthis("Connection Initiated :" + endpointId + " Name is " + connectionInfo.getEndpointName());
                 // Automatically accept the connection on both sides.
                 // setups the callbacks to read data from the other connection.
-                Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
+                Nearby.getConnectionsClient(requireContext()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
-                        public void onPayloadReceived(String endpointId, Payload payload) {
+                        public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
 
                             if (payload.getType() == Payload.Type.BYTES) {
                                 String stuff = new String(payload.asBytes());
@@ -104,14 +109,14 @@ public class AdvertiseFragment extends Fragment {
                         }
 
                         @Override
-                        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
+                        public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
                             //if stream or file, we need to know when the transfer has finished.  ignoring this right now.
                         }
                     });
             }
 
             @Override
-            public void onConnectionResult(String endpointId, ConnectionResolution result) {
+            public void onConnectionResult(@NonNull String endpointId, ConnectionResolution result) {
                 logthis("Connection accept :" + endpointId + " result is " + result.toString());
 
                 switch (result.getStatus().getStatusCode()) {
@@ -136,19 +141,19 @@ public class AdvertiseFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnected(String endpointId) {
+            public void onDisconnected(@NonNull String endpointId) {
                 logthis("Connection disconnected :" + endpointId);
                 ConnectedEndPointId = "";  //need a remove if using a list.
             }
         };
 
     /**
-     *  Start advertising the nearby.  It sets the callback from above with what to once we get a connection
-     *  request.
+     * Start advertising the nearby.  It sets the callback from above with what to once we get a connection
+     * request.
      */
     private void startAdvertising() {
 
-        Nearby.getConnectionsClient(getContext())
+        Nearby.getConnectionsClient(requireContext())
             .startAdvertising(
                 UserNickName,    //human readable name for the endpoint.
                 MainActivity.ServiceId,  //unique identifier for advertise endpoints
@@ -180,7 +185,7 @@ public class AdvertiseFragment extends Fragment {
      */
     public void stopAdvertising() {
         mIsAdvertising = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising() ;
+        Nearby.getConnectionsClient(getContext()).stopAdvertising();
         logthis("Advertising stopped.");
     }
 

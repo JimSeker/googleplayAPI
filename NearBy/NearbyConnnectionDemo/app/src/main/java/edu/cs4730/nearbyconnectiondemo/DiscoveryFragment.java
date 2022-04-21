@@ -67,10 +67,11 @@ public class DiscoveryFragment extends Fragment {
         myView.findViewById(R.id.end_discovery).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
-                    Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
-                    ConnectedEndPointId = "";
-                }
+                if (ConnectedEndPointId != null)
+                    if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
+                        Nearby.getConnectionsClient(requireContext()).disconnectFromEndpoint(ConnectedEndPointId);
+                        ConnectedEndPointId = "";
+                    }
                 if (mIsDiscovering) {
                     stopDiscovering();
                 }
@@ -83,13 +84,13 @@ public class DiscoveryFragment extends Fragment {
      * Sets the device to discovery mode.  Once an endpoint is found, it will initiate a connection.
      */
     protected void startDiscovering() {
-        Nearby.getConnectionsClient(getContext()).
+        Nearby.getConnectionsClient(requireContext()).
             startDiscovery(
                 MainActivity.ServiceId,   //id for the service to be discovered.  ie, what are we looking for.
 
                 new EndpointDiscoveryCallback() {  //callback when we discovery that endpoint.
                     @Override
-                    public void onEndpointFound(String endpointId, DiscoveredEndpointInfo info) {
+                    public void onEndpointFound(@NonNull String endpointId, @NonNull DiscoveredEndpointInfo info) {
                         //we found an end point.
                         logthis("We found an endpoint " + endpointId + " name is " + info.getEndpointName());
                         //now make a initiate a connection to it.
@@ -97,7 +98,7 @@ public class DiscoveryFragment extends Fragment {
                     }
 
                     @Override
-                    public void onEndpointLost(String endpointId) {
+                    public void onEndpointLost(@NonNull String endpointId) {
                         logthis("End point lost  " + endpointId);
                     }
                 },
@@ -128,7 +129,7 @@ public class DiscoveryFragment extends Fragment {
      */
     protected void stopDiscovering() {
         mIsDiscovering = false;
-        Nearby.getConnectionsClient(getContext()).stopDiscovery();
+        Nearby.getConnectionsClient(requireContext()).stopDiscovery();
         logthis("Discovery Stopped.");
     }
 
@@ -139,13 +140,13 @@ public class DiscoveryFragment extends Fragment {
 
             @Override
             public void onConnectionInitiated(
-                String endpointId, ConnectionInfo connectionInfo) {
+                @NonNull String endpointId, @NonNull ConnectionInfo connectionInfo) {
                 // Automatically accept the connection on both sides.
                 // setups the callbacks to read data from the other connection.
-                Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
+                Nearby.getConnectionsClient(requireContext()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
-                        public void onPayloadReceived(String endpointId, Payload payload) {
+                        public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
 
                             if (payload.getType() == Payload.Type.BYTES) {
                                 String stuff = new String(payload.asBytes());
@@ -161,14 +162,14 @@ public class DiscoveryFragment extends Fragment {
                         }
 
                         @Override
-                        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
+                        public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
                             //if stream or file, we need to know when the transfer has finished.  ignoring this right now.
                         }
                     });
             }
 
             @Override
-            public void onConnectionResult(String endpointId, ConnectionResolution result) {
+            public void onConnectionResult(@NonNull String endpointId, ConnectionResolution result) {
                 switch (result.getStatus().getStatusCode()) {
                     case ConnectionsStatusCodes.STATUS_OK:
                         // We're connected! Can now start sending and receiving data.
@@ -189,7 +190,7 @@ public class DiscoveryFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnected(String endpointId) {
+            public void onDisconnected(@NonNull String endpointId) {
                 // We've been disconnected from this endpoint. No more data can be
                 // sent or received.
                 logthis("Connection disconnected :" + endpointId);
@@ -204,7 +205,7 @@ public class DiscoveryFragment extends Fragment {
      */
 
     public void makeConnection(String endpointId) {
-        Nearby.getConnectionsClient(getContext())
+        Nearby.getConnectionsClient(requireContext())
             .requestConnection(
                 UserNickName,   //human readable name for the local endpoint.  if null/empty, uses device name or model.
                 endpointId,
@@ -242,7 +243,7 @@ public class DiscoveryFragment extends Fragment {
         Payload payload = Payload.fromBytes(data.getBytes());
 
         // sendPayload (List<String> endpointIds, Payload payload)  if more then one connection allowed.
-        Nearby.getConnectionsClient(getContext()).
+        Nearby.getConnectionsClient(requireContext()).
             sendPayload(ConnectedEndPointId,  //end point to end to
                 payload)   //the actual payload of data to send.
             .addOnSuccessListener(new OnSuccessListener<Void>() {  //don't know if need this one.
