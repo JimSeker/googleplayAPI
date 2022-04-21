@@ -2,7 +2,10 @@ package edu.cs4730.mapdemov2;
 
 
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,14 +30,14 @@ public class CompassFragment extends Fragment implements OnMapReadyCallback {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //Because of the maps, we need to have the view inflated only once (viewpager, may call this multiple times
         // so if this is the first time, ie myView is null, then do the setup, otherwise, "reset" the view, by removing it
         // and return the already setup view.
         if (myView == null) {
             myView = inflater.inflate(R.layout.compass_fragment, container, false);
-        } else  {
+        } else {
             ((ViewGroup) container.getParent()).removeView(myView);
             return myView;
         }
@@ -49,7 +52,7 @@ public class CompassFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
 
 

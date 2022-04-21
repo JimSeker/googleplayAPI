@@ -2,6 +2,8 @@ package edu.cs4730.mapdemov2;
 
 
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -32,7 +34,7 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //Because of the maps, we need to have the view inflated only once (viewpager, may call this multiple times
         // so if this is the first time, ie myView is null, then do the setup, otherwise, "reset" the view, by removing it
@@ -53,7 +55,7 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
         //now that we have the map, add some things.
         Marker kiel = map.addMarker(new MarkerOptions()
@@ -90,8 +92,8 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         map.setOnMarkerClickListener( new GoogleMap.OnMarkerClickListener() {
 
             @Override
-            public boolean onMarkerClick(Marker myMarker) {
-                Toast.makeText(getActivity().getApplicationContext(), "Clicked the " + myMarker.getTitle() + " Marker", Toast.LENGTH_SHORT).show();
+            public boolean onMarkerClick(@NonNull Marker myMarker) {
+                Toast.makeText(requireContext(), "Clicked the " + myMarker.getTitle() + " Marker", Toast.LENGTH_SHORT).show();
 
                 //return true;  //yes we consumed the event.
                 return false; //so the default action is shown as well.
@@ -104,9 +106,9 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
             @Override
-            public void onMapClick(LatLng point) {
+            public void onMapClick(@NonNull LatLng point) {
 
-                Toast.makeText(getActivity().getApplicationContext(), "Lat: " + point.latitude+ " Long:" +point.longitude,  Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Lat: " + point.latitude+ " Long:" +point.longitude,  Toast.LENGTH_SHORT).show();
             }
 
         });

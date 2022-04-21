@@ -45,7 +45,7 @@ public class DrawMapFragment extends Fragment implements OnMapReadyCallback {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         //Because of the maps, we need to have the view inflated only once (viewpager, may call this multiple times
