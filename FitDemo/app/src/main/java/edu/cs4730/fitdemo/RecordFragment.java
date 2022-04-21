@@ -1,9 +1,14 @@
 package edu.cs4730.fitdemo;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
@@ -29,11 +34,9 @@ import java.util.List;
  * <p>
  * This needs cleaned up and the async tasks need fixed so they can use the UI.  right now everything
  * uses Log.e instead of the standard logger (it works though).
- *
+ * <p>
  * with the new rules for fit, even testing doesn't work.  go to your fit in the console.cloud.google.com and you need
  * to chan ge the published status in the Oauth consent screen to testing then add your users to even test.
- * 
- *
  */
 public class RecordFragment extends Fragment {
 
@@ -43,7 +46,7 @@ public class RecordFragment extends Fragment {
     Button btn_cancel, btn_show;
 
     public RecordFragment() {
-        // Required empty public constructor
+
     }
 
     @Override
@@ -56,7 +59,7 @@ public class RecordFragment extends Fragment {
         btn_show.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fitness.getRecordingClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+                Fitness.getRecordingClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
                     .listSubscriptions(DataType.TYPE_STEP_COUNT_DELTA)  //DataType.TYPE_ACTIVITY_SEGMENT is the example.
                     .addOnSuccessListener(new OnSuccessListener<List<Subscription>>() {
                         @Override
@@ -74,7 +77,7 @@ public class RecordFragment extends Fragment {
         btn_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Fitness.getRecordingClient(getActivity(), GoogleSignIn.getLastSignedInAccount(getContext()))
+                Fitness.getRecordingClient(requireActivity(), GoogleSignIn.getLastSignedInAccount(requireContext()))
                     .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)  //
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
@@ -91,23 +94,6 @@ public class RecordFragment extends Fragment {
                     });
             }
         });
-
-
-        FitnessOptions fitnessOptions =
-            FitnessOptions.builder().addDataType(DataType.TYPE_STEP_COUNT_DELTA).build();
-
-        // Check if the user has permissions to talk to Fitness APIs, otherwise authenticate the
-        // user and request required permissions.
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(getContext()), fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-                this,
-                REQUEST_OAUTH,
-                GoogleSignIn.getLastSignedInAccount(getContext()),
-                fitnessOptions);
-        } else {
-            subscribe();
-        }
-
         return myView;
     }
 
@@ -134,7 +120,27 @@ public class RecordFragment extends Fragment {
             });
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        //don't ask until we are attached to an mainactivity.
+        FitnessOptions fitnessOptions =
+            FitnessOptions.builder().addDataType(DataType.TYPE_STEP_COUNT_DELTA).build();
 
+        // Check if the user has permissions to talk to Fitness APIs, otherwise authenticate the
+        // user and request required permissions.
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(requireContext()), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                this,
+                REQUEST_OAUTH,
+                GoogleSignIn.getLastSignedInAccount(requireContext()),
+                fitnessOptions);
+        } else {
+            subscribe();
+        }
+    }
+
+    //we can't get rid of this, because the old has permissions above.  until that changes, I'll need this.
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {

@@ -209,7 +209,7 @@ public class SensorFragment extends Fragment {
         logthis("Setup Sensors start");
         mlistener = new OnDataPointListener() {
             @Override
-            public void onDataPoint(DataPoint dataPoint) {
+            public void onDataPoint(@NonNull DataPoint dataPoint) {
                 //we are not on the UI thread!
                 for (Field field : dataPoint.getDataType().getFields()) {
                     Value val = dataPoint.getValue(field);
@@ -272,7 +272,7 @@ public class SensorFragment extends Fragment {
     }
 
 
-
+    //required, because fit is still using the older methods.  so I can't remove it yet.
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_OAUTH) {

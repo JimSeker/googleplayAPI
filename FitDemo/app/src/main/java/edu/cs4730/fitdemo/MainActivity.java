@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.navigation.NavigationView;
@@ -22,6 +26,8 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.Map;
+
 /**
  * Most of the code is in the fragments.
  * <p>
@@ -35,8 +41,9 @@ public class MainActivity extends AppCompatActivity
     FragmentManager fragmentManager;
     SensorFragment sensorFragment;
     RecordFragment recordFragment = null;
-    public static final int REQUEST_ACCESS_Activity_Updates = 0;
     public static final String TAG = "MainActivity";
+    private String[] REQUIRED_PERMISSIONS;
+    ActivityResultLauncher<String[]> rpl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +53,39 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            //REQUIRED_PERMISSIONS = new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.ACTIVITY_RECOGNITION"};
+            REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACTIVITY_RECOGNITION, Manifest.permission.ACCESS_FINE_LOCATION};
+            Log.v(TAG, "android 12 activity and fine location");
+        } else {
+            REQUIRED_PERMISSIONS = new String[]{ Manifest.permission.ACTIVITY_RECOGNITION};
+            Log.v(TAG, "below android 12 activity recognition needed.");
+        }
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    boolean granted = true;
+                    for (Map.Entry<String, Boolean> x : isGranted.entrySet()) {
+                        Log.v(TAG, x.getKey() + " is " + x.getValue());
+                        if (!x.getValue()) granted = false;
+                    }
+                    if (granted) {
+                        Log.v(TAG, "All permissions are granted.");
+                        //they likely died first without permissions, so just do it again.
+                        sensorFragment = new SensorFragment();
+                        recordFragment = new RecordFragment();
+                        fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
+                        Toast.makeText(getApplicationContext(), "Activity access granted", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.v(TAG, "One of more permissions were NOT granted.");
+                        Toast.makeText(getApplicationContext(), "Activity access NOT granted", Toast.LENGTH_SHORT).show();
+                        finish();
+
+                    }
+                }
+            }
+        );
         fragmentManager = getSupportFragmentManager();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -58,59 +98,31 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         //first instance, so the default is zero.
-        sensorFragment = new SensorFragment();
-        recordFragment = new RecordFragment();
-        fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
+        if (allPermissionsGranted()) {
+            sensorFragment = new SensorFragment();
+            recordFragment = new RecordFragment();
+            fragmentManager.beginTransaction().replace(R.id.container, sensorFragment).commit();
+        }  //else wait until it comes back.
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        CheckPerm();
+        if (!allPermissionsGranted())
+            rpl.launch(REQUIRED_PERMISSIONS);
+        else
+            Log.v(TAG, "All permissions have been granted already.");
     }
 
-    //ask for permissions when we start.
-    public void CheckPerm() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if ( (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) ||
-                (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) )  {
-                //I'm on not explaining why, just asking for permission.
-                Log.v(TAG, "android 12 asking for permissions");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION, Manifest.permission.ACCESS_FINE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_Activity_Updates);
-
-            }
-        } else {
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                //I'm on not explaining why, just asking for permission.
-                Log.v(TAG, "below android 12 asking for permissions");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                    MainActivity.REQUEST_ACCESS_Activity_Updates);
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
             }
         }
+        return true;
     }
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        Log.v(TAG, "onRequest result called.");
-
-        if (requestCode == REQUEST_ACCESS_Activity_Updates) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //We have permissions, so ...
-                Log.v(TAG, "Activity permission was  granted.");
-                Toast.makeText(this, "Activity access granted", Toast.LENGTH_SHORT).show();
-            } else {
-                // permission denied,    Disable this feature or close the app.
-                Log.v(TAG, "Activity permission was NOT granted.");
-                Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
     @Override
     public void onBackPressed() {
