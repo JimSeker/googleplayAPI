@@ -75,7 +75,7 @@ public class AdvertiseFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (ConnectedEndPointId.compareTo("") != 0) { //connected to someone
-                    Nearby.getConnectionsClient(getContext()).disconnectFromEndpoint(ConnectedEndPointId);
+                    Nearby.getConnectionsClient(requireContext()).disconnectFromEndpoint(ConnectedEndPointId);
                     ConnectedEndPointId = "";
                 }
                 if (mIsAdvertising) {
@@ -87,10 +87,10 @@ public class AdvertiseFragment extends Fragment {
         preview = (FrameLayout) myView.findViewById(R.id.camera2_preview);
 
         //we have to pass the camera id that we want to use to the surfaceview
-        CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) requireActivity().getSystemService(Context.CAMERA_SERVICE);
         try {
             String cameraId = manager.getCameraIdList()[0];
-            mPreview = new Camera2Preview(getActivity().getApplicationContext(), cameraId);
+            mPreview = new Camera2Preview(requireContext(), cameraId);
             preview.addView(mPreview);
 
         } catch (CameraAccessException e) {
@@ -110,14 +110,14 @@ public class AdvertiseFragment extends Fragment {
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
         new ConnectionLifecycleCallback() {
             @Override
-            public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+            public void onConnectionInitiated(@NonNull String endpointId, ConnectionInfo connectionInfo) {
                 logthis("Connection Initiated :" + endpointId + " Name is " + connectionInfo.getEndpointName());
                 // Automatically accept the connection on both sides.
                 // setups the callbacks to read data from the other connection.
-                Nearby.getConnectionsClient(getContext()).acceptConnection(endpointId, //mPayloadCallback);
+                Nearby.getConnectionsClient(requireContext()).acceptConnection(endpointId, //mPayloadCallback);
                     new PayloadCallback() {
                         @Override
-                        public void onPayloadReceived(String endpointId, Payload payload) {
+                        public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
 
                             if (payload.getType() == Payload.Type.BYTES) {
                                 String stuff = new String(payload.asBytes());
@@ -131,14 +131,14 @@ public class AdvertiseFragment extends Fragment {
                         }
 
                         @Override
-                        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
+                        public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
                             //if stream or file, we need to know when the transfer has finished.  ignoring this right now.
                         }
                     });
             }
 
             @Override
-            public void onConnectionResult(String endpointId, ConnectionResolution result) {
+            public void onConnectionResult(@NonNull String endpointId, ConnectionResolution result) {
                 logthis("Connection accept :" + endpointId + " result is " + result.toString());
 
                 switch (result.getStatus().getStatusCode()) {
@@ -165,7 +165,7 @@ public class AdvertiseFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnected(String endpointId) {
+            public void onDisconnected(@NonNull String endpointId) {
                 logthis("Connection disconnected :" + endpointId);
                 ConnectedEndPointId = "";  //need a remove if using a list.
             }
@@ -177,7 +177,7 @@ public class AdvertiseFragment extends Fragment {
      */
     private void startAdvertising() {
 
-        Nearby.getConnectionsClient(getContext())
+        Nearby.getConnectionsClient(requireContext())
             .startAdvertising(
                 UserNickName,    //human readable name for the endpoint.
                 MainActivity.ServiceId,  //unique identifier for advertise endpoints
@@ -209,7 +209,7 @@ public class AdvertiseFragment extends Fragment {
      */
     public void stopAdvertising() {
         mIsAdvertising = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising();
+        Nearby.getConnectionsClient(requireContext()).stopAdvertising();
         logthis("Advertising stopped.");
     }
 
@@ -227,7 +227,7 @@ public class AdvertiseFragment extends Fragment {
         // Open the ParcelFileDescriptor for this URI with read access.
         ParcelFileDescriptor pfd = null;
         try {
-            pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
+            pfd = requireContext().getContentResolver().openFileDescriptor(uri, "r");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
@@ -238,7 +238,7 @@ public class AdvertiseFragment extends Fragment {
         //Payload payload = Payload.fromBytes(data.getBytes());
 
         // sendPayload (List<String> endpointIds, Payload payload)  if more then one connection allowed.
-        Nearby.getConnectionsClient(getContext()).
+        Nearby.getConnectionsClient(requireContext()).
             sendPayload(ConnectedEndPointId,  //end point to end to
                 payload)   //the actual payload of data to send.
             .addOnSuccessListener(new OnSuccessListener<Void>() {  //don't know if need this one.
@@ -284,7 +284,7 @@ public class AdvertiseFragment extends Fragment {
         myThread = new Thread(new sendPics(250));
         //so going have to be a thread or async task or this will overload the main activity.
         if (mCapture == null) // While I would like the declare this earlier, the camera is not setup yet, so wait until now.
-            mCapture = new Camera2CapturePic(getActivity().getApplicationContext(), mPreview);
+            mCapture = new Camera2CapturePic(requireContext(), mPreview);
         mCapture.setThread(myThread);
         myThread.start();
 
@@ -312,7 +312,7 @@ public class AdvertiseFragment extends Fragment {
                     return;
                 }
             }
-            while (ConnectedEndPointId != "") {
+            while (!ConnectedEndPointId.equals("")) {
                 mediaFile = new File(mediaStorageDir.getPath() + File.separator +
                     "IMG_" + i + ".jpg");
                 Log.d(TAG, "File is " + mediaFile.getAbsolutePath());
