@@ -84,7 +84,16 @@ public class HelpFragment extends Fragment {
             REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH};
             logthis("Android 11 or less, bluetooth permissions only ");
         }
-
+        myView.findViewById(R.id.btn_permi).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!allPermissionsGranted())
+                    rpl.launch(REQUIRED_PERMISSIONS);
+                else {
+                    logthis("All permissions have been granted already.");
+                }
+            }
+        });
         myView.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
