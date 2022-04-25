@@ -22,13 +22,11 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import java.io.IOException;
 
 /**
- * This is a simplier example of the text detector then android example code.  It's also in line with the rest of my examples.
+ * This is a simpler example of the text detector then android example code.  It's also in line with the rest of my examples.
  *
- * This does in a guesture dectector so you can tap the text and it will show up in the logger and at the top of the screen.
+ * This does in a gesture detector so you can tap the text and it will show up in the logger and at the top of the screen.
  *
  */
-
-
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";

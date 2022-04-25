@@ -171,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //because it's setup in oncreate and onresume, it's likely I'm asking twice very quickly.  the
         //alreadyaskingpremission vairable will stop the second request on top of the first request.
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         alreadyaskingpremission = false;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
@@ -188,8 +189,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     // appears to be necessary for the Detector.
     public class BarcodeTrackFactory implements MultiProcessor.Factory<Barcode> {
 
+        @NonNull
         @Override
-        public Tracker<Barcode> create(Barcode barcode) {
+        public Tracker<Barcode> create(@NonNull Barcode barcode) {
             //BarCodeTracker is defined below
             return new BarCodeTracker();
         }
@@ -230,18 +232,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      *  methods needed for the surfaceView callback methods.
      */
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
         mSurfaceAvailable = true;
         startPreview();
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
         //should not be called, app is locked in portrait mode.
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         mSurfaceAvailable = false;
     }
 }
