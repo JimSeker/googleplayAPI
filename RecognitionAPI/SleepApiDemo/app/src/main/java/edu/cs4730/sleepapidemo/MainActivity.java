@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint({"MissingPermission", "UnspecifiedImmutableFlag"})
         //it's already handled.
     void subscribeToSleep() {
         PendingIntent pi;
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint({"MissingPermission", "UnspecifiedImmutableFlag"})
     void unsubscriptToSleep() {
         PendingIntent pi;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
