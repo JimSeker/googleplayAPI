@@ -17,6 +17,7 @@
 package com.google.android.gms.location.sample.activityrecognition;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -221,6 +222,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * Gets a PendingIntent to be sent for each activity detection.
      */
+    @SuppressLint("UnspecifiedImmutableFlag")
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
 

@@ -1,6 +1,7 @@
 package edu.cs4730.activityrecognitiondemo;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -225,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     /**
      * Gets a PendingIntent to be sent for each activity detection.
      */
+    @SuppressLint("UnspecifiedImmutableFlag")
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
