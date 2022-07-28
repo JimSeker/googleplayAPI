@@ -83,7 +83,7 @@ public class AuthFragment extends Fragment {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
+                        //Intent data = result.getData();
                         Toast.makeText(getContext(), "Authentication success.", Toast.LENGTH_SHORT).show();
                         logthis("Google Sign In success.");
                         mFirebaseUser = mFirebaseAuth.getCurrentUser();

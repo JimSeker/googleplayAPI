@@ -22,15 +22,15 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    implementation platform('com.google.firebase:firebase-bom:29.2.1')
+    implementation platform('com.google.firebase:firebase-bom:30.3.1')
     //implementation 'com.google.firebase:firebase-firestore:23.0.3'
     //implementation 'com.google.firebase:firebase-auth:21.0.1'
     // FirebaseUI for Firebase Auth
     //see this page for versioning, https://github.com/firebase/FirebaseUI-Android  not automatic, like above.
-    implementation 'com.firebaseui:firebase-ui-auth:8.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.1'
     // FirebaseUI for Cloud Firestore
-    implementation 'com.firebaseui:firebase-ui-firestore:8.0.0'
+    implementation 'com.firebaseui:firebase-ui-firestore:8.0.1'
 }
