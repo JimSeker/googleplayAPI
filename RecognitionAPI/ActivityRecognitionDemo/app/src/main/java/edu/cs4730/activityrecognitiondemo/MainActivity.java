@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -156,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
      * Registers success and failure callbacks.
      */
+    @SuppressLint("MissingPermission")
     public void startActivityUpdates() {
         Log.wtf(TAG, "start called.");
         Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
@@ -194,9 +194,10 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
      * failure callbacks.
      */
+    @SuppressLint("MissingPermission")
     public void stopActivityUpdates() {
         Log.wtf(TAG, "stop called.");
-        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+       Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
             getActivityDetectionPendingIntent());
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
