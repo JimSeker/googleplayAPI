@@ -33,6 +33,13 @@ import java.util.Map;
  * <p>
  * But this activity is asking for the new ACTIVITY permission that started in API 29.  Not sure
  * what happens if this is run on a 28 device.
+ *
+ * ACTIVITY_RECOGNTION and ACCESS_FILE_LOCATION are requrested, since you need them for step count
+ *   also could get calories.expended, activity.exercise information.
+ *  see https://developers.google.com/fit/android/authorization 
+ * Note you need the BODY_SENSOR permission in order to get heart_rate information.
+ * this app doesn't not access it, so it is not requested or listed in the mananifest
+ * also no attempt for the new API 33 BODY_SENSORS_BACKGROUND is made either.
  */
 
 public class MainActivity extends AppCompatActivity
