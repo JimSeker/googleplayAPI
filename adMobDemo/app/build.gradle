@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "edu.cs4730.admobdemo"
         minSdkVersion 26
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
@@ -20,19 +20,20 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'com.google.android.gms:play-services-ads:20.4.0'
-    //implementation 'com.google.firebase:firebase-ads:20.4.0'  //likely the same library as gp ads at this point.
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'com.google.android.gms:play-services-ads:21.3.0'
+    //implementation 'com.google.firebase:firebase-ads:21.3.0'  //likely the same library as gp ads at this point.
     implementation 'com.google.android.ads.consent:consent-library:1.0.8'
+    implementation 'androidx.work:work-runtime:2.7.1'
     // For apps targeting Android 12, add WorkManager dependency.
     //https://developers.google.com/admob/android/quick-start
-    constraints {
-        implementation('androidx.work:work-runtime:2.7.0') {
-            because '''androidx.work:work-runtime:2.1.0 pulled from play-services-ads
-                   has a bug using PendingIntent without FLAG_IMMUTABLE or
-                   FLAG_MUTABLE and will fail in apps targeting S+.'''
-        }
-    }
+//    constraints {
+//        implementation('androidx.work:work-runtime:2.7.0') {
+//            because '''androidx.work:work-runtime:2.1.0 pulled from play-services-ads
+//                   has a bug using PendingIntent without FLAG_IMMUTABLE or
+//                   FLAG_MUTABLE and will fail in apps targeting S+.'''
+//        }
+//    }
 
 }
