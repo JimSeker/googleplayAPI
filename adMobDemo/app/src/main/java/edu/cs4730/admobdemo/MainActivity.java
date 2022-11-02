@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAdLoaded() {
                 // Code to be executed when an ad finishes loading.
-                logthis( "banner ad has finished loading.");
+                logthis("banner ad has finished loading.");
             }
 
             @Override
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAdOpened() {
                 // Code to be executed when the ad is displayed.
-                logthis( "banner ad is displayed.");
+                logthis("banner ad is displayed.");
             }
 
             @Override
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onConsentInfoUpdated(ConsentStatus consentStatus) {
                 // User's consent status successfully updated.
-                logthis( "consent status successfully updated.");
+                logthis("consent status successfully updated.");
             }
 
             @Override
@@ -136,25 +136,6 @@ public class MainActivity extends AppCompatActivity {
          *
          */
 
-        InterstitialAd.load(this,"ca-app-pub-3940256099942544/1033173712"
-            , adRequest,
-            new InterstitialAdLoadCallback() {
-                @Override
-                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                    // The mInterstitialAd reference will be null until
-                    // an ad is loaded.
-                    mInterstitialAd = interstitialAd;
-                    logthis( "interstitial ad loaded.");
-                }
-
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    // Handle the error
-                    logthis("interstitial failed " + loadAdError.toString());
-                    mInterstitialAd = null;
-                }
-            });
-
 
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,50 +144,69 @@ public class MainActivity extends AppCompatActivity {
                  * Now the interstitialad setup and display if possible.
                  */
 
-                if (mInterstitialAd != null) {
-                   //now we can setup the full screen pieces.
-                    mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                InterstitialAd.load(getApplicationContext(), "ca-app-pub-3940256099942544/1033173712"
+                    , adRequest,
+                    new InterstitialAdLoadCallback() {
                         @Override
-                        public void onAdClicked() {
-                            // Called when a click is recorded for an ad.
-                            logthis( "interstitial Ad was clicked.");
+                        public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                            // The mInterstitialAd reference will be null until
+                            // an ad is loaded.
+                            mInterstitialAd = interstitialAd;
+                            logthis("interstitial ad loaded.");
+                            /**
+                             * This add is loaded, so now we can show it.  You likely want to load the ad elsewhere, so it ready to show.
+                             * but this is a simple example.
+                             */
+                            //now we can setup the full screen pieces.
+                            mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                                @Override
+                                public void onAdClicked() {
+                                    // Called when a click is recorded for an ad.
+                                    logthis("interstitial Ad was clicked.");
+                                    //should dismiss the add here, but I can't figure out how.
+                                }
+
+                                @Override
+                                public void onAdDismissedFullScreenContent() {
+                                    // Called when ad is dismissed.
+                                    // Set the ad reference to null so you don't show the ad a second time.
+                                    logthis("interstitial Ad dismissed fullscreen content.");
+                                    mInterstitialAd = null;
+                                }
+
+                                @Override
+                                public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                    // Called when ad fails to show.
+                                    logthis("interstitial Ad failed to show fullscreen content.");
+                                    mInterstitialAd = null;
+                                }
+
+                                @Override
+                                public void onAdImpression() {
+                                    // Called when an impression is recorded for an ad.
+                                    logthis("interstitial Ad recorded an impression.");
+                                }
+
+                                @Override
+                                public void onAdShowedFullScreenContent() {
+                                    // Called when ad is shown.
+                                    logthis("interstitial Ad showed fullscreen content.");
+                                }
+
+                            });
+
+                            //now show the add.
+                            mInterstitialAd.show(MainActivity.this);
                         }
 
                         @Override
-                        public void onAdDismissedFullScreenContent() {
-                            // Called when ad is dismissed.
-                            // Set the ad reference to null so you don't show the ad a second time.
-                            logthis( "interstitial Ad dismissed fullscreen content.");
+                        public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                            // Handle the error
+                            logthis("interstitial failed " + loadAdError.toString());
                             mInterstitialAd = null;
                         }
-
-                        @Override
-                        public void onAdFailedToShowFullScreenContent(AdError adError) {
-                            // Called when ad fails to show.
-                            logthis( "interstitial Ad failed to show fullscreen content.");
-                            mInterstitialAd = null;
-                        }
-
-                        @Override
-                        public void onAdImpression() {
-                            // Called when an impression is recorded for an ad.
-                            logthis( "interstitial Ad recorded an impression.");
-                        }
-
-                        @Override
-                        public void onAdShowedFullScreenContent() {
-                            // Called when ad is shown.
-                            logthis( "interstitial Ad showed fullscreen content.");
-                        }
-
                     });
 
-                    //now show the add.
-                    mInterstitialAd.show(MainActivity.this);
-                } else {
-                    logthis( "The interstitial ad wasn't ready yet.");
-
-                }
             }
         });
 
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void logthis(String item) {
-       Log.d(TAG, item);
-       logger.append(item+ "\n");
+        Log.d(TAG, item);
+        logger.append(item + "\n");
     }
 }
