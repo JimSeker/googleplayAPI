@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 // User's consent status failed to update.
                 logthis("consent status failed to update.");
             }
+
         });
 
         /**
@@ -144,7 +145,8 @@ public class MainActivity extends AppCompatActivity {
                  * Now the interstitialad setup and display if possible.
                  */
 
-                InterstitialAd.load(getApplicationContext(), "ca-app-pub-3940256099942544/1033173712"
+                //InterstitialAd.load(getApplicationContext(), "ca-app-pub-3940256099942544/1033173712"
+                InterstitialAd.load(getApplicationContext(), getResources().getString(R.string.fullscreen_ad_unit_id)
                     , adRequest,
                     new InterstitialAdLoadCallback() {
                         @Override
