@@ -21,7 +21,7 @@ public class FetchAddressWorker extends Worker {
     public FetchAddressWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
-    //depreciated 
+
     @NonNull
     @Override
     public Result doWork() {

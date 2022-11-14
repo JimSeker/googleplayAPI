@@ -8,9 +8,11 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -45,6 +47,7 @@ import com.google.android.gms.tasks.Task;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Map;
 
 /*
  * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
@@ -54,7 +57,7 @@ import java.util.Date;
  *
  * This shows how to get location updates, either the last known and continuing.
  * getLastLocation is get the last known location  and startLocationUpdates() is continuing.
- * Also uses the intent service to get address locations as well.
+ * Also uses the worker to get address locations as well.
  *
  * use this for the location aware parts, not the android.location.
  * https://developers.google.com/android/reference/com/google/android/gms/location/package-summary
@@ -62,13 +65,15 @@ import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity {
-    // for checking permissions.
-    public static final int REQUEST_ACCESS_startLocationUpdates = 0;
-    public static final int REQUEST_ACCESS_onConnected = 1;
+
+
     /**
      * Constant used in the location settings dialog.
      */
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
+    // for checking permissions.
+    ActivityResultLauncher<String[]> rpl_onConnected, rpl_startLocationUpdates;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
     private FusedLocationProviderClient mFusedLocationClient;
     Location mLastLocation;
@@ -99,6 +104,37 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // for checking permissions.
+        rpl_onConnected = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                new ActivityResultCallback<Map<String, Boolean>>() {
+                    @Override
+                    public void onActivityResult(Map<String, Boolean> isGranted) {
+                        if (allPermissionsGranted()) {
+
+                            getLastLocation();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    }
+                }
+        );
+        // for checking permissions.
+        rpl_startLocationUpdates = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                new ActivityResultCallback<Map<String, Boolean>>() {
+                    @Override
+                    public void onActivityResult(Map<String, Boolean> isGranted) {
+                        if (allPermissionsGranted()) {
+                            startLocationUpdates();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    }
+                }
+        );
+
         logger = findViewById(R.id.logger);
         btn = findViewById(R.id.button);
         btn.setText("Start location updates");
@@ -150,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
     public void locationUpdates() {
         if (mRequestingLocationUpdates) {
             //true, so start them
-
             startLocationUpdates();
             btn.setText("Stop location updates");
         } else {
@@ -173,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
 
         mLocationRequest = new LocationRequest.Builder(100000)  //create a requrest with 10000 interval and default rest.
                 //now set the rest of the pieces we want to change.
-                //.setIntervalMillis(10000)  //not neeeded, since it is part of the builder.
+                //.setIntervalMillis(10000)  //not needed, since it is part of the builder.
                 .setMinUpdateIntervalMillis(50000)  //get an update no faster then 5 seconds.
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
@@ -191,26 +226,21 @@ public class MainActivity extends AppCompatActivity {
                 super.onLocationResult(locationResult);
 
                 mLastLocation = locationResult.getLastLocation();
-                logger.append("\n\n" + DateFormat.getTimeInstance().format(new Date()) + ": ");
-                logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
-                logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
-               // startIntentService();
+                logthis("\n\n" + DateFormat.getTimeInstance().format(new Date()) + ": " +
+                        " Lat: " + mLastLocation.getLatitude() +
+                        " Long: " + mLastLocation.getLongitude());
                 startWorker();
             }
         };
     }
 
     protected void startLocationUpdates() {
-        //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            //I'm on not explaining why, just asking for permission.
-            Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_startLocationUpdates);
+
+        if (!allPermissionsGranted()) {
+            logthis("Requesting permissions");
+            rpl_startLocationUpdates.launch(REQUIRED_PERMISSIONS);
             return;
         }
-
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
@@ -276,15 +306,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //This shows how to get a "one off" location.  instead of using the location updates
-    //
+    @SuppressLint("MissingPermission") //I'm really checking, but studio can't tell.
     public void getLastLocation() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            //I'm on not explaining why, just asking for permission.
-            Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_onConnected);
+        if (!allPermissionsGranted()) {
+            logthis("Requesting permissions");
+            rpl_onConnected.launch(REQUIRED_PERMISSIONS);
             return;
         }
         mFusedLocationClient.getLastLocation()
@@ -292,18 +319,16 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Location location) {
                         if (location == null) {
-                            Log.w(TAG, "onSuccess:null");
-                            logger.append("Last location: None");
+                            logthis("Last location: null");
                             return;
                         }
                         mLastLocation = location;
 
                         Log.v(TAG, "getLastLocation");
                         if (mLastLocation != null) {
-                            logger.append("Last location: ");
-                            logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
-                            logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
-                            //startIntentService();
+                            logthis("Last location: " +
+                                    " Lat: " + mLastLocation.getLatitude() +
+                                    " Long: " + mLastLocation.getLongitude());
                             startWorker();
                         }
                     }
@@ -320,11 +345,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Creates an Worker, adds location data to it as an extra, and starts worker for
-     * fetching an address.  It then sets an observer to get the data back and display it via
-     * the logger.
+     * fetching an address.  It then sets an observer to get the data back and displayed
      */
-
-
     public void startWorker() {
         Data myData = new Data.Builder()
                 .putDouble(Constants.LATITUDE, mLastLocation.getLatitude())
@@ -341,54 +363,24 @@ public class MainActivity extends AppCompatActivity {
                     public void onChanged(@Nullable WorkInfo status) {
                         if (status != null && status.getState().isFinished()) {
                             String mAddressOutput = status.getOutputData().getString(Constants.RESULT_DATA_KEY);
-                            Log.i(TAG, "address received: " + mAddressOutput);
-                            logger.append(mAddressOutput);
-
+                            logthis("address received: " + mAddressOutput);
                         }
                     }
                 });
     }
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        Log.v(TAG, "onRequest result called.");
-        boolean coarse = false, fine = false;
-
-        //received result for GPS access
-        for (int i = 0; i < grantResults.length; i++) {
-            if ((permissions[i].compareTo(Manifest.permission.ACCESS_COARSE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
-                coarse = true;
-            else if ((permissions[i].compareTo(Manifest.permission.ACCESS_FINE_LOCATION) == 0) &&
-                    (grantResults[i] == PackageManager.PERMISSION_GRANTED))
-                fine = true;
-        }
-        Log.v(TAG, "Received response for gps permission request.");
-        // If request is cancelled, the result arrays are empty.
-        if (coarse && fine) {
-            // permission was granted
-            Log.v(TAG, permissions[0] + " permission has now been granted. Showing preview.");
-            Toast.makeText(this, "GPS access granted",
-                    Toast.LENGTH_SHORT).show();
-            if (requestCode == REQUEST_ACCESS_startLocationUpdates) {
-                startLocationUpdates();
-            } else if (requestCode == REQUEST_ACCESS_onConnected) {
-                getLastLocation();
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
             }
-
-        } else {
-            // permission denied,    Disable this feature or close the app.
-            Log.v(TAG, "GPS permission was NOT granted.");
-            Toast.makeText(this, "GPS access NOT granted", Toast.LENGTH_SHORT).show();
-            finish();
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+        return true;
     }
 
-
+    //help function to print the screen and log it.
+    void logthis(String item) {
+        Log.d(TAG, item);
+        logger.append(item + "\n");
+    }
 }
