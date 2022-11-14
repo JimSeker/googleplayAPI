@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "edu.cs4730.locationawaredemo"
-        minSdkVersion 26
+        minSdkVersion 31
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -24,6 +24,6 @@ dependencies {
     implementation 'com.google.android.material:material:1.7.0'
     // Dependency for Google location aware stuff.
     //see https://developers.google.com/android/guides/setup for the whole list.
-    implementation 'com.google.android.gms:play-services-location:21.0.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation 'com.google.android.gms:play-services-base:18.1.0'
 }

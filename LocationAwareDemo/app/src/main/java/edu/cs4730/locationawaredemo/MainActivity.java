@@ -10,11 +10,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +33,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -41,15 +44,17 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /*
-  * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
-  * http://developer.android.com/training/location/index.html
-  *
-  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
-  *
-  * This shows how to get location updates, either the last known and continuing.
-  * getLastLocation is get the last known location  and startLocationUpdates() is continuing.
-  * Also uses the intent service to get address locations as well.
-  *
+ * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
+ * http://developer.android.com/training/location/index.html
+ *
+ * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
+ *
+ * This shows how to get location updates, either the last known and continuing.
+ * getLastLocation is get the last known location  and startLocationUpdates() is continuing.
+ * Also uses the intent service to get address locations as well.
+ *
+ * use this for the location aware parts, not the android.location.
+ * https://developers.google.com/android/reference/com/google/android/gms/location/package-summary
  */
 
 
@@ -92,9 +97,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar =  findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        logger =  findViewById(R.id.logger);
+        logger = findViewById(R.id.logger);
         btn = findViewById(R.id.button);
         btn.setText("Start location updates");
         btn.setOnClickListener(new View.OnClickListener() {
@@ -158,18 +163,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void createLocationRequest() {
-        mLocationRequest = LocationRequest.create()
-            .setInterval(10000)
-            .setFastestInterval(5000)
-            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+        //deprecated.
+//        mLocationRequest = LocationRequest.create()
+//            .setInterval(10000)
+//            .setFastestInterval(5000)
+//            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+//            .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
+//            .setMaxWaitTime(10000);
+
+
+        mLocationRequest = new LocationRequest.Builder(100000)  //create a requrest with 10000 interval and default rest.
+            //now set the rest of the pieces we want to change.
+            //.setIntervalMillis(10000)  //not neeeded, since it is part of the builder.
+            .setMinUpdateIntervalMillis(50000)  //get an update no faster then 5 seconds.
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
             .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
-            .setMaxWaitTime(10000);
-        /* depreciated.
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-         */
+            .setMaxUpdateDelayMillis(10000)  //wait only 10 seconds max between
+            .build();
     }
 
     /**
@@ -193,56 +203,56 @@ public class MainActivity extends AppCompatActivity {
     protected void startLocationUpdates() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             //I'm on not explaining why, just asking for permission.
             Log.v(TAG, "asking for permissions");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_startLocationUpdates);
+                MainActivity.REQUEST_ACCESS_startLocationUpdates);
             return;
         }
 
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-                    @SuppressLint("MissingPermission")
-                    @Override
-                    public void onSuccess(@NonNull LocationSettingsResponse locationSettingsResponse) {
-                        Log.i(TAG, "All location settings are satisfied.");
+            .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                @SuppressLint("MissingPermission")
+                @Override
+                public void onSuccess(@NonNull LocationSettingsResponse locationSettingsResponse) {
+                    Log.i(TAG, "All location settings are satisfied.");
 
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
+                    //noinspection MissingPermission
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                        mLocationCallback, Looper.myLooper());
 
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                "location settings ");
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the
+                                // result in onActivityResult().
+                                ResolvableApiException rae = (ResolvableApiException) e;
+                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException sie) {
+                                Log.i(TAG, "PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            String errorMessage = "Location settings are inadequate, and cannot be " +
+                                "fixed here. Fix in Settings.";
+                            Log.e(TAG, errorMessage);
+                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            mRequestingLocationUpdates = false;
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                                mRequestingLocationUpdates = false;
-                        }
 
 
-                    }
-                });
+                }
+            });
 
 
     }
@@ -257,12 +267,12 @@ public class MainActivity extends AppCompatActivity {
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        mRequestingLocationUpdates = false;
-                    }
-                });
+            .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    mRequestingLocationUpdates = false;
+                }
+            });
     }
 
     //This shows how to get a "one off" location.  instead of using the location updates
@@ -270,40 +280,40 @@ public class MainActivity extends AppCompatActivity {
     public void getLastLocation() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             //I'm on not explaining why, just asking for permission.
             Log.v(TAG, "asking for permissions");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    MainActivity.REQUEST_ACCESS_onConnected);
+                MainActivity.REQUEST_ACCESS_onConnected);
             return;
         }
         mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location == null) {
-                            Log.w(TAG, "onSuccess:null");
-                            logger.append("Last location: None");
-                            return;
-                        }
-                        mLastLocation = location;
+            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location == null) {
+                        Log.w(TAG, "onSuccess:null");
+                        logger.append("Last location: None");
+                        return;
+                    }
+                    mLastLocation = location;
 
-                        Log.v(TAG, "getLastLocation");
-                        if (mLastLocation != null) {
-                            logger.append("Last location: ");
-                            logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
-                            logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
-                            startIntentService();
-                        }
+                    Log.v(TAG, "getLastLocation");
+                    if (mLastLocation != null) {
+                        logger.append("Last location: ");
+                        logger.append(" Lat: " + String.valueOf(mLastLocation.getLatitude()));
+                        logger.append(" Long: " + String.valueOf(mLastLocation.getLongitude()) + "\n");
+                        startIntentService();
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "getLastLocation:onFailure", e);
-                        logger.append("Last location: Fail");
-                    }
-                });
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "getLastLocation:onFailure", e);
+                    logger.append("Last location: Fail");
+                }
+            });
 
     }
 
@@ -323,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Display the address string or an error message sent from the intent service.
             String mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
-            Log.i(TAG, "address received: "+ mAddressOutput);
+            Log.i(TAG, "address received: " + mAddressOutput);
             logger.append(mAddressOutput);
 
         }
