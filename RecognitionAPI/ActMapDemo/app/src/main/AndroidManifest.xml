@@ -32,7 +32,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -44,10 +43,6 @@
         <!-- Service that provides activity recognition data. Setting the android:exported attribute
 to "false" stops other apps from starting this service, even when using an explicit
 intent. -->
-        <service
-            android:name=".DetectedActivitiesIntentService"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 
 </manifest>
