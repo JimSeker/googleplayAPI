@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     @Override
     protected void onStop() {
         Log.wtf(TAG, "onStop called.");
-        // Unregister the broadcast receiver that was registered during onResume().
+        // Unregister the broadcast receiver that was registered during onStart().
         if (gettingupdates)  //if turned on, stop them during pause.
             CheckPerm();
         unregisterReceiver(mActivityReceiver);
