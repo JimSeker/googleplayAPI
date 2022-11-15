@@ -3,9 +3,12 @@ package edu.cs4730.activityrecognitiondemo;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.speech.tts.TextToSpeech;
 
 import androidx.activity.result.ActivityResult;
@@ -14,27 +17,28 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
-import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * uses the singletop and a onNewIntent method so all the code is kept in this single
- * method.   it will say the most probable action and then anything at least 50%
+ * it will say the most probable action and then anything at least 50%
  * for testing purposes inside, you can simple move the phone up and down slowly to get walking
  * pretty fast for running.  You don't actually have move for those.   walking as good pace and holding
  * the device study, which result in driving.   At least on a Moto G (v1) GPE device.
@@ -42,17 +46,20 @@ import java.util.List;
  * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognition
  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
  *
- * this is very slow to receive.  also the screen needs to stay on, otherwise, it removes the listener.
+ * This does not auto start, the user click the button to start it.
+ * this is very slow to receive if nothing changes early on, but afterwards it responds on pretty regularly.
  */
 
 public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
-    //for the speech part.
-    private static final int REQ_TTS_STATUS_CHECK = 0;
+    // for checking permissions.
+    ActivityResultLauncher<String[]> rpl;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACTIVITY_RECOGNITION};
+
+    //speech pieces.
     private TextToSpeech mTts;
     private String myUtteranceId = "txt2spk";
     private boolean canspeak = false;
-    public static final int REQUEST_ACCESS_Activity_Updates = 0;
-    private Context mContext;
+
     /**
      * The desired time between activity detections. Larger values result in fewer activity
      * detections while improving battery life. A value of 0 results in activity detections at the
@@ -61,11 +68,10 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      */
     public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 1 * 1000;  //fastest rate which appear to be about 10 seconds.
     //30 * 1000; // 30 seconds
-    /**
-     * The entry point for interacting with activity recognition.
-     */
-    //   private ActivityRecognitionClient mActivityRecognitionClient;
-    // private List<ActivityTransition> activityTransitionList;
+
+    // Action fired when transitions are triggered.
+    private final String ACTIVITY_RECEIVER_ACTION = BuildConfig.APPLICATION_ID + "ACTIVITY_RECEIVER_ACTION";
+    private ActivityReceiver mActivityReceiver;
 
     boolean gettingupdates = false;
 
@@ -77,7 +83,34 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
+
+        //one of these should keep the screen on.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setTurnScreenOn(true);
+        }
+        // for checking permissions.
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    if (allPermissionsGranted()) {
+                        //We have permissions, so ...
+                        if (!gettingupdates) {
+                            logthis("starting from permissions");
+                            startActivityUpdates();
+                        } else {
+                            stopActivityUpdates();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }
+            }
+        );
+
         btn = findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,9 +119,9 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
             }
         });
-        mContext = this;
         logger = findViewById(R.id.logger);
-        //using the new startActivityForResult method.
+
+        // startActivityForResult method for the speech engine.
         ActivityResultLauncher<Intent> myActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
@@ -98,9 +131,9 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                     if (result.getResultCode() == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
                         // TTS is up and running
                         mTts = new TextToSpeech(getApplicationContext(), MainActivity.this);
-                        Log.v(TAG, "Pico is installed okay");
+                        logthis("Speech is installed and okay");
                     } else
-                        Log.e(TAG, "Got a failure. TTS apparently not available");
+                        logthis("Got a failure. speech apparently not available");
                 }
             });
         // Check to be sure that TTS exists and is okay to use
@@ -108,72 +141,58 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
         myActivityResultLauncher.launch(checkIntent);
-
-//        //setup the client activity piece.
-//        mActivityRecognitionClient = new ActivityRecognitionClient(this);
-
-
+        //get the receiver ready.
+        mActivityReceiver = new ActivityReceiver();
     }
 
     //ask for permissions when we start.
     public void CheckPerm() {
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-            //I'm on not explaining why, just asking for permission.
-            Log.v(TAG, "asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                MainActivity.REQUEST_ACCESS_Activity_Updates);
-
-        } else {
-            //We have permissions, so ...
-            if (!gettingupdates) {
-                startActivityUpdates();
-            } else {
-                stopActivityUpdates();
-            }
+        if (!allPermissionsGranted()) {
+            logthis("Requesting permissions");
+            rpl.launch(REQUIRED_PERMISSIONS);
+            return;
         }
-
+        //We have permissions, so ...
+        if (!gettingupdates) {
+            startActivityUpdates();
+        } else {
+            stopActivityUpdates();
+        }
     }
 
-
+    //on start setup the receiver
     @Override
-    protected void onResume() {
-        super.onResume();
-        // Register the broadcast receiver that informs this activity of the DetectedActivity
-        // object broadcast sent by the intent service.
-        if (!gettingupdates)
-            CheckPerm();
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION));
     }
 
+    //onstop turn off updates and remove the receiver.
     @Override
     protected void onStop() {
         Log.wtf(TAG, "onStop called.");
         // Unregister the broadcast receiver that was registered during onResume().
         if (gettingupdates)  //if turned on, stop them during pause.
             CheckPerm();
+        unregisterReceiver(mActivityReceiver);
         super.onStop();
     }
 
-
     /**
-     * Registers for activity recognition updates using
-     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
+     * Registers for activity recognition updates using requestActivityUpdates(long, PendingIntent).
      * Registers success and failure callbacks.
      */
     @SuppressLint("MissingPermission")
     public void startActivityUpdates() {
-        Log.wtf(TAG, "start called.");
+        logthis("beginning to start activity updates");
 
         ActivityRecognition.getClient(this).requestActivityUpdates(DETECTION_INTERVAL_IN_MILLISECONDS,
                 getActivityDetectionPendingIntent())
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    Toast.makeText(mContext,
-                            "Activity updates enabled",
-                            Toast.LENGTH_SHORT)
-                        .show();
                     gettingupdates = true;
-                    Log.wtf(TAG, "Success, activity updates enabled.");
+                    logthis("Success, activity updates enabled.");
                     btn.setText("Stop Recognition");
                 }
             })
@@ -181,11 +200,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.wtf(TAG, "Failed to enable activity updates");
-                    Toast.makeText(mContext,
-                            "Failed to enable activity updates",
-                            Toast.LENGTH_SHORT)
-                        .show();
+                    logthis("Failed to enable activity updates");
                     gettingupdates = false;
                     btn.setText("Start Recognition");
                 }
@@ -193,21 +208,17 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     }
 
     /**
-     * Removes activity recognition updates using
-     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
-     * failure callbacks.
+     * Removes activity recognition updates using removeActivityUpdates(PendingIntent).
+     * Registers success and failure callbacks.
      */
     @SuppressLint("MissingPermission")
     public void stopActivityUpdates() {
-        Log.wtf(TAG, "stop called.");
+        logthis("beginning to stop activity updates");
         ActivityRecognition.getClient(this).removeActivityUpdates(getActivityDetectionPendingIntent())
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    Toast.makeText(mContext,
-                            "Activity updates removed",
-                            Toast.LENGTH_SHORT)
-                        .show();
+                    logthis("Activity updates removed");
                     gettingupdates = false;
                     btn.setText("Start Recognition");
                 }
@@ -215,60 +226,27 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.w(TAG, "Failed to enable activity recognition.");
-                    Toast.makeText(mContext, "Failed to remove activity updates",
-                        Toast.LENGTH_SHORT).show();
+                    logthis("Failed to remove activity updates ?!");
                     gettingupdates = true;  //I think this is true???
                     btn.setText("Stop Recognition");
                 }
             });
     }
 
-
     /**
      * Gets a PendingIntent to be sent for each activity detection.
      */
     @SuppressLint("UnspecifiedImmutableFlag")
+    //it's actually handled, but studio doesn't believe me.
     private PendingIntent getActivityDetectionPendingIntent() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // requestActivityUpdates() and removeActivityUpdates().
+        Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE);
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
         } else {
-            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
         }
-        // return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    /**
-     * we want to get the intent back here without starting another instanced
-     * so  we get the data here, hopefully.
-     */
-    @Override
-    protected void onNewIntent(Intent intent) {
-        Log.wtf(TAG, "onNewIntent");
-
-        ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-        //get most probable activity
-        DetectedActivity probably = result.getMostProbableActivity();
-        if (probably.getConfidence() >= 50) {  //doc's say over 50% is likely, under is not sure at all.
-            speech(getActivityString(probably.getType()));
-        }
-        logger.append("Most Probable: " + getActivityString(probably.getType()) + " " + probably.getConfidence() + "%\n");
-        //or we could go through the list, which is sorted by most likely to least likely.
-        List<DetectedActivity> fulllist = result.getProbableActivities();
-        for (DetectedActivity da : fulllist) {
-            if (da.getConfidence() >= 50) {
-                logger.append("-->" + getActivityString(da.getType()) + " " + da.getConfidence() + "%\n");
-                speech(getActivityString(da.getType()));
-
-            }
-        }
-        super.onNewIntent(intent);
-    }
 
     /**
      * Returns a human readable String corresponding to a detected activity type.
@@ -315,28 +293,54 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         }
     }
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        Log.v(TAG, "onRequest result called.");
-
-        if (requestCode == REQUEST_ACCESS_Activity_Updates) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //We have permissions, so ...
-                if (!gettingupdates) {
-                    startActivityUpdates();
-                } else {
-                    stopActivityUpdates();
-                }
-            } else {
-                // permission denied,    Disable this feature or close the app.
-                Log.v(TAG, "Activity permission was NOT granted.");
-                Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
+    //helper function to check if all the permissions are granted.
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        return true;
+    }
+
+    //help function to print the screen and log it.
+    void logthis(String item) {
+        Log.d(TAG, item);
+        logger.append(item + "\n");
+    }
+
+    /**
+     * Handles intents from from the Activity Updates API.
+     */
+    public class ActivityReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d(TAG, "onReceive(): " + intent);
+
+            if (!TextUtils.equals(ACTIVITY_RECEIVER_ACTION, intent.getAction())) {
+                logthis("Received an unsupported action in TransitionsReceiver: action = " +
+                    intent.getAction());
+                return;
+            }
+
+            ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
+            //get most probable activity
+            DetectedActivity probably = result.getMostProbableActivity();
+            if (probably.getConfidence() >= 50) {  //doc's say over 50% is likely, under is not sure at all.
+                speech(getActivityString(probably.getType()));
+            }
+            logthis("Most Probable: " + getActivityString(probably.getType()) + " " + probably.getConfidence() + "%");
+            //or we could go through the list, which is sorted by most likely to least likely.
+            List<DetectedActivity> fulllist = result.getProbableActivities();
+            for (DetectedActivity da : fulllist) {
+                if (da.getConfidence() >= 50) {
+                    logthis("-->" + getActivityString(da.getType()) + " " + da.getConfidence() + "%");
+                    speech(getActivityString(da.getType()));
+
+                }
+            }
+        }
     }
 }
