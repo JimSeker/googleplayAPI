@@ -16,8 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * This takes the lat and long as parameters.
+ * using the Geocoder with the lat and lng, it finds the address.
+ * returns the address as a string back.
+ */
+
 public class FetchAddressWorker extends Worker {
     private static final String TAG = "FetchAddressWorker";
+
     public FetchAddressWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -25,7 +32,7 @@ public class FetchAddressWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        double mLatitude =getInputData().getDouble(Constants.LATITUDE, 0D);
+        double mLatitude = getInputData().getDouble(Constants.LATITUDE, 0D);
         double mLongitude = getInputData().getDouble(Constants.LONGITUDE, 0D);
         String returnMessage = "";
         boolean success = false;
@@ -50,20 +57,18 @@ public class FetchAddressWorker extends Worker {
             // surrounding the given latitude and longitude. The results are a best guess and are
             // not guaranteed to be accurate.
             addresses = geocoder.getFromLocation(
-                  mLatitude,
-                  mLongitude,
-                    // In this sample, we get just a single address.
-                    1);
+                mLatitude, mLongitude,
+                1);// In this sample, we get just a single address.
         } catch (IOException ioException) {
             // Catch network or other I/O problems.
             returnMessage = getApplicationContext().getString(R.string.service_not_available);
             Log.e(TAG, returnMessage, ioException);
         } catch (IllegalArgumentException illegalArgumentException) {
             // Catch invalid latitude or longitude values.
-            returnMessage =  getApplicationContext().getString(R.string.invalid_lat_long_used);
+            returnMessage = getApplicationContext().getString(R.string.invalid_lat_long_used);
             Log.e(TAG, returnMessage + ". " +
-                    "Latitude = " + mLatitude +
-                    ", Longitude = " + mLongitude, illegalArgumentException);
+                "Latitude = " + mLatitude +
+                ", Longitude = " + mLongitude, illegalArgumentException);
         }
 
         // Handle case where no address was found.
@@ -72,8 +77,6 @@ public class FetchAddressWorker extends Worker {
                 returnMessage = getApplicationContext().getString(R.string.no_address_found);
                 Log.e(TAG, returnMessage);
             }
-
-            success = false; //already set, but just to ensure.
         } else {
             Address address = addresses.get(0);
             ArrayList<String> addressFragments = new ArrayList<String>();
@@ -93,21 +96,14 @@ public class FetchAddressWorker extends Worker {
                 addressFragments.add(address.getAddressLine(i));
             }
             Log.i(TAG, getApplicationContext().getString(R.string.address_found));
-            success = true;
-            returnMessage =  TextUtils.join(System.getProperty("line.separator"), addressFragments);
+            returnMessage = TextUtils.join(System.getProperty("line.separator"), addressFragments);
         }
         //...set the output, and we're done!
-        Data output;
-        if (success)
-                output = new Data.Builder()
-                .putString(Constants.RESULT_DATA_KEY, returnMessage)
-                        .putInt(Constants.RESULT_CODE, Constants.SUCCESS_RESULT)
-                .build();
-        else
-            output = new Data.Builder()
-                    .putString(Constants.RESULT_DATA_KEY, returnMessage)
-                    .putInt(Constants.RESULT_CODE, Constants.FAILURE_RESULT)
-                    .build();
+        Data output = new Data.Builder()
+            .putString(Constants.RESULT_DATA_KEY, returnMessage)
+            .putInt(Constants.RESULT_CODE, Constants.SUCCESS_RESULT)
+            .build();
+
 
         return Result.success(output);
     }

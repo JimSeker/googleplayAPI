@@ -107,32 +107,32 @@ public class MainActivity extends AppCompatActivity {
 
         // for checking permissions.
         rpl_onConnected = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
-                new ActivityResultCallback<Map<String, Boolean>>() {
-                    @Override
-                    public void onActivityResult(Map<String, Boolean> isGranted) {
-                        if (allPermissionsGranted()) {
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    if (allPermissionsGranted()) {
 
-                            getLastLocation();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
+                        getLastLocation();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 }
+            }
         );
         // for checking permissions.
         rpl_startLocationUpdates = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
-                new ActivityResultCallback<Map<String, Boolean>>() {
-                    @Override
-                    public void onActivityResult(Map<String, Boolean> isGranted) {
-                        if (allPermissionsGranted()) {
-                            startLocationUpdates();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    if (allPermissionsGranted()) {
+                        startLocationUpdates();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 }
+            }
         );
 
         logger = findViewById(R.id.logger);
@@ -157,9 +157,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
-     * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
-     * if a device has the needed location settings.
+     * Uses a LocationSettingsRequest.Builder to build a LocationSettingsRequest that is used
+     * for checking if a device has the needed location settings.
      */
     private void buildLocationSettingsRequest() {
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
@@ -167,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
         mLocationSettingsRequest = builder.build();
     }
 
+    //to save te battery pasue requests
     @Override
     protected void onPause() {
         super.onPause();
@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
         stopLocationUpdates();
     }
 
+    //and when we come back, start them again, if were started before onPause.
     @Override
     public void onResume() {
         super.onResume();
@@ -196,28 +197,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * helper function to create a locationRequest for the variable. otherwise, this could be
+     * done in onCreate.
+     */
     protected void createLocationRequest() {
-        //deprecated.
-//        mLocationRequest = LocationRequest.create()
-//            .setInterval(10000)
-//            .setFastestInterval(5000)
-//            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-//            .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
-//            .setMaxWaitTime(10000);
-
 
         mLocationRequest = new LocationRequest.Builder(100000)  //create a requrest with 10000 interval and default rest.
-                //now set the rest of the pieces we want to change.
-                //.setIntervalMillis(10000)  //not needed, since it is part of the builder.
-                .setMinUpdateIntervalMillis(50000)  //get an update no faster then 5 seconds.
-                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
-                .setMaxUpdateDelayMillis(10000)  //wait only 10 seconds max between
-                .build();
+            //now set the rest of the pieces we want to change.
+            //.setIntervalMillis(10000)  //not needed, since it is part of the builder.
+            .setMinUpdateIntervalMillis(50000)  //get an update no faster then 5 seconds.
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .setWaitForAccurateLocation(true)  //waits a couple of second initially for a accurate measurement.
+            .setMaxUpdateDelayMillis(20000)  //wait only 20 seconds max between
+            .build();
     }
 
     /**
-     * Creates a callback for receiving location events.
+     * Creates a callback for receiving location events.  again a helper function, this could
+     * also be done in onCreate.
      */
     private void createLocationCallback() {
         mLocationCallback = new LocationCallback() {
@@ -227,15 +225,18 @@ public class MainActivity extends AppCompatActivity {
 
                 mLastLocation = locationResult.getLastLocation();
                 logthis("\n\n" + DateFormat.getTimeInstance().format(new Date()) + ": " +
-                        " Lat: " + mLastLocation.getLatitude() +
-                        " Long: " + mLastLocation.getLongitude());
+                    " Lat: " + mLastLocation.getLatitude() +
+                    " Long: " + mLastLocation.getLongitude());
                 startWorker();
             }
         };
     }
 
+    /**
+     * If we have all the permissions, then it will create the location updates
+     */
+    @SuppressLint("MissingPermission")  //I'm really checking, but studio can't tell.
     protected void startLocationUpdates() {
-
         if (!allPermissionsGranted()) {
             logthis("Requesting permissions");
             rpl_startLocationUpdates.launch(REQUIRED_PERMISSIONS);
@@ -243,69 +244,62 @@ public class MainActivity extends AppCompatActivity {
         }
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-                    @SuppressLint("MissingPermission")
-                    @Override
-                    public void onSuccess(@NonNull LocationSettingsResponse locationSettingsResponse) {
-                        Log.i(TAG, "All location settings are satisfied.");
-
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
-
+            .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                @Override
+                public void onSuccess(@NonNull LocationSettingsResponse locationSettingsResponse) {
+                    logthis("All location settings are satisfied, starting locationUpdates.");
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                        mLocationCallback, Looper.myLooper());
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            logthis("Location settings are not satisfied. Attempting to upgrade location settings ");
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the
+                                // result in onActivityResult().
+                                ResolvableApiException rae = (ResolvableApiException) e;
+                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException sie) {
+                                logthis("PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            logthis("Location settings are inadequate, and cannot be fixed here. Fix in Settings.");
+                            mRequestingLocationUpdates = false;
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                                mRequestingLocationUpdates = false;
-                        }
-
-
-                    }
-                });
-
-
+                }
+            });
     }
 
+    /**
+     * this will stop locationUpdates.
+     */
     protected void stopLocationUpdates() {
         if (!mRequestingLocationUpdates) {
-            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            logthis("stopLocationUpdates: updates never requested, no-op.");
             return;
         }
-
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        mRequestingLocationUpdates = false;
-                    }
-                });
+            .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    mRequestingLocationUpdates = false;
+                }
+            });
     }
 
-    //This shows how to get a "one off" location.  instead of using the location updates
+    /**
+     *  This shows how to get a "one off" location.  instead of using the location updates shown in
+     *  above the methods.
+     */
     @SuppressLint("MissingPermission") //I'm really checking, but studio can't tell.
     public void getLastLocation() {
         //first check to see if I have permissions (marshmallow) if I don't then ask, otherwise start up the demo.
@@ -315,31 +309,31 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location == null) {
-                            logthis("Last location: null");
-                            return;
-                        }
-                        mLastLocation = location;
+            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location == null) {
+                        logthis("Last location: null");
+                        return;
+                    }
+                    mLastLocation = location;
 
-                        Log.v(TAG, "getLastLocation");
-                        if (mLastLocation != null) {
-                            logthis("Last location: " +
-                                    " Lat: " + mLastLocation.getLatitude() +
-                                    " Long: " + mLastLocation.getLongitude());
-                            startWorker();
-                        }
+                    Log.v(TAG, "getLastLocation");
+                    if (mLastLocation != null) {
+                        logthis("Last location: " +
+                            " Lat: " + mLastLocation.getLatitude() +
+                            " Long: " + mLastLocation.getLongitude());
+                        startWorker();
                     }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "getLastLocation:onFailure", e);
-                        logger.append("Last location: Fail");
-                    }
-                });
+                }
+            })
+            .addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "getLastLocation:onFailure", e);
+                    logger.append("Last location: Fail");
+                }
+            });
 
     }
 
@@ -349,26 +343,27 @@ public class MainActivity extends AppCompatActivity {
      */
     public void startWorker() {
         Data myData = new Data.Builder()
-                .putDouble(Constants.LATITUDE, mLastLocation.getLatitude())
-                .putDouble(Constants.LONGITUDE, mLastLocation.getLongitude())
-                .build();
+            .putDouble(Constants.LATITUDE, mLastLocation.getLatitude())
+            .putDouble(Constants.LONGITUDE, mLastLocation.getLongitude())
+            .build();
         OneTimeWorkRequest locationWork = new OneTimeWorkRequest.Builder(FetchAddressWorker.class)
-                .setInputData(myData)
-                .build();
+            .setInputData(myData)
+            .build();
         WorkManager.getInstance(getApplicationContext()).enqueue(locationWork);
         //now set the observer to get the result.
         WorkManager.getInstance(getApplicationContext()).getWorkInfoByIdLiveData(locationWork.getId())
-                .observe(this, new Observer<WorkInfo>() {
-                    @Override
-                    public void onChanged(@Nullable WorkInfo status) {
-                        if (status != null && status.getState().isFinished()) {
-                            String mAddressOutput = status.getOutputData().getString(Constants.RESULT_DATA_KEY);
-                            logthis("address received: " + mAddressOutput);
-                        }
+            .observe(this, new Observer<WorkInfo>() {
+                @Override
+                public void onChanged(@Nullable WorkInfo status) {
+                    if (status != null && status.getState().isFinished()) {
+                        String mAddressOutput = status.getOutputData().getString(Constants.RESULT_DATA_KEY);
+                        logthis("address received: " + mAddressOutput);
                     }
-                });
+                }
+            });
     }
 
+    //helper function to check if all the permissions are granted.
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
