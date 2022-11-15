@@ -23,12 +23,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -38,6 +36,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -52,11 +51,6 @@ public class MainActivity extends AppCompatActivity
     protected static final String TAG = "MainActivity";
     public static final int REQUEST_ACCESS_Activity_Updates = 0;
     private Context mContext;
-
-    /**
-     * The entry point for interacting with activity recognition.
-     */
-    private ActivityRecognitionClient mActivityRecognitionClient;
 
     // UI elements.
     private Button mRequestActivityUpdatesButton;
@@ -93,7 +87,6 @@ public class MainActivity extends AppCompatActivity
         mAdapter = new DetectedActivitiesAdapter(this, detectedActivities);
         detectedActivitiesListView.setAdapter(mAdapter);
 
-        mActivityRecognitionClient = new ActivityRecognitionClient(this);
     }
 
 
@@ -111,7 +104,6 @@ public class MainActivity extends AppCompatActivity
                 .registerOnSharedPreferenceChangeListener(this);
             updateDetectedActivitiesList();
         }
-
     }
 
     /**
@@ -156,8 +148,9 @@ public class MainActivity extends AppCompatActivity
      * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
      * Registers success and failure callbacks.
      */
+    @SuppressLint("MissingPermission")  //there are checked, studio just can't tell.
     public void requestActivityUpdatesButtonHandler(View view) {
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
+        Task<Void> task = ActivityRecognition.getClient(this).requestActivityUpdates(
             Constants.DETECTION_INTERVAL_IN_MILLISECONDS,
             getActivityDetectionPendingIntent());
 
@@ -192,8 +185,9 @@ public class MainActivity extends AppCompatActivity
      * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
      * failure callbacks.
      */
+    @SuppressLint("MissingPermission") //it's checked.
     public void removeActivityUpdatesButtonHandler(View view) {
-        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+         Task<Void> task = ActivityRecognition.getClient(this).removeActivityUpdates(
             getActivityDetectionPendingIntent());
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override

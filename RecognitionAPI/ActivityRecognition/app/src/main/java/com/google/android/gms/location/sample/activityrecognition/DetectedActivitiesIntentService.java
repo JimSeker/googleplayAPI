@@ -27,10 +27,10 @@ import com.google.android.gms.location.DetectedActivity;
 
 import java.util.ArrayList;
 
-/**
+/** 
  *  IntentService for handling incoming intents that are generated as a result of requesting
  *  activity updates using
- *  {@link com.google.android.gms.location.ActivityRecognitionApi#requestActivityUpdates}.
+ *  {@link com.google.android.gms.location.ActivityRecognitionClient#requestActivityUpdates}.
  */
 public class DetectedActivitiesIntentService extends IntentService {
 
