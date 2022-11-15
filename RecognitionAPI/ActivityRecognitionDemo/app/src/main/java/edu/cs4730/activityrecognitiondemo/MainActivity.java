@@ -23,13 +23,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-
 
 import java.util.List;
 
@@ -42,6 +41,8 @@ import java.util.List;
  * <p>
  * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognition
  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
+ *
+ * this is very slow to receive.  also the screen needs to stay on, otherwise, it removes the listener.
  */
 
 public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
@@ -58,12 +59,13 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      * fastest possible rate. Getting frequent updates negatively impact battery life and a real
      * app may prefer to request less frequent updates.
      */
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 1*1000;  //fastest rate which appear to be about 10 seconds.
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 1 * 1000;  //fastest rate which appear to be about 10 seconds.
     //30 * 1000; // 30 seconds
     /**
      * The entry point for interacting with activity recognition.
      */
-    private ActivityRecognitionClient mActivityRecognitionClient;
+    //   private ActivityRecognitionClient mActivityRecognitionClient;
+    // private List<ActivityTransition> activityTransitionList;
 
     boolean gettingupdates = false;
 
@@ -107,8 +109,10 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
         myActivityResultLauncher.launch(checkIntent);
 
-        //setup the client activity piece.
-        mActivityRecognitionClient = new ActivityRecognitionClient(this);
+//        //setup the client activity piece.
+//        mActivityRecognitionClient = new ActivityRecognitionClient(this);
+
+
     }
 
     //ask for permissions when we start.
@@ -158,35 +162,34 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     @SuppressLint("MissingPermission")
     public void startActivityUpdates() {
         Log.wtf(TAG, "start called.");
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-            DETECTION_INTERVAL_IN_MILLISECONDS,
-            getActivityDetectionPendingIntent());
 
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Toast.makeText(mContext,
-                    "Activity updates enabled",
-                    Toast.LENGTH_SHORT)
-                    .show();
-                gettingupdates = true;
-                Log.wtf(TAG, "Success, activity updates enabled.");
-                btn.setText("Stop Recognition");
-            }
-        });
+        ActivityRecognition.getClient(this).requestActivityUpdates(DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent())
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Toast.makeText(mContext,
+                            "Activity updates enabled",
+                            Toast.LENGTH_SHORT)
+                        .show();
+                    gettingupdates = true;
+                    Log.wtf(TAG, "Success, activity updates enabled.");
+                    btn.setText("Stop Recognition");
+                }
+            })
 
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.wtf(TAG, "Failed to enable activity updates");
-                Toast.makeText(mContext,
-                    "Failed to enable activity updates",
-                    Toast.LENGTH_SHORT)
-                    .show();
-                gettingupdates = false;
-                btn.setText("Start Recognition");
-            }
-        });
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.wtf(TAG, "Failed to enable activity updates");
+                    Toast.makeText(mContext,
+                            "Failed to enable activity updates",
+                            Toast.LENGTH_SHORT)
+                        .show();
+                    gettingupdates = false;
+                    btn.setText("Start Recognition");
+                }
+            });
     }
 
     /**
@@ -197,30 +200,28 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     @SuppressLint("MissingPermission")
     public void stopActivityUpdates() {
         Log.wtf(TAG, "stop called.");
-       Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
-            getActivityDetectionPendingIntent());
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Toast.makeText(mContext,
-                    "Activity updates removed",
-                    Toast.LENGTH_SHORT)
-                    .show();
-                gettingupdates = false;
-                btn.setText("Start Recognition");
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Failed to enable activity recognition.");
-                Toast.makeText(mContext, "Failed to remove activity updates",
-                    Toast.LENGTH_SHORT).show();
-                gettingupdates = true;  //I think this is true???
-                btn.setText("Stop Recognition");
-            }
-        });
+        ActivityRecognition.getClient(this).removeActivityUpdates(getActivityDetectionPendingIntent())
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Toast.makeText(mContext,
+                            "Activity updates removed",
+                            Toast.LENGTH_SHORT)
+                        .show();
+                    gettingupdates = false;
+                    btn.setText("Start Recognition");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "Failed to enable activity recognition.");
+                    Toast.makeText(mContext, "Failed to remove activity updates",
+                        Toast.LENGTH_SHORT).show();
+                    gettingupdates = true;  //I think this is true???
+                    btn.setText("Stop Recognition");
+                }
+            });
     }
 
 
@@ -239,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         } else {
             return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
-       // return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
