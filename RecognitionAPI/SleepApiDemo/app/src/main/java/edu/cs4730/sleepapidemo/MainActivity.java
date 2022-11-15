@@ -1,8 +1,11 @@
 package edu.cs4730.sleepapidemo;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -21,6 +24,8 @@ import com.google.android.gms.location.SleepSegmentRequest;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.Map;
+
 
 /**
  * very simple implementation of the sleep APIs.  It just subscribes and the the broadcast receiver
@@ -33,7 +38,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 public class MainActivity extends AppCompatActivity {
 
     public final static String TAG = "MainActivity";
-    public static final int REQUEST_ACCESS_Activity_Updates = 0;
+    // for checking permissions.
+    ActivityResultLauncher<String[]> rpl;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACTIVITY_RECOGNITION};
 
     Button subscribe, unsubscribe;
     TextView logger;
@@ -42,14 +49,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        CheckPerm();
+
+        // for checking permissions.
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    if (allPermissionsGranted()) {
+                        //We have permissions, so ...
+                        logthis("We have permission, starting");
+                        subscribeToSleep();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }
+            }
+        );
+
+
         logger = findViewById(R.id.logger);
         subscribe = findViewById(R.id.start);
         unsubscribe = findViewById(R.id.stop);
         subscribe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                subscribeToSleep();
+                CheckPerm();
             }
         });
         unsubscribe.setOnClickListener(new View.OnClickListener() {
@@ -59,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         unsubscribe.setEnabled(false);
+
     }
 
 
@@ -76,26 +102,25 @@ public class MainActivity extends AppCompatActivity {
                 PendingIntent.FLAG_CANCEL_CURRENT);
         }
         ActivityRecognition.getClient(getApplicationContext()).requestSleepSegmentUpdates(
-            pi,
-            SleepSegmentRequest.getDefaultSleepSegmentRequest()
-        ).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                   @Override
-                                   public void onSuccess(Void aVoid) {
-                                       logthis("Successfully subscribed to sleep data");
-                                       logthis("Note, all data goes the logcat, not the screen.");
-                                       subscribe.setEnabled(false);
-                                       unsubscribe.setEnabled(true);
-                                   }
-                               }
+                pi, SleepSegmentRequest.getDefaultSleepSegmentRequest())
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                      @Override
+                                      public void onSuccess(Void aVoid) {
+                                          logthis("Successfully subscribed to sleep data");
+                                          logthis("Note, all data goes the logcat, not the screen.");
+                                          subscribe.setEnabled(false);
+                                          unsubscribe.setEnabled(true);
+                                      }
+                                  }
 
-        ).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                logthis("Failed to subscribe to sleep data");
-                subscribe.setEnabled(true);
-                unsubscribe.setEnabled(false);
-            }
-        });
+            ).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    logthis("Failed to subscribe to sleep data");
+                    subscribe.setEnabled(true);
+                    unsubscribe.setEnabled(false);
+                }
+            });
 
     }
 
@@ -111,66 +136,49 @@ public class MainActivity extends AppCompatActivity {
                 getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
                 PendingIntent.FLAG_CANCEL_CURRENT);
         }
-        ActivityRecognition.getClient(getApplicationContext()).removeActivityUpdates(
-            pi
-        ).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                   @Override
-                                   public void onSuccess(Void aVoid) {
-                                       logthis("Successfully UNsubscribed to sleep data");
-                                       subscribe.setEnabled(true);
-                                       unsubscribe.setEnabled(false);
-                                   }
-                               }
+        ActivityRecognition.getClient(getApplicationContext()).removeActivityUpdates(pi)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                      @Override
+                                      public void onSuccess(Void aVoid) {
+                                          logthis("Successfully Unsubscribed to sleep data");
+                                          subscribe.setEnabled(true);
+                                          unsubscribe.setEnabled(false);
+                                      }
+                                  }
 
-        ).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                logthis("Failed to UNsubscribe to sleep data");
-                //not sure if we are subscribed or not.
-                subscribe.setEnabled(true);
-                unsubscribe.setEnabled(false);
-            }
-        });
+            ).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    logthis("Failed to Unsubscribe to sleep data");
+                    //not sure if we are subscribed or not.
+                    subscribe.setEnabled(true);
+                    unsubscribe.setEnabled(false);
+                }
+            });
 
     }
 
     //ask for permissions when we start.
     public void CheckPerm() {
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-            //I'm on not explaining why, just asking for permission.
-            //logthis("asking for permissions");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                MainActivity.REQUEST_ACCESS_Activity_Updates);
-
-        } else {
-            subscribeToSleep();
+        if (!allPermissionsGranted()) {
+            logthis("Requesting permissions");
+            rpl.launch(REQUIRED_PERMISSIONS);
+            return;
         }
-
+        subscribeToSleep();
     }
 
-
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        Log.v(TAG, "onRequest result called.");
-
-        if (requestCode == REQUEST_ACCESS_Activity_Updates) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //We have permissions, so ...
-                logthis("We have permission, starting");
-                subscribeToSleep();
-            } else {
-                // permission denied,    Disable this feature or close the app.
-                logthis("Activity permission was NOT granted.");
-                Toast.makeText(this, "Activity access NOT granted", Toast.LENGTH_SHORT).show();
+    //helper function to check if all the permissions are granted.
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        return true;
     }
 
+    //helper function to print the screen and log it.
     void logthis(String item) {
         Log.v(TAG, item);
         logger.append("\n" + item);
