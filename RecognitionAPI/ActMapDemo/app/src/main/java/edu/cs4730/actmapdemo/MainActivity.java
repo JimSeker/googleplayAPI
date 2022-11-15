@@ -108,26 +108,14 @@ public class MainActivity extends AppCompatActivity {
         mapfrag = new myMapFragment();
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-        navView.setOnItemSelectedListener(
-            new BottomNavigationView.OnItemSelectedListener() {
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        myFragmentPagerAdapter adapter = new myFragmentPagerAdapter(fragmentManager);
+        viewPager.setAdapter(adapter);
+        //viewPager.setCurrentItem(1);
+        //new Tablayout from the support design library
+        TabLayout mTabLayout = (TabLayout) findViewById(R.id.tablayout1);
+        mTabLayout.setupWithViewPager(viewPager);
 
-                public boolean onNavigationItemSelected(MenuItem item) {
-                    //setup the fragments here.
-                    int id = item.getItemId();
-                    if (id == R.id.MapFragment) {
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, mapfrag).commit();
-                        item.setChecked(true);
-                        return true;
-                    } else if (id == R.id.ListFragment) {
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, listfrag).commit();
-                        item.setChecked(true);
-                    }
-                    return false;
-                }
-            }
-
-        );
 
 
 
@@ -556,6 +544,57 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, item);
         //logger.append(item + "\n");
     }
+
+    //view page for the two fragments map and list.
+    public class myFragmentPagerAdapter extends FragmentPagerAdapter {
+        int PAGE_COUNT = 2;
+
+        //required constructor that simply supers.
+        myFragmentPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        // return the correct fragment based on where in pager we are.
+        @Override
+        public Fragment getItem(int position) {
+
+            switch (position) {
+                case 0:
+                    return mapfrag;
+                case 1:
+                    return listfrag;
+                default:
+                    return null;
+            }
+        }
+
+        //how many total pages in the viewpager there are.  3 in this case.
+        @Override
+        public int getCount() {
+
+            return PAGE_COUNT;
+        }
+
+        //getPageTitle required for the PageStripe to work and have a value.
+        @Override
+        public CharSequence getPageTitle(int position) {
+
+            switch (position) {
+                case 0:
+                    return "Map";
+                case 1:
+                    return "List";
+                default:
+                    return null;
+            }
+            //return String.valueOf(position);  //returns string of position for title
+
+
+        }
+
+    }
+
+
     /**
      * Handles intents from from the Activity Updates API.
      */
