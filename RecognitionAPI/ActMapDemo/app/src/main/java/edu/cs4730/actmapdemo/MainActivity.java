@@ -100,27 +100,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         //setup fragments
         listfrag = new myListFragment();
         mapfrag = new myMapFragment();
+        mActivityReceiver = new ActivityReceiver();
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        viewPager = (ViewPager) findViewById(R.id.pager);
+        viewPager = findViewById(R.id.pager);
         myFragmentPagerAdapter adapter = new myFragmentPagerAdapter(fragmentManager);
         viewPager.setAdapter(adapter);
-        //viewPager.setCurrentItem(1);
         //new Tablayout from the support design library
-        TabLayout mTabLayout = (TabLayout) findViewById(R.id.tablayout1);
+        TabLayout mTabLayout = findViewById(R.id.tablayout1);
         mTabLayout.setupWithViewPager(viewPager);
 
-
-
-
-
-        //permission pieces
+       //permission pieces
         // for checking permissions.
         rpl_LocationUpdates = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
@@ -165,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
             }
         );
 
-
         //setup the location pieces.
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
@@ -174,19 +169,6 @@ public class MainActivity extends AppCompatActivity {
         buildLocationSettingsRequest();
         initialsetup();  //get last location and call it current spot.
     }
-
-
-    /**
-     * The service will call the handler to send back information.
-     **/
-    private Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            currentActivity = msg.arg1;
-            Log.v(TAG, "handler, update activity");
-            return true;
-        }
-    });
 
     //menu methods
     @Override
@@ -588,10 +570,7 @@ public class MainActivity extends AppCompatActivity {
                     return null;
             }
             //return String.valueOf(position);  //returns string of position for title
-
-
         }
-
     }
 
 
