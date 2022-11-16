@@ -59,13 +59,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This example demo's how you can combine multiple pieces together to form a more interesting app.
+ * Once the user turns on the gps/locationaware via the menu, it monitors the user "activity", ie (walking, etc)
+ * and as it gets new gps points, it draws them on the map.  different activities are drawn in different
+ * colors.  It also lists each one in the list fragment.
+ */
 public class MainActivity extends AppCompatActivity {
 
     // for checking permissions.
     ActivityResultLauncher<String[]> rpl_LocationUpdates, rpl_Activity, rpl_onConnected;
     private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION};
-
-
+    
     static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
     String TAG = "MainActivity";
     ViewPager2 viewPager;

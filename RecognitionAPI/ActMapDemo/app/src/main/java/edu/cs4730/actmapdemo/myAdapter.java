@@ -3,8 +3,12 @@ package edu.cs4730.actmapdemo;
 /**
  * Created by Seker on 1/22/2015.
  */
+
 import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,14 +19,11 @@ import com.google.android.gms.location.DetectedActivity;
 
 import java.util.List;
 
-/*
- * this adapter is very similar to the adapters used for listview, except a ViewHolder is required
- * see http://developer.android.com/training/improving-layouts/smooth-scrolling.html
- * except instead having to implement a ViewHolder, it is implemented within
- * the adapter.
+/**
+ * simple adapter to do the list of activities, picture, name, and distance.
  */
 
-public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
+public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
 
     private List<objData> myList;
     private int rowLayout;
@@ -36,11 +37,12 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
         public TextView pos;
         public TextView miles;
         public ImageView Pic;
+
         public ViewHolder(View itemView) {
             super(itemView);
-            pos = (TextView) itemView.findViewById(R.id.location);
-            miles = (TextView) itemView.findViewById(R.id.distance);
-            Pic= (ImageView)itemView.findViewById(R.id.pic);
+            pos = itemView.findViewById(R.id.location);
+            miles = itemView.findViewById(R.id.distance);
+            Pic = itemView.findViewById(R.id.pic);
         }
     }
 
@@ -52,6 +54,7 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
     }
 
     // Create new views (invoked by the layout manager)
+    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext()).inflate(rowLayout, viewGroup, false);
@@ -63,10 +66,10 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder>{
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
         objData entry = myList.get(i);
         viewHolder.pos.setText(entry.lat + " " + entry.lng);
-        if (entry.distance <5280.0f)
-          viewHolder.miles.setText(String.format("%.2f", entry.distance) + " feet");
+        if (entry.distance < 5280.0f)
+            viewHolder.miles.setText(String.format("%.2f", entry.distance) + " feet");
         else
-            viewHolder.miles.setText(String.format("%.2f", entry.distance /5280.0f) + " miles");
+            viewHolder.miles.setText(String.format("%.2f", entry.distance / 5280.0f) + " miles");
 
         viewHolder.Pic.setImageResource(getActivityPic(entry.act));
     }
