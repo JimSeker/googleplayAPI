@@ -10,10 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
-import android.os.Messenger;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,17 +20,14 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.Priority;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.tabs.TabLayout;
 
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentActivity;
 import androidx.core.content.ContextCompat;
-import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -59,6 +53,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
     String TAG = "MainActivity";
-    ViewPager viewPager;
+    ViewPager2 viewPager;
     myListFragment listfrag;
     myMapFragment mapfrag;
 
@@ -100,23 +95,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         //setup fragments
         listfrag = new myListFragment();
         mapfrag = new myMapFragment();
         mActivityReceiver = new ActivityReceiver();
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        //viewpager2 setup.  tried a bottomnavview, but the map stops displaying correctly.
         viewPager = findViewById(R.id.pager);
-        myFragmentPagerAdapter adapter = new myFragmentPagerAdapter(fragmentManager);
+        myFragmentPagerAdapter adapter = new myFragmentPagerAdapter(this);
         viewPager.setAdapter(adapter);
-        //new Tablayout from the support design library
         TabLayout mTabLayout = findViewById(R.id.tablayout1);
-        mTabLayout.setupWithViewPager(viewPager);
+        new TabLayoutMediator(mTabLayout,
+            viewPager,
+            new TabLayoutMediator.TabConfigurationStrategy() {
+                @Override
+                public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+                    switch (position) {
+                        case 0:
+                            tab.setText("Map");
+                            break;
+                        case 1:
+                            tab.setText("List");
+                    }
+                }
+            }
+        ).attach();
 
-       //permission pieces
+        //permission pieces
         // for checking permissions.
         rpl_LocationUpdates = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
@@ -307,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
     private void createLocationCallback() {
         mLocationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 addData(locationResult.getLastLocation());
             }
@@ -506,7 +512,6 @@ public class MainActivity extends AppCompatActivity {
         loc2.setLatitude(latLng2.latitude);
         loc2.setLongitude(latLng2.longitude);
 
-
         return loc1.distanceTo(loc2);
     }
 
@@ -528,18 +533,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //view page for the two fragments map and list.
-    public class myFragmentPagerAdapter extends FragmentPagerAdapter {
+    public class myFragmentPagerAdapter extends FragmentStateAdapter {
         int PAGE_COUNT = 2;
 
         //required constructor that simply supers.
-        myFragmentPagerAdapter(FragmentManager fm) {
-            super(fm);
+        myFragmentPagerAdapter(FragmentActivity fa) {
+            super(fa);
         }
 
         // return the correct fragment based on where in pager we are.
         @Override
-        public Fragment getItem(int position) {
-
+        public Fragment createFragment(int position) {
             switch (position) {
                 case 0:
                     return mapfrag;
@@ -550,27 +554,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        //how many total pages in the viewpager there are.  3 in this case.
+        //how many total pages in the viewpager there are.  2 in this case.
         @Override
-        public int getCount() {
-
+        public int getItemCount() {
             return PAGE_COUNT;
         }
 
-        //getPageTitle required for the PageStripe to work and have a value.
-        @Override
-        public CharSequence getPageTitle(int position) {
-
-            switch (position) {
-                case 0:
-                    return "Map";
-                case 1:
-                    return "List";
-                default:
-                    return null;
-            }
-            //return String.valueOf(position);  //returns string of position for title
-        }
     }
 
 

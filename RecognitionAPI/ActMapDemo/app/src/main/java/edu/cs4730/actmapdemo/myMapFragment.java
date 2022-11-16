@@ -2,6 +2,8 @@ package edu.cs4730.actmapdemo;
 
 import android.graphics.Color;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,9 +41,8 @@ public class myMapFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
@@ -60,7 +61,7 @@ public class myMapFragment extends Fragment {
 
         ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
             @Override
-            public void onMapReady(GoogleMap googleMap) {
+            public void onMapReady(@NonNull GoogleMap googleMap) {
                 map = googleMap;
 
                 INITLOC = new LatLng(41.312928, -105.587253);
@@ -79,7 +80,7 @@ public class myMapFragment extends Fragment {
 
                 map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
                     @Override
-                    public void onPolylineClick(Polyline polyline) {
+                    public void onPolylineClick(@NonNull Polyline polyline) {
                         Toast.makeText(getActivity(), getActivityString(polyline.getColor()), Toast.LENGTH_LONG).show();
                     }
                 });

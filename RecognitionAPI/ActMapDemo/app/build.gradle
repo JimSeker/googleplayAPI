@@ -25,6 +25,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
     // Dependency for Google location aware stuff.
     //see https://developers.google.com/android/guides/setup for the whole list.
     implementation 'com.google.android.gms:play-services-location:21.0.1'
