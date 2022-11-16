@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,12 +23,20 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ *  Shows a simple map.
+ *
+ *  This one, with the same code as compassFragment won't draw in bottomnavview the second time it
+ *  is clicked.  but the others work just fine?!  I'm seeing this in other apps too, so something
+ *  about how the map and bottomnavview interact with each other.  this was org using a viewpager,
+ *  which still works just fine.
+ *
  */
 public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap map;
     View myView;
+    String TAG = "BasicMapFragment";
+
     public BasicMapFragment() {
         // Required empty public constructor
     }
@@ -41,15 +50,16 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         // and return the already setup view.
         if (myView == null) {
             myView = inflater.inflate(R.layout.basicmap_fragment, container, false);
-        } else  {
+            Log.d(TAG, "new view");
+        } else {
             ((ViewGroup) container.getParent()).removeView(myView);
+            Log.d(TAG, "old view, returning now.");  //likely this one will stop showing.
             return myView;
         }
         //in a fragment
-         ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
+        ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
         //in an activity
         //((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
-
 
         return myView;
     }
@@ -59,22 +69,22 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         map = googleMap;
         //now that we have the map, add some things.
         Marker kiel = map.addMarker(new MarkerOptions()
-                .position(MainActivity.KIEL)
-                .title("Kiel")
-                //change and use a blue "default" marker, instead of read.
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            .position(MainActivity.KIEL)
+            .title("Kiel")
+            //change and use a blue "default" marker, instead of read.
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
         );
 
         Marker laramie = map.addMarker(new MarkerOptions()
-                .position(MainActivity.LARAMIE)
-                .title("Laramie")
-                .snippet("I'm in Laramie!")
-                .icon(BitmapDescriptorFactory
-                        .fromResource(R.drawable.ic_launcher))
+            .position(MainActivity.LARAMIE)
+            .title("Laramie")
+            .snippet("I'm in Laramie!")
+            .icon(BitmapDescriptorFactory
+                .fromResource(R.drawable.ic_launcher))
         );
 
         Marker cheyenne = map.addMarker(new MarkerOptions().position(MainActivity.CHEYENNE)
-                .title("Cheyenne"));
+            .title("Cheyenne"));
         // Move the camera instantly to hamburg with a zoom of 15.
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(MainActivity.LARAMIE, 15));
 
@@ -89,7 +99,7 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         map.getUiSettings().setZoomControlsEnabled(true);
 
         //add a marker click event.
-        map.setOnMarkerClickListener( new GoogleMap.OnMarkerClickListener() {
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
 
             @Override
             public boolean onMarkerClick(@NonNull Marker myMarker) {
@@ -108,13 +118,12 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onMapClick(@NonNull LatLng point) {
 
-                Toast.makeText(requireContext(), "Lat: " + point.latitude+ " Long:" +point.longitude,  Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Lat: " + point.latitude + " Long:" + point.longitude, Toast.LENGTH_SHORT).show();
             }
 
         });
 
     }
-
 
 
 }

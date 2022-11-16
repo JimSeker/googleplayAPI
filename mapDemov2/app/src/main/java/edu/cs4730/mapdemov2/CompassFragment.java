@@ -64,6 +64,9 @@ public class CompassFragment extends Fragment implements OnMapReadyCallback {
 
         // Sets the map type to be "hybrid"
         //map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
+        //turn on buildings
+        //map.setBuildingsEnabled(true);
     }
 
 
