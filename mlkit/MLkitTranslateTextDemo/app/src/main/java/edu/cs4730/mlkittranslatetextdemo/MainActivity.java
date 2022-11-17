@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.Continuation;
@@ -24,10 +26,10 @@ import com.google.mlkit.nl.translate.TranslatorOptions;
 /**
  * this is a very simple example of getting the translator to work.
  * It's all done in oncreate, no buttons.
- *
+ * <p>
  * You can change the example in the code to other languages and
  * other test to translate.
- *
+ * <p>
  * https://developers.google.com/ml-kit/language/translation/android
  */
 
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     String text = "hello world";
     Translator translator;
     TextView logger;
+    EditText et_text;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,94 +49,88 @@ public class MainActivity extends AppCompatActivity {
         logger = findViewById(R.id.logger);
         //create the options pieces and then get a translator for it.
         TranslatorOptions options =
-            new TranslatorOptions.Builder()
-                .setSourceLanguage(TranslateLanguage.ENGLISH)
-                .setTargetLanguage(TranslateLanguage.GERMAN)
-                .build();
+                new TranslatorOptions.Builder()
+                        .setSourceLanguage(TranslateLanguage.ENGLISH)
+                        .setTargetLanguage(TranslateLanguage.GERMAN)
+                        .build();
 
         translator = Translation.getClient(options);
 
         getLifecycle().addObserver(translator); //ensures the translator is closed when not needed.
 
         logthis("Translating " + text + " to german");
-        //we need ot make sure it has been downloaded (not about 30MB is the size too.
-        //so use WIFI!!!
-//        DownloadConditions conditions = new DownloadConditions.Builder()
-//            .requireWifi()
-//            .build();
-//        translator.downloadModelIfNeeded(conditions)
-//            .addOnSuccessListener(new OnSuccessListener() {
-//                @Override
-//                public void onSuccess(Object o) {
-//                    //successfully download the model needed.
-//                    logthis("Successfully download model");
-//                }
-//
-//            })
-//            .addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull Exception e) {
-//                    logthis("failed download model");
-//                }
-//            });
-//        translate();
-//
-        logthis("Starting");
+        logthis("Starting, wait for first translation to complete.");
         downloadandtraslate();
+
+        et_text = findViewById(R.id.et_text);
+        findViewById(R.id.button)
+                .setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            if (! et_text.getText().toString().isEmpty()) {
+                                                text = et_text.getText().toString();
+                                                translate();
+                                            }
+
+                                        }
+                                    }
+
+                );
+
 
     }
 
     void translate() {
         translator.translate(text)
-            .addOnSuccessListener(
-                new OnSuccessListener<String>() {
-                    @Override
-                    public void onSuccess(String s) {
-                        logthis("Translate is " + s);
-                    }
-                })
-            .addOnFailureListener(
-                new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        logthis("translate failed " + e.toString());
-                    }
-                });
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(String s) {
+                                logthis("Translate is " + s);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                logthis("translate failed " + e.toString());
+                            }
+                        });
     }
 
 
     void downloadandtraslate() {
         DownloadConditions conditions = new DownloadConditions.Builder()
-            .requireWifi()
-            .build();
+                .requireWifi()
+                .build();
         logthis("Starting model download as needed.");
         translator.downloadModelIfNeeded(conditions)
-            .addOnCompleteListener(
-                new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            logthis("model downloaded and now translating");
-                            translator.translate(text)
-                                .addOnSuccessListener(
-                                    new OnSuccessListener<String>() {
-                                        @Override
-                                        public void onSuccess(String s) {
-                                            logthis("Translate is " + s);
-                                        }
-                                    })
-                                .addOnFailureListener(
-                                    new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            logthis("translate failed " + e.toString());
-                                        }
-                                    });
-                        } else {
-                            logthis("Failed to download the model");
-                        }
-                    }
-                });
+                .addOnCompleteListener(
+                        new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    logthis("model downloaded and now translating");
+                                    translator.translate(text)
+                                            .addOnSuccessListener(
+                                                    new OnSuccessListener<String>() {
+                                                        @Override
+                                                        public void onSuccess(String s) {
+                                                            logthis("Translate is " + s);
+                                                        }
+                                                    })
+                                            .addOnFailureListener(
+                                                    new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            logthis("translate failed " + e.toString());
+                                                        }
+                                                    });
+                                } else {
+                                    logthis("Failed to download the model");
+                                }
+                            }
+                        });
     }
 
     void deletemodel() {
@@ -142,20 +139,20 @@ public class MainActivity extends AppCompatActivity {
 
 
         TranslateRemoteModel germanModel =
-            new TranslateRemoteModel.Builder(TranslateLanguage.GERMAN).build();
+                new TranslateRemoteModel.Builder(TranslateLanguage.GERMAN).build();
         modelManager.deleteDownloadedModel(germanModel)
-            .addOnSuccessListener(new OnSuccessListener() {
-                @Override
-                public void onSuccess(Object o) {
-                    logthis("German model deleted");
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    logthis("Failed to delete german model");
-                }
-            });
+                .addOnSuccessListener(new OnSuccessListener() {
+                    @Override
+                    public void onSuccess(Object o) {
+                        logthis("German model deleted");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        logthis("Failed to delete german model");
+                    }
+                });
 
     }
 
