@@ -27,7 +27,7 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
 
     private List<objData> myList;
     private int rowLayout;
-    private Context mContext;
+   // private Context mContext;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -47,10 +47,9 @@ public class myAdapter extends RecyclerView.Adapter<myAdapter.ViewHolder> {
     }
 
     //constructor
-    myAdapter(List<objData> myList, int rowLayout, Context context) {
+    myAdapter(List<objData> myList, int rowLayout) {
         this.myList = myList;
         this.rowLayout = rowLayout;
-        this.mContext = context;
     }
 
     // Create new views (invoked by the layout manager)

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 
@@ -26,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -55,8 +55,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -64,22 +62,26 @@ import java.util.Map;
  * Once the user turns on the gps/locationaware via the menu, it monitors the user "activity", ie (walking, etc)
  * and as it gets new gps points, it draws them on the map.  different activities are drawn in different
  * colors.  It also lists each one in the list fragment.
+ *
+ * The data is handled via the viewModel.
+ *
+ * it appears, I've got the distance variables messed up, I'll see about fixing this later.  but hard to
+ * test and debug when I can't be connected to the studio.
+ *
  */
 public class MainActivity extends AppCompatActivity {
 
     // for checking permissions.
     ActivityResultLauncher<String[]> rpl_LocationUpdates, rpl_Activity, rpl_onConnected;
     private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION};
-    
-    static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
+
+
     String TAG = "MainActivity";
     ViewPager2 viewPager;
     myListFragment listfrag;
     myMapFragment mapfrag;
 
-    int currentActivity = DetectedActivity.UNKNOWN;
-    List<String> DataList = new ArrayList<String>();
-    List<objData> objDataList = new ArrayList<objData>();
+    DataViewModel mViewModel;
 
     float Milecheck = 5280.0f;
     float MileIncr = 5280.0f;
@@ -101,12 +103,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mViewModel = new ViewModelProvider(this).get(DataViewModel.class);
         //setup fragments
         listfrag = new myListFragment();
         mapfrag = new myMapFragment();
         mActivityReceiver = new ActivityReceiver();
 
-        //viewpager2 setup.  tried a bottomnavview, but the map stops displaying correctly.
+        //viewpager2 setup.  tried a BottomNavView, but the map stops displaying correctly.
         viewPager = findViewById(R.id.pager);
         myFragmentPagerAdapter adapter = new myFragmentPagerAdapter(this);
         viewPager.setAdapter(adapter);
@@ -179,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
         createLocationCallback();
         buildLocationSettingsRequest();
         initialsetup();  //get last location and call it current spot.
+
     }
 
     //menu methods
@@ -197,12 +201,12 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_start) {
             //first reset everything (in case this is the 2+ time)
             mapfrag.clearmap();
-            DataList.clear();
-            objDataList.clear();
-            //now do the stetup and start it.
+            // objDataList.clear();
+            mViewModel.clear();
+            //now do the setup and start it.
             createLocationRequest();
             startLocationUpdates();
-            CheckPermActivity();//            setupActivityRec(true);
+            CheckPermActivity();
             mRequestingLocationUpdates = true;
             return true;
         } else if (id == R.id.action_stop) {
@@ -225,7 +229,8 @@ public class MainActivity extends AppCompatActivity {
                             location.getLatitude(),
                             location.getLongitude(),
                             location.getTime(),
-                            currentActivity
+                            //currentActivity
+                            mViewModel.currentActivity
                         ));
                     }
                 })
@@ -471,55 +476,31 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(TAG, "getLastLocation:onFailure", e);
                 }
             });
-
     }
 
 
     public void addData(Location mlocation) {
         objData newData;
-
-
         if (mlocation != null) {
-
             newData = new objData(
                 mlocation.getLatitude(),
                 mlocation.getLongitude(),
                 mlocation.getTime(),
-                currentActivity
+                mViewModel.currentActivity
             );
 
             //figure distance info.
-            if (objDataList.isEmpty()) {
-                newData.distance = 0.0f;
-            } else {
-                newData.distance = distanceBetween(objDataList.get(objDataList.size() - 1).myLatlng, newData.myLatlng) * 3.28f; //converted to feet
-                newData.distance += objDataList.get(objDataList.size() - 1).distance;  //previous distance, to ge the total.
-            }
+            newData.distance = mViewModel.getDistance(newData.myLatlng);
             //add everything and add to the data structures.
-            objDataList.add(newData);
-            listfrag.updateAdatper(objDataList);
-            mapfrag.updateMapDraw(newData);
+            mViewModel.add(newData);
+           // mapfrag.updateMapDraw(newData);
+            //I've forgotten what this is supposed to do.
             if (newData.distance >= Milecheck) {
                 mapfrag.mileMarker(newData, Milecheck / 5280 + " Miles");
                 Milecheck += MileIncr;
             }
         }
     }
-
-    private float distanceBetween(LatLng latLng1, LatLng latLng2) {
-
-        Location loc1 = new Location(LocationManager.GPS_PROVIDER);
-        Location loc2 = new Location(LocationManager.GPS_PROVIDER);
-
-        loc1.setLatitude(latLng1.latitude);
-        loc1.setLongitude(latLng1.longitude);
-
-        loc2.setLatitude(latLng2.latitude);
-        loc2.setLongitude(latLng2.longitude);
-
-        return loc1.distanceTo(loc2);
-    }
-
 
     //helper function to check if all the permissions are granted.
     private boolean allPermissionsGranted() {
@@ -586,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             //get most probable activity
             DetectedActivity probably = result.getMostProbableActivity();
-            currentActivity = probably.getType();
+            mViewModel.currentActivity = probably.getType();
         }
     }
 }
