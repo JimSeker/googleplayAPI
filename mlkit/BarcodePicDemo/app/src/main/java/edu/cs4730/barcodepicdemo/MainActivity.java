@@ -50,6 +50,9 @@ import java.util.List;
  * and then it can be processed via another button.
  * <p>
  * Note, likely the intent should turn down the image size, it really don't need to be that high of resolution.
+ *
+ * note the QR codes don't seem to read well, while things the camera app can find them, this app fails on the same
+ * qr code.
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -63,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     Paint myColor;
     ActivityResultLauncher<Intent> myActivityResultLauncher;
     BarcodeScannerOptions options;
+    String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +94,9 @@ public class MainActivity extends AppCompatActivity {
         options =
             new BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(   //default is all formats.
-                    Barcode.FORMAT_QR_CODE,
-                    Barcode.FORMAT_UPC_A)
+                   // Barcode.FORMAT_QR_CODE,
+                    Barcode.FORMAT_ALL_FORMATS)
+                   // Barcode.FORMAT_UPC_A)
                 .build();
 
         //setup the paint object.
@@ -154,8 +159,11 @@ public class MainActivity extends AppCompatActivity {
                     // Task completed successfully
                     if (barcodes == null) {
                         logger.setText("No barcodes found.");
+                        return;
                     }
+                    Log.d(TAG, "We have something " + barcodes.size());
                     for (Barcode barcode : barcodes) {
+                        Log.wtf(TAG, barcode.getDisplayValue());
                         logger.setText("Success: " + barcode.getDisplayValue());
                         //lets draw a box around it, since we using the bmp, no scaling is needed either.  a camera image would need to be scaled.
                         Rect rect = barcode.getBoundingBox();
