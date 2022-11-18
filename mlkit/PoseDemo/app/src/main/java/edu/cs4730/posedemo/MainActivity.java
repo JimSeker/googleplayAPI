@@ -116,13 +116,22 @@ public class MainActivity extends AppCompatActivity {
                             @androidx.camera.core.ExperimentalGetImage
                             public void analyze(@NonNull ImageProxy imageProxy) {
                                 int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+                                boolean isImageFlipped = false; // lensFacing == CameraSelector.LENS_FACING_FRONT;
+                                if (rotationDegrees == 0 || rotationDegrees == 180) {
+                                    graphicOverlay.setImageSourceInfo(
+                                        imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
+                                } else {
+                                    graphicOverlay.setImageSourceInfo(
+                                        imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
+                                }
+
                                 // insert your code here.
                                 Image mediaImage = imageProxy.getImage();
                                 if (mediaImage != null) {
                                     InputImage image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
                                     // Pass image to an ML Kit Vision API
                                     poseDetector.process(image)
-                                        .addOnSuccessListener(
+                                        .addOnSuccessListener(executor,
                                             new OnSuccessListener<Pose>() {
                                                 @Override
                                                 public void onSuccess(Pose pose) {
