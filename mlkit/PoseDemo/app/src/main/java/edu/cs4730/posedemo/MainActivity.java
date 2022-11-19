@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     PoseDetector poseDetector;
     GraphicOverlay graphicOverlay;
+    int lensFacing = CameraSelector.LENS_FACING_BACK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,8 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
                         ImageAnalysis imageAnalysis =
                             new ImageAnalysis.Builder()
-                                // enable the following line if RGBA output is needed.
-                                //.setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                                //.setTargetResolution(new Size(480, 360)) //min resolution to work.
                                 .setTargetResolution(new Size(1280, 720))
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build();
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                             @androidx.camera.core.ExperimentalGetImage
                             public void analyze(@NonNull ImageProxy imageProxy) {
                                 int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
-                                boolean isImageFlipped = false; // lensFacing == CameraSelector.LENS_FACING_FRONT;
+                                boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
                                 if (rotationDegrees == 0 || rotationDegrees == 180) {
                                     graphicOverlay.setImageSourceInfo(
                                         imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                         });
 
                         CameraSelector cameraSelector = new CameraSelector.Builder()
-                            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                            .requireLensFacing(lensFacing)
                             .build();
 
                         // Unbind use cases before rebinding
