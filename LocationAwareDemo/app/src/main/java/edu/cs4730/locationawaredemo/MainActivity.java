@@ -49,7 +49,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
 
-/*
+/**
  * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
  * http://developer.android.com/training/location/index.html
  *
@@ -65,7 +65,6 @@ import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
-
 
     /**
      * Constant used in the location settings dialog.
@@ -203,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
      */
     protected void createLocationRequest() {
 
-        mLocationRequest = new LocationRequest.Builder(100000)  //create a requrest with 10000 interval and default rest.
+        mLocationRequest = new LocationRequest.Builder(100000)  //create a request with 10000 interval and default rest.
             //now set the rest of the pieces we want to change.
             //.setIntervalMillis(10000)  //not needed, since it is part of the builder.
             .setMinUpdateIntervalMillis(50000)  //get an update no faster then 5 seconds.
