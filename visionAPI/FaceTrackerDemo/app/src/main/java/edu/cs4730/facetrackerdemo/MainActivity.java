@@ -30,7 +30,13 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
 
-
+/**
+ * very simple example using the facetracker.  it checks if the eyes are open and the person is
+ * smiling.  It doesn't draw anything.  but speaks telling you too open eyes, smile etc.
+ *
+ * note this api is deprecated.  the landmarks have failed (which is why it doesn't draw).  I fully
+ * expect the rest ot fail at any time.  https://developers.google.com/vision
+ */
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, OnInitListener {
 
     String TAG = "MainActivity";
@@ -187,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         alreadyaskingpremission = false;
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
@@ -195,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             return;
         }
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
+            " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
         Toast.makeText(this, "Camera permission not granted, so exiting", Toast.LENGTH_LONG).show();
         finish();
 
