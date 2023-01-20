@@ -2,7 +2,7 @@
 
 This directory is specific to the on-device ML kit (not ML cloud) APIs  https://developers.google.com/ml-kit
 
-`BarcodePicDemo` This example use an intent to take a picture and then processes the image for barcodes.
+`BarcodePicDemo` This example use an intent to take a picture and then processes the image for barcodes.  It should be able to recognize qr codes, but fails.
 
 `DigitalInkRecDemo` is a simple example using the digital ink APIs, you draw/write letters/word and then see if it figure out the text.
 
