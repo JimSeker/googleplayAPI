@@ -17,7 +17,6 @@ import com.google.android.gms.nearby.connection.Strategy;
 public class MainActivity extends AppCompatActivity implements HelpFragment.OnFragmentInteractionListener {
     String TAG = "MainActivity";
     public static final String ServiceId = "edu.cs4730.nearbyconnectiondemo";  //need a unique value to identify app.
-    public static final int REQUEST_ACCESS_COURSE_LOCATION= 1;
     FragmentManager fragmentManager;
 
     /**

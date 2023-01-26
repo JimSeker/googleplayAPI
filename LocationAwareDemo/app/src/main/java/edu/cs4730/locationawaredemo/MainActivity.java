@@ -66,9 +66,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * Constant used in the location settings dialog.
-     */
+    // Constant used in the location settings dialog.
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
     // for checking permissions.
     ActivityResultLauncher<String[]> rpl_onConnected, rpl_startLocationUpdates;

@@ -34,12 +34,18 @@ import java.util.Map;
  * But this activity is asking for the new ACTIVITY permission that started in API 29.  Not sure
  * what happens if this is run on a 28 device.
  *
- * ACTIVITY_RECOGNTION and ACCESS_FILE_LOCATION are requrested, since you need them for step count
+ * ACTIVITY_RECOGNTION and ACCESS_FILE_LOCATION are requested, since you need them for step count
  *   also could get calories.expended, activity.exercise information.
- *  see https://developers.google.com/fit/android/authorization 
+ *  see https://developers.google.com/fit/android/authorization
  * Note you need the BODY_SENSOR permission in order to get heart_rate information.
  * this app doesn't not access it, so it is not requested or listed in the mananifest
  * also no attempt for the new API 33 BODY_SENSORS_BACKGROUND is made either.
+ *
+ * lastly, much of google fit to looks to be almost deprecated in favor of the new (still alpha version)
+ * health connect.  The recording fragment is the only not currently showing some variation of deprecated.
+ * This is not a "fixable" deprecation, instead of looks to be a complete rewrite to new protocols and
+ * likely this example would be legacy in favor of a new one.  that likely I won't do.  
+ *
  */
 
 public class MainActivity extends AppCompatActivity
