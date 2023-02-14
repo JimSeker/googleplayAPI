@@ -25,8 +25,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import java.util.concurrent.Callable;
-
 /**
  * This is the advertise side of the Nearby API.  (server)
  */
@@ -185,7 +183,7 @@ public class AdvertiseFragment extends Fragment {
      */
     public void stopAdvertising() {
         mIsAdvertising = false;
-        Nearby.getConnectionsClient(getContext()).stopAdvertising();
+        Nearby.getConnectionsClient(requireContext()).stopAdvertising();
         logthis("Advertising stopped.");
     }
 
@@ -202,7 +200,7 @@ public class AdvertiseFragment extends Fragment {
         Payload payload = Payload.fromBytes(data.getBytes());
 
         // sendPayload (List<String> endpointIds, Payload payload)  if more then one connection allowed.
-        Nearby.getConnectionsClient(getContext()).
+        Nearby.getConnectionsClient(requireContext()).
             sendPayload(ConnectedEndPointId,  //end point to end to
                 payload)   //the actual payload of data to send.
             .addOnSuccessListener(new OnSuccessListener<Void>() {  //don't know if need this one.

@@ -21,5 +21,4 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.0'
     implementation 'com.google.android.gms:play-services-nearby:18.3.0'
-
 }
