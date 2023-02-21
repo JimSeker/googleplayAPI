@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
                 @Override
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         PoseDetectorOptions options =
             new PoseDetectorOptions.Builder()
                 .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
+               // .setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU)
                 .build();
         // Accurate pose detector on static images, when depending on the pose-detection-accurate sdk
 //        AccuratePoseDetectorOptions options =
