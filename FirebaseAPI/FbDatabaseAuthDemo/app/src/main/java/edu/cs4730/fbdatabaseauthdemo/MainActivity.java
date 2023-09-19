@@ -22,11 +22,7 @@ import edu.cs4730.fbdatabaseauthdemo.databinding.ActivityMainBinding;
  * caught it when the app is open as well.  But then you won't see the notification.
  */
 
-public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener {
-
-    //public variables to use my fragments
-    static final int RC_PHOTO_PICKER = 9003;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     //local variables.
     private static final String TAG = "MainActivity";
@@ -46,8 +42,7 @@ public class MainActivity extends AppCompatActivity
         authFragment = new AuthFragment();
         authGoogleApiFragment = new AuthGoogleApiFragment();
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         binding.drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -55,8 +50,8 @@ public class MainActivity extends AppCompatActivity
 
         //put the default first fragment into place.
         getSupportFragmentManager().beginTransaction()
-            // .add(binding.container.getId(), authFragment).commit();
-            .add(binding.container.getId(), authGoogleApiFragment).commit();
+                // .add(binding.container.getId(), authFragment).commit();
+                .add(binding.container.getId(), authGoogleApiFragment).commit();
 
     }
 
@@ -66,23 +61,17 @@ public class MainActivity extends AppCompatActivity
         int id = menuItem.getItemId();
 
         if (id == R.id.nav_auth) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), authFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), authFragment).commit();
         } else if (id == R.id.nav_dbsimple) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), new DBSimpleFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), new DBSimpleFragment()).commit();
         } else if (id == R.id.nav_dblist) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), new DBListFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), new DBListFragment()).commit();
         } else if (id == R.id.nav_authg) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), authGoogleApiFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), authGoogleApiFragment).commit();
         } else if (id == R.id.nav_storage) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), new StorageFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), new StorageFragment()).commit();
         } else if (id == R.id.nav_rc) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(binding.container.getId(), new RCFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(binding.container.getId(), new RCFragment()).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

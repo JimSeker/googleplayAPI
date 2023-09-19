@@ -1,16 +1,21 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -28,8 +33,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.bumptech.glide.Glide;
-
-import static android.app.Activity.RESULT_OK;
 
 import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentStorageBinding;
 
@@ -51,31 +54,22 @@ public class StorageFragment extends Fragment {
     DatabaseReference mFirebaseDatabaseReference;
     DatabaseReference myRef;
     ValueEventListener myValueEventlistener;
-
-    //ImageView myPic;
     FragmentStorageBinding binding;
     boolean havepic = false;
     String imageurl = "";
 
-    
-
-
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = FragmentStorageBinding.inflate(inflater, container, false);
 
         //auth, so I can get the username.
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        if (mFirebaseUser != null)
-            mUsername = mFirebaseUser.getDisplayName();
-        else
-            mUsername = "anonymous";
+        if (mFirebaseUser != null) mUsername = mFirebaseUser.getDisplayName();
+        else mUsername = "anonymous";
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-
-
+        //init storage methods.
         mFirebaseStorage = FirebaseStorage.getInstance();
         mPhotosStorageReference = mFirebaseStorage.getReference().child("photos");
 
@@ -86,7 +80,8 @@ public class StorageFragment extends Fragment {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/jpeg");
                 // intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Complete action using"), MainActivity.RC_PHOTO_PICKER);
+                picActivityResultLauncher.launch(intent);
+                //startActivityForResult(Intent.createChooser(intent, "Complete action using"), MainActivity.RC_PHOTO_PICKER);
             }
         });
 
@@ -114,12 +109,8 @@ public class StorageFragment extends Fragment {
     }
 
     void DownloadImage(String imageUrl) {
-
-        // Download directly from StorageReference using Glide
-// (See MyAppGlideModule for Loader registration)
-        Glide.with(this /* context */)
-                .load(imageUrl)
-                .into(binding.imagePic);
+        // Download directly from StorageReference using Glide (See MyAppGlideModule for Loader registration)
+        Glide.with(requireContext()).load(imageUrl).into(binding.imagePic);
     }
 
     void deleteImage(String imageUrl) {
@@ -146,63 +137,66 @@ public class StorageFragment extends Fragment {
         });
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.RC_PHOTO_PICKER && resultCode == RESULT_OK) {
-            Uri selectedImageUri = data.getData();
+    ActivityResultLauncher<Intent> picActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        @Override
+        public void onActivityResult(ActivityResult result) {
+            if (result.getResultCode() == Activity.RESULT_OK) {
+                // There are no request codes
+                Intent data = result.getData();
+                Uri selectedImageUri = data.getData();
 
-            if (havepic) {
-                //delete the old pic first
-                deleteImage(imageurl);
-            }
-            String filename = selectedImageUri.getLastPathSegment();  //now only get numbers?  why???
-            //other way, still getting a number not file name... I don't know why...
-            //List<String> filenames =  selectedImageUri.getPathSegments();
-            //String filename = filenames.get(filenames.size()-1);
-            Log.wtf(TAG, "ORG filename is " + filename);
-            //sometimes it get more of the filepath and I don't know why, so this should fix the name.
-            if (filename.contains("/")) {
-                String[] list = filename.split("/");
-                filename = list[list.length];
-            }
-            Log.wtf(TAG, "NEW filename is " + filename);
-            // Get a reference to store file at chat_photos/<FILENAME>
-            //fix this so it's just the file name...
-            final StorageReference photoRef = mPhotosStorageReference.child(filename);
-
-            // Upload file to Firebase Storage
-            UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-            //now we need the download url to add the db, but have do it with second task.
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        throw task.getException();
-                    }
-                    Log.wtf(TAG, photoRef.toString());
-                    // Continue with the task to get the download URL
-                    return photoRef.getDownloadUrl();
-
+                if (havepic) {
+                    //delete the old pic first
+                    deleteImage(imageurl);
                 }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        Uri downloadUri = task.getResult();
-                        Log.wtf(TAG, "url is" + downloadUri.toString());
-                        mFirebaseDatabaseReference.child("photos").child(mUsername).setValue(downloadUri.toString());
-
-                    } else {
-                        // Handle failures
-                        // ...
-                    }
+                String filename = selectedImageUri.getLastPathSegment();  //now only get numbers?  why???
+                //other way, still getting a number not file name... I don't know why...
+                //List<String> filenames =  selectedImageUri.getPathSegments();
+                //String filename = filenames.get(filenames.size()-1);
+                Log.wtf(TAG, "ORG filename is " + filename);
+                //sometimes it get more of the filepath and I don't know why, so this should fix the name.
+                if (filename.contains("/")) {
+                    String[] list = filename.split("/");
+                    filename = list[list.length];
                 }
-            });
+                Log.wtf(TAG, "NEW filename is " + filename);
+                // Get a reference to store file at chat_photos/<FILENAME>
+                //fix this so it's just the file name...
+                final StorageReference photoRef = mPhotosStorageReference.child(filename);
 
+                // Upload file to Firebase Storage
+                UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+                //now we need the download url to add the db, but have do it with second task.
+                Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                    @Override
+                    public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                        if (!task.isSuccessful()) {
+                            throw task.getException();
+                        }
+                        Log.wtf(TAG, photoRef.toString());
+                        // Continue with the task to get the download URL
+                        return photoRef.getDownloadUrl();
 
+                    }
+                }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Uri> task) {
+                        if (task.isSuccessful()) {
+                            Uri downloadUri = task.getResult();
+                            Log.wtf(TAG, "url is" + downloadUri.toString());
+                            mFirebaseDatabaseReference.child("photos").child(mUsername).setValue(downloadUri.toString());
+                        } else {
+                            // Handle failures
+                            Log.wtf(TAG, "The task failed to get download url and add to db.");
+                        }
+                    }
+                });
+
+            } else {
+                Toast.makeText(requireContext(), "Image picker was canceled", Toast.LENGTH_SHORT).show();
+            }
         }
-    }
+    });
 
     @Override
     public void onPause() {
