@@ -3,6 +3,7 @@ package edu.cs4730.firebasemessagedemo;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.ProgressDialog;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cs4730.firebasemessagedemo.databinding.ActivitySendBinding;
+
 
 /**
  * this activity is used to send the message to one or all devices.
@@ -39,13 +42,13 @@ import java.util.Map;
  */
 
 public class SendActivity extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener, View.OnClickListener {
+    String TAG = "SendActivity";
+    private ActivitySendBinding binding;
+    //private RadioGroup radioGroup;
+    //private Spinner spinner;
+    //private ProgressDialog progressDialog;
 
-    private Button buttonSendPush;
-    private RadioGroup radioGroup;
-    private Spinner spinner;
-    private ProgressDialog progressDialog;
-
-    private EditText editTextTitle, editTextMessage;
+    //private EditText editTextTitle, editTextMessage;
 
     private boolean isSendAllChecked;
     private List<String> devices;
@@ -53,21 +56,28 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_send);
-        radioGroup = findViewById(R.id.radioGroup);
-        spinner = findViewById(R.id.spinnerDevices);
-        buttonSendPush = findViewById(R.id.buttonSendPush);
-
-        editTextTitle = findViewById(R.id.editTextTitle);
-        editTextMessage = findViewById(R.id.editTextMessage);
+        binding = ActivitySendBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+//        radioGroup = findViewById(R.id.radioGroup);
+//        spinner = findViewById(R.id.spinnerDevices);
+//        buttonSendPush = findViewById(R.id.buttonSendPush);
+//
+//        editTextTitle = findViewById(R.id.editTextTitle);
+//        editTextMessage = findViewById(R.id.editTextMessage);
 
 
         devices = new ArrayList<>();
 
-        radioGroup.setOnCheckedChangeListener(this);
-        buttonSendPush.setOnClickListener(this);
+        binding.radioGroup.setOnCheckedChangeListener(this);
+        binding.buttonSendPush.setOnClickListener(this);
 
         loadRegisteredDevices();
+    }
+    //helper method
+    void logthis(String item) {
+        Log.d(TAG, item);
+        binding.logger.append("\n");
+        binding.logger.append(item);
     }
 
     /**
@@ -75,15 +85,12 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
      * see the php code in the directory for more details about the backend.
      */
     private void loadRegisteredDevices() {
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Fetching Devices...");
-        progressDialog.show();
+        logthis("Fetching Devices...");
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, EndPoints.URL_FETCH_DEVICES,
             new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    progressDialog.dismiss();
                     JSONObject obj = null;
                     try {
                         obj = new JSONObject(response);
@@ -100,7 +107,7 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
                                 android.R.layout.simple_spinner_dropdown_item,
                                 devices);
 
-                            spinner.setAdapter(arrayAdapter);
+                            binding.spinnerDevices.setAdapter(arrayAdapter);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -133,19 +140,17 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     //this method will send a message to all registered devices.
     private void sendMultiplePush() {
-        final String title = editTextTitle.getText().toString();
-        final String message = editTextMessage.getText().toString();
+        final String title = binding.editTextTitle.getText().toString();
+        final String message = binding.editTextMessage.getText().toString();
 
-        progressDialog.setMessage("Sending Push");
-        progressDialog.show();
+        logthis("Sending Push");
+
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_MULTIPLE_PUSH,
             new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    progressDialog.dismiss();
-
-                    Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
+                    logthis( response);
                 }
             },
             new Response.ErrorListener() {
@@ -169,20 +174,17 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     //this will send a message to only the device/token listed.
     private void sendSinglePush() {
-        final String title = editTextTitle.getText().toString();
-        final String message = editTextMessage.getText().toString();
-        final String name = spinner.getSelectedItem().toString();
+        final String title = binding.editTextTitle.getText().toString();
+        final String message = binding.editTextMessage.getText().toString();
+        final String name = binding.spinnerDevices.getSelectedItem().toString();
 
-        progressDialog.setMessage("Sending Push");
-        progressDialog.show();
+        logthis("Sending Push");
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_SINGLE_PUSH,
             new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    progressDialog.dismiss();
-
-                    Toast.makeText(SendActivity.this, response, Toast.LENGTH_LONG).show();
+                    logthis( response);
                 }
             },
             new Response.ErrorListener() {
@@ -209,12 +211,12 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         switch (radioGroup.getCheckedRadioButtonId()) {
             case R.id.radioButtonSendAll:
                 isSendAllChecked = true;
-                spinner.setEnabled(false);
+                binding.spinnerDevices.setEnabled(false);
                 break;
 
             case R.id.radioButtonSendOne:
                 isSendAllChecked = false;
-                spinner.setEnabled(true);
+                binding.spinnerDevices.setEnabled(true);
                 break;
 
         }

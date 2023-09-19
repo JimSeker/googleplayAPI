@@ -1,5 +1,6 @@
 package edu.cs4730.firebasemessagedemo;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -115,6 +116,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * This method generates a notification on the device.
      * If there is correctly formatted json, it will use it, other just display the message
      */
+
     private void sendNotification(String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -123,6 +125,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_IMMUTABLE);
         } else {
+            //lint is wrong, it can't see the if statement correctly.
             pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
         }
