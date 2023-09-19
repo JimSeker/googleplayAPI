@@ -1,6 +1,5 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,9 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -33,11 +29,9 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.bumptech.glide.Glide;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.Executor;
-
 import static android.app.Activity.RESULT_OK;
+
+import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentStorageBinding;
 
 
 /**
@@ -53,26 +47,24 @@ public class StorageFragment extends Fragment {
 
     private FirebaseStorage mFirebaseStorage;
     private StorageReference mPhotosStorageReference;
-    private Button mPhotoPickerButton;
-
     private final String TAG = "StorageFragment";
     DatabaseReference mFirebaseDatabaseReference;
-    TextView logger;
     DatabaseReference myRef;
     ValueEventListener myValueEventlistener;
 
-    ImageView myPic;
-
+    //ImageView myPic;
+    FragmentStorageBinding binding;
     boolean havepic = false;
     String imageurl = "";
+
+    
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView = inflater.inflate(R.layout.fragment_storage, container, false);
-
-        myPic = myView.findViewById(R.id.imagePic);
+        binding = FragmentStorageBinding.inflate(inflater, container, false);
 
         //auth, so I can get the username.
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -87,9 +79,8 @@ public class StorageFragment extends Fragment {
         mFirebaseStorage = FirebaseStorage.getInstance();
         mPhotosStorageReference = mFirebaseStorage.getReference().child("photos");
 
-        mPhotoPickerButton = myView.findViewById(R.id.btn_pic);
         // ImagePickerButton shows an image picker to upload a image for a message
-        mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
+        binding.btnPic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -98,7 +89,6 @@ public class StorageFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent, "Complete action using"), MainActivity.RC_PHOTO_PICKER);
             }
         });
-
 
         myRef = FirebaseDatabase.getInstance().getReference().child("photos").child(mUsername);
         myValueEventlistener = new ValueEventListener() {
@@ -120,7 +110,7 @@ public class StorageFragment extends Fragment {
                 havepic = false;
             }
         };
-        return myView;
+        return binding.getRoot();
     }
 
     void DownloadImage(String imageUrl) {
@@ -128,8 +118,8 @@ public class StorageFragment extends Fragment {
         // Download directly from StorageReference using Glide
 // (See MyAppGlideModule for Loader registration)
         Glide.with(this /* context */)
-            .load(imageUrl)
-            .into(myPic);
+                .load(imageUrl)
+                .into(binding.imagePic);
     }
 
     void deleteImage(String imageUrl) {

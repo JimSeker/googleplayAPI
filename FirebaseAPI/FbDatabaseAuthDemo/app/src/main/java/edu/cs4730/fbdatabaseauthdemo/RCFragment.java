@@ -20,6 +20,8 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentRcBinding;
+
 /**
  * This is a simple demo of Remote Config Firebase functions.
  */
@@ -29,32 +31,26 @@ public class RCFragment extends Fragment {
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     public static final String NOTE_LENGTH_KEY = "note_msg_length";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 140;
-
-    TextView rc_value;
+    FragmentRcBinding binding;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView = inflater.inflate(R.layout.fragment_rc, container, false);
-
-        rc_value = myView.findViewById(R.id.rc_value);
-        myView.findViewById(R.id.btn_rc).setOnClickListener(new View.OnClickListener() {
+        binding = FragmentRcBinding.inflate(inflater, container, false);
+        binding.btnRc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 fetchConfig();
             }
         });
 
-
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         // Create Remote Config Setting to enable developer mode.
         // Fetching configs from the server is normally limited to 5 requests per hour.
         // setting it to 5 minutes fetch interval (maybe 0L), so developers
         // can test different config values during development.
-        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(0L)  //3600L
-            .build();
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder().setMinimumFetchIntervalInSeconds(0L)  //3600L
+                .build();
         mFirebaseRemoteConfig.setConfigSettingsAsync(configSettings);
 
         // Define default config values. Defaults are used when fetched config values are not
@@ -64,9 +60,8 @@ public class RCFragment extends Fragment {
         mFirebaseRemoteConfig.setDefaultsAsync(defaultConfigMap);
         fetchConfig();
 
-        return myView;
+        return binding.getRoot();
     }
-
 
     // Fetch the config to determine the allowed length of messages.
     public void fetchConfig() {
@@ -77,32 +72,30 @@ public class RCFragment extends Fragment {
             cacheExpiration = 0;
         }
         Log.d(TAG, "cache is " + cacheExpiration);
-        mFirebaseRemoteConfig.fetch(cacheExpiration)
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    // Make the fetched config available
-                    // via FirebaseRemoteConfig get<type> calls, e.g., getLong, getString.
-                    mFirebaseRemoteConfig.activate();
+        mFirebaseRemoteConfig.fetch(cacheExpiration).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // Make the fetched config available
+                // via FirebaseRemoteConfig get<type> calls, e.g., getLong, getString.
+                mFirebaseRemoteConfig.activate();
 
-                    // Update the config's.  In our case, just display it.
-                    applyRCvalue();
+                // Update the config's.  In our case, just display it.
+                applyRCvalue();
 
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    // An error occurred when fetching the config.
-                    Log.w(TAG, "Error fetching config", e);
-                    applyRCvalue();
-                }
-            });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // An error occurred when fetching the config.
+                Log.w(TAG, "Error fetching config", e);
+                applyRCvalue();
+            }
+        });
     }
 
     void applyRCvalue() {
         long note_msg_length = mFirebaseRemoteConfig.getLong(NOTE_LENGTH_KEY);
-        rc_value.setText(String.valueOf(note_msg_length));
+        binding.rcValue.setText(String.valueOf(note_msg_length));
     }
 
 

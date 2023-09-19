@@ -12,6 +12,8 @@ import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
 
+import edu.cs4730.fbdatabaseauthdemo.databinding.ActivityMainBinding;
+
 /**
  * The friendlychat code was use an an example in many places, but it so complex.
  * https://github.com/firebase/friendlychat-android
@@ -28,34 +30,33 @@ public class MainActivity extends AppCompatActivity
 
     //local variables.
     private static final String TAG = "MainActivity";
+
     AuthFragment authFragment;
     AuthGoogleApiFragment authGoogleApiFragment;
-
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
 
         authFragment = new AuthFragment();
         authGoogleApiFragment = new AuthGoogleApiFragment();
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
+            this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        binding.drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        binding.navView.setNavigationItemSelectedListener(this);
 
         //put the default first fragment into place.
         getSupportFragmentManager().beginTransaction()
-            // .add(R.id.container, authFragment).commit();
-            .add(R.id.container, authGoogleApiFragment).commit();
+            // .add(binding.container.getId(), authFragment).commit();
+            .add(binding.container.getId(), authGoogleApiFragment).commit();
 
     }
 
@@ -66,22 +67,22 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_auth) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, authFragment).commit();
+                .replace(binding.container.getId(), authFragment).commit();
         } else if (id == R.id.nav_dbsimple) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new DBSimpleFragment()).commit();
+                .replace(binding.container.getId(), new DBSimpleFragment()).commit();
         } else if (id == R.id.nav_dblist) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new DBListFragment()).commit();
+                .replace(binding.container.getId(), new DBListFragment()).commit();
         } else if (id == R.id.nav_authg) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, authGoogleApiFragment).commit();
+                .replace(binding.container.getId(), authGoogleApiFragment).commit();
         } else if (id == R.id.nav_storage) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new StorageFragment()).commit();
+                .replace(binding.container.getId(), new StorageFragment()).commit();
         } else if (id == R.id.nav_rc) {
             getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new RCFragment()).commit();
+                .replace(binding.container.getId(), new RCFragment()).commit();
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

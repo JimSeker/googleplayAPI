@@ -28,6 +28,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentDblistBinding;
+import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentMyDialogBinding;
+import edu.cs4730.fbdatabaseauthdemo.databinding.NoteRowBinding;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,53 +39,41 @@ import com.google.firebase.database.FirebaseDatabase;
 public class DBListFragment extends Fragment {
 
     final static String TAG = "DBListFragment";
-
     DatabaseReference mFirebaseDatabaseReference;
     DatabaseReference myChildRef;
-
-
     private FirebaseAuth mFirebaseAuth;
-
-
-    private RecyclerView mRecyclerView;
+    private FragmentDblistBinding binding;
     private LinearLayoutManager mLinearLayoutManager;
     private FirebaseRecyclerAdapter<Note, NoteViewHolder> mFirebaseAdapter;
 
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
-        TextView tv_title;
-        TextView tv_note;
-        View myitemView;
-
-        public NoteViewHolder(View v) {
-            super(v);
-            tv_title = itemView.findViewById(R.id.title);
-            tv_note = itemView.findViewById(R.id.note);
-            myitemView = itemView;
+//        TextView tv_title;
+//        TextView tv_note;
+//        View myitemView;
+        NoteRowBinding viewBinding;
+        public NoteViewHolder(NoteRowBinding viewBinding) {
+            super(viewBinding.getRoot());
+            this.viewBinding = viewBinding;
+//            tv_title = itemView.findViewById(R.id.title);
+//            tv_note = itemView.findViewById(R.id.note);
+//            myitemView = itemView;
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView = inflater.inflate(R.layout.fragment_dblist, container, false);
-        FloatingActionButton fab = myView.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        binding = FragmentDblistBinding.inflate(inflater, container, false);
+        binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showDialog("Add");
             }
         });
 
-
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
-
-        mRecyclerView = myView.findViewById(R.id.list);
-        mLinearLayoutManager = new LinearLayoutManager(getContext());
-        // mLinearLayoutManager.setStackFromEnd(true);  //causes the list to align at the bottom, instead of the top.
-
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
         //Following android doc and example.  It was not commented and I'm not sure what is going on here.
@@ -98,35 +90,33 @@ public class DBListFragment extends Fragment {
         };
 
         myChildRef = mFirebaseDatabaseReference.child("messages");
-
-
         //Following android doc and example.  It was not commented and I'm not sure what is going on here.
-        FirebaseRecyclerOptions<Note> options =
-            new FirebaseRecyclerOptions.Builder<Note>()
-                .setQuery(myChildRef, parser)
-                .build();
+        FirebaseRecyclerOptions<Note> options = new FirebaseRecyclerOptions.Builder<Note>().setQuery(myChildRef, parser).build();
 
         /**
          *  This is the adapter for the recyclerview.  but it's the firebase recycler adapter.
          */
+        //needed for the firebase recyclerview adapter.
+        mLinearLayoutManager = new LinearLayoutManager(getContext());
+        // mLinearLayoutManager.setStackFromEnd(true);  //causes the list to align at the bottom, instead of the top.
+        //we are extending a firebase recyclerview addapter here, using the viewholder above.
         mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, NoteViewHolder>(options) {
-
             @NonNull
             @Override
             public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new NoteViewHolder(inflater.inflate(R.layout.note_row, viewGroup, false));
+                return new NoteViewHolder(NoteRowBinding.inflate(inflater, viewGroup, false));
             }
 
             @Override
             protected void onBindViewHolder(@NonNull final NoteViewHolder viewHolder, int position, @NonNull Note note) {
-                viewHolder.tv_title.setText(note.getTitle());
-                viewHolder.tv_title.setTag(note);  //since it's small.  larger, just use the id, which is the key.
-                viewHolder.tv_note.setText(note.getNote());
-                viewHolder.myitemView.setOnClickListener(new View.OnClickListener() {
+                viewHolder.viewBinding.title.setText(note.getTitle());
+                viewHolder.viewBinding.title.setTag(note);  //since it's small.  larger, just use the id, which is the key.
+                viewHolder.viewBinding.note.setText(note.getNote());
+                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        updateDialog((Note) viewHolder.tv_title.getTag());
+                        updateDialog((Note) viewHolder.viewBinding.title.getTag());
                     }
                 });
             }
@@ -141,15 +131,14 @@ public class DBListFragment extends Fragment {
                 int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
                 // to the bottom of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                    (positionStart >= (noteCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                    mRecyclerView.scrollToPosition(positionStart);
+                if (lastVisiblePosition == -1 || (positionStart >= (noteCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    binding.list.scrollToPosition(positionStart);
                 }
             }
         });
 
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mRecyclerView.setAdapter(mFirebaseAdapter);
+        binding.list.setLayoutManager(mLinearLayoutManager);
+        binding.list.setAdapter(mFirebaseAdapter);
 
         //setup left/right swipes on the cardviews so I can delete data.
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
@@ -164,7 +153,7 @@ public class DBListFragment extends Fragment {
                 //called when it has been animated off the screen.  So item is no longer showing.
                 //use ItemtouchHelper.X to find the correct one.
                 if (direction == ItemTouchHelper.RIGHT) {
-                    Note mynote = (Note) ((NoteViewHolder) viewHolder).tv_title.getTag();
+                    Note mynote = (Note) ((NoteViewHolder) viewHolder).viewBinding.title.getTag();
                     //  this is the delete.
                     //mFirebaseDatabaseReference.child("messages").child(mynote.getId()).removeValue();
                     //or use this, since it already declared.
@@ -173,10 +162,8 @@ public class DBListFragment extends Fragment {
             }
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(mRecyclerView);
-
-
-        return myView;
+        itemTouchHelper.attachToRecyclerView(binding.list);
+        return binding.getRoot();
     }
 
     @Override
@@ -196,38 +183,30 @@ public class DBListFragment extends Fragment {
      * This creates a dialog to update the note.  It is passed to this method.
      */
     void updateDialog(final Note note) {
-        LayoutInflater inflater = LayoutInflater.from(requireContext());
-        final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
-        final EditText et_note = textenter.findViewById(R.id.et_note);
-        et_note.setText(note.getNote());
-        final EditText et_title = textenter.findViewById(R.id.et_title);
-        et_title.setText(note.getTitle());
+        FragmentMyDialogBinding binding = FragmentMyDialogBinding.inflate(LayoutInflater.from(requireContext()));
+        binding.etNote.setText(note.getNote());
+        binding.etTitle.setText(note.getTitle());
         final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
-        builder.setView(textenter).setTitle("Update Note");
+        builder.setView(binding.getRoot()).setTitle("Update Note");
         builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
-
             @Override
             public void onClick(DialogInterface dialog, int id) {
 
-                logthis("update title is " + et_title.getText().toString());
-                logthis("update note is " + et_note.getText().toString());
-                //myChildRef.push().setValue(new Note(et_title.getText().toString(), et_note.getText().toString()));
-                Note mynote = new Note(et_title.getText().toString(), et_note.getText().toString());
+                logthis("update title is " + binding.etTitle.getText().toString());
+                logthis("update note is " + binding.etNote.getText().toString());
+                Note mynote = new Note(binding.etTitle.getText().toString(), binding.etNote.getText().toString());
 
                 // mFirebaseDatabaseReference.child("messages").child(note.getId()).setValue(mynote);
                 //OR since it's partially there already, use myChildRef
                 myChildRef.child(note.getId()).setValue(mynote);
-                //Toast.makeText(getBaseContext(), userinput.getText().toString(), Toast.LENGTH_LONG).show();
+            }
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                logthis("dialog canceled");
+                dialog.cancel();
 
             }
-        })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    logthis("dialog canceled");
-                    dialog.cancel();
-
-                }
-            });
+        });
         //you can create the dialog or just use the now method in the builder.
         //AlertDialog dialog = builder.create();
         //dialog.show();
@@ -238,31 +217,24 @@ public class DBListFragment extends Fragment {
      * Add dialog, with blanks.  then adds the data into the database.
      */
     void showDialog(String title) {
-        LayoutInflater inflater = LayoutInflater.from(requireContext());
-        final View textenter = inflater.inflate(R.layout.fragment_my_dialog, null);
-        final EditText et_note = textenter.findViewById(R.id.et_note);
-        final EditText et_title = textenter.findViewById(R.id.et_title);
+        FragmentMyDialogBinding binding = FragmentMyDialogBinding.inflate(LayoutInflater.from(requireContext()));
         final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
-        builder.setView(textenter).setTitle(title);
+        builder.setView(binding.getRoot()).setTitle(title);
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
-
             @Override
             public void onClick(DialogInterface dialog, int id) {
-
-                logthis("title is " + et_title.getText().toString());
-                logthis("note is " + et_note.getText().toString());
-                //Note push is used only when added new data for child "notes".  ie needes a unique id.
-                myChildRef.push().setValue(new Note(et_title.getText().toString(), et_note.getText().toString()));
-                //Toast.makeText(getBaseContext(), userinput.getText().toString(), Toast.LENGTH_LONG).show();
+                logthis("title is " + binding.etTitle.getText().toString());
+                logthis("note is " + binding.etNote.getText().toString());
+                //Note push is used only when added new data for child "notes".  ie needs a unique id.
+                myChildRef.push().setValue(new Note(binding.etTitle.getText().toString(), binding.etNote.getText().toString()));
             }
-        })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    logthis("dialog canceled");
-                    dialog.cancel();
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                logthis("dialog canceled");
+                dialog.cancel();
 
-                }
-            });
+            }
+        });
         //you can create the dialog or just use the now method in the builder.
         //AlertDialog dialog = builder.create();
         //dialog.show();

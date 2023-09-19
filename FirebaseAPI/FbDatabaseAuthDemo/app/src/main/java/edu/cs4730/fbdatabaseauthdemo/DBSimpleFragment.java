@@ -20,6 +20,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentDbsimpleBinding;
+
 
 /**
  * A very simple example of how to use the realtime database.
@@ -28,19 +30,17 @@ public class DBSimpleFragment extends Fragment {
 
     FirebaseDatabase database;
     final static String TAG = "SimpleActivity";
-    TextView logger;
+    FragmentDbsimpleBinding binding;
     DatabaseReference myRef;
     DatabaseReference myChildRef;
     ChildEventListener myChildeventlistener;
     ValueEventListener myValueEventlistener;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView =  inflater.inflate(R.layout.fragment_dbsimple, container, false);
+        binding = FragmentDbsimpleBinding.inflate(inflater, container, false);
 
-        logger = myView.findViewById(R.id.logger);
 
         database = FirebaseDatabase.getInstance();
         myChildRef = database.getReference().child("messages");
@@ -52,7 +52,7 @@ public class DBSimpleFragment extends Fragment {
                 Note myNote = dataSnapshot.getValue(Note.class);
                 logthis("title: " + myNote.getTitle());
                 logthis("note: " + myNote.getNote());
-                logthis("id? " + s + "\n");
+                logthis("id: " + s + "\n");
             }
 
             @Override
@@ -68,7 +68,6 @@ public class DBSimpleFragment extends Fragment {
                 Note myNote = dataSnapshot.getValue(Note.class);
                 logthis("removed title: " + myNote.getTitle());
                 logthis("removed note: " + myNote.getNote());
-
             }
 
             @Override
@@ -105,8 +104,7 @@ public class DBSimpleFragment extends Fragment {
             }
         };
 
-
-        myView.findViewById(R.id.add_object).setOnClickListener(new View.OnClickListener() {
+        binding.addObject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myChildRef.push().setValue(new Note("Test", "message test"));
@@ -114,21 +112,18 @@ public class DBSimpleFragment extends Fragment {
             }
         });
 
-
-        myView.findViewById(R.id.add_simple).setOnClickListener(new View.OnClickListener() {
+        binding.addSimple.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 myRef.setValue("Hello, World!");   //don't use push, app crashes and corrupts the data.
             }
         });
-        return myView;
+        return binding.getRoot();
     }
-
 
     void logthis(String item) {
         Log.d(TAG, "Value is: " + item);
-        logger.append(item + "\n");
+        binding.logger.append(item + "\n");
     }
 
     @Override
