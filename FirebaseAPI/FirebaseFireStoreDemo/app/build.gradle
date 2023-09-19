@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "edu.cs4730.firebasefirestoredemo"
-        minSdkVersion 26
-        targetSdkVersion 32
+        minSdkVersion 28
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -18,19 +18,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        viewBinding = true
+    }
+    namespace 'edu.cs4730.firebasefirestoredemo'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-
-    implementation platform('com.google.firebase:firebase-bom:30.3.1')
+//https://firebase.google.com/support/release-notes/android, the bom doesn't tell me when there is a update here, like others do.
+    implementation platform('com.google.firebase:firebase-bom:32.3.1')
     //implementation 'com.google.firebase:firebase-firestore:23.0.3'
     //implementation 'com.google.firebase:firebase-auth:21.0.1'
     // FirebaseUI for Firebase Auth
     //see this page for versioning, https://github.com/firebase/FirebaseUI-Android  not automatic, like above.
-    implementation 'com.firebaseui:firebase-ui-auth:8.0.1'
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.2'
     // FirebaseUI for Cloud Firestore
-    implementation 'com.firebaseui:firebase-ui-firestore:8.0.1'
+    implementation 'com.firebaseui:firebase-ui-firestore:8.0.2'
 }

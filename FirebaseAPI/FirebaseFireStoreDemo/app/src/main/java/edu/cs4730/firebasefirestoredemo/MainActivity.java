@@ -33,6 +33,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cs4730.firebasefirestoredemo.databinding.ActivityMainBinding;
+
 /**
  * This is a simple example using the default data example from google.
  * It does require a google login in order to work (both read and write)
@@ -43,13 +45,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     final static String TAG = "MainActivity";
-
-    private TextView logger;
-    private SignInButton mSignInButton;
-    Button SignOutButton, addData_btn, listData_btn;
-
+    private ActivityMainBinding binding;
     ActivityResultLauncher<Intent> myActivityResultLauncher;
-
     //firestore and auth pieces.
     FirebaseFirestore db;
     private FirebaseAuth mFirebaseAuth;
@@ -59,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         db = FirebaseFirestore.getInstance();
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -71,70 +69,54 @@ public class MainActivity extends AppCompatActivity {
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
                 if (mFirebaseUser != null) {
                     logthis("username: " + mFirebaseUser.getDisplayName());
-                    mSignInButton.setEnabled(false);
+                    binding.signInButton.setEnabled(false);
                 } else {
                     // user is not signed in.
                     myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
-                        .createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false)
-                        .setAvailableProviders(Arrays.asList(
-                            new AuthUI.IdpConfig.GoogleBuilder().build(),
-                            new AuthUI.IdpConfig.EmailBuilder().build(),
-                            new AuthUI.IdpConfig.PhoneBuilder().build())
-                        )
-                        .build());
+                            .createSignInIntentBuilder().setIsSmartLockEnabled(false).setAvailableProviders(Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build(), new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.PhoneBuilder().build())).build());
                 }
             }
         };
 
         //using the new startActivityForResult method.
-        myActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        Toast.makeText(MainActivity.this, "Authentication success.", Toast.LENGTH_SHORT).show();
-                        logthis("Google Sign In success.");
-                        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                        logthis("username is" + mFirebaseUser.getDisplayName());
-                        mSignInButton.setEnabled(false);
-                    } else {
-                        // Google Sign In failed
-                        logthis("Google Sign In failed.");
-                        mSignInButton.setEnabled(true);
-                    }
+        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    Toast.makeText(MainActivity.this, "Authentication success.", Toast.LENGTH_SHORT).show();
+                    logthis("Google Sign In success.");
+                    mFirebaseUser = mFirebaseAuth.getCurrentUser();
+                    logthis("username is" + mFirebaseUser.getDisplayName());
+                    binding.signInButton.setEnabled(false);
+                } else {
+                    // Google Sign In failed
+                    logthis("Google Sign In failed.");
+                    binding.signInButton.setEnabled(true);
                 }
-            });
-
-
-        logger = findViewById(R.id.logger);
+            }
+        });
         // Assign fields
-        mSignInButton = findViewById(R.id.sign_in_button);
-        mSignInButton.setOnClickListener(new View.OnClickListener() {
+        binding.signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 signIn();
             }
         });
 
-        SignOutButton = findViewById(R.id.sign_out_button);
-        SignOutButton.setOnClickListener(new View.OnClickListener() {
+        binding.signOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 signOut();
             }
         });
-        addData_btn = findViewById(R.id.add_data);
-        addData_btn.setOnClickListener(new View.OnClickListener() {
+        binding.addData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 adddata();
             }
         });
-        listData_btn = findViewById(R.id.getdata);
-        listData_btn.setOnClickListener(new View.OnClickListener() {
+        binding.getdata.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 readdata();
@@ -164,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseUser = null;
         //remove the listener or it will require the user to sign in again.  Not the action I want to here.
         mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        mSignInButton.setEnabled(true);
+        binding.signInButton.setEnabled(true);
         logthis("Signed out");
     }
 
@@ -179,23 +161,18 @@ public class MainActivity extends AppCompatActivity {
         user.put("last", "Lovelace");
         user.put("born", 1815);
 
-// Add a new document with a generated ID
-        db.collection("users")
-            .add(user)
-            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                @Override
-                public void onSuccess(DocumentReference documentReference) {
-                    logthis("DocumentSnapshot added with ID: " + documentReference.getId());
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    logthis("Error adding document" + e);
-                }
-            });
-
-
+        // Add a new document with a generated ID
+        db.collection("users").add(user).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                logthis("DocumentSnapshot added with ID: " + documentReference.getId());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                logthis("Error adding document" + e);
+            }
+        });
         // Create a second user with a first, middle, and last name
         user = new HashMap<>();
         user.put("first", "Alan");
@@ -204,45 +181,40 @@ public class MainActivity extends AppCompatActivity {
         user.put("born", 1912);
 
         // Add a new document with a generated ID
-        db.collection("users")
-            .add(user)
-            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                @Override
-                public void onSuccess(DocumentReference documentReference) {
-                    logthis("DocumentSnapshot added with ID: " + documentReference.getId());
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    logthis("Error adding document" + e);
-                }
-            });
+        db.collection("users").add(user).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                logthis("DocumentSnapshot added with ID: " + documentReference.getId());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                logthis("Error adding document" + e);
+            }
+        });
     }
 
     /**
      * This is the code that the tab shows you to list the data in the firestore database.
      */
     void readdata() {
-        db.collection("users")
-            .get()
-            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            logthis(document.getId() + " => " + document.getData());
-                        }
-                    } else {
-                        logthis("Error getting documents." + task.getException());
+        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        logthis(document.getId() + " => " + document.getData());
                     }
+                } else {
+                    logthis("Error getting documents." + task.getException());
                 }
-            });
+            }
+        });
     }
 
     //helper function to log and added to textview.
     public void logthis(String msg) {
-        logger.append(msg + "\n");
+        binding.logger.append(msg + "\n");
         Log.d(TAG, msg);
     }
 
