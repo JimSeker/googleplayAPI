@@ -8,7 +8,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import edu.cs4730.mapdemov2.databinding.ActivityMainBinding;
 
 
 /**
@@ -21,15 +22,15 @@ public class MainActivity extends AppCompatActivity {
     static final LatLng CHEYENNE = new LatLng(41.1400, -104.8197);  //Note, West is a negative, East is positive
     static final LatLng KIEL = new LatLng(53.551, 9.993);
     static final LatLng LARAMIE = new LatLng(41.312928, -105.587253);
-
+    ActivityMainBinding binding;
     String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        BottomNavigationView navView = findViewById(R.id.nav_view);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupWithNavController(navView, navController);
+        NavigationUI.setupWithNavController(binding.navView, navController);
     }
 }

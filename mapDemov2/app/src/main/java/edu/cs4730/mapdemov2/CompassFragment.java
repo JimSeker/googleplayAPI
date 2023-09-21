@@ -15,6 +15,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 
+import edu.cs4730.mapdemov2.databinding.CompassFragmentBinding;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -22,39 +24,26 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 public class CompassFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap map;
-    View myView;
+    CompassFragmentBinding binding;
 
     public CompassFragment() {
         // Required empty public constructor
     }
 
-
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        //Because of the maps, we need to have the view inflated only once (viewpager, may call this multiple times
-        // so if this is the first time, ie myView is null, then do the setup, otherwise, "reset" the view, by removing it
-        // and return the already setup view.
-        if (myView == null) {
-            myView = inflater.inflate(R.layout.compass_fragment, container, false);
-        } else {
-            ((ViewGroup) container.getParent()).removeView(myView);
-            return myView;
-        }
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = CompassFragmentBinding.inflate(inflater, container, false);
         //in a fragment
         ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map2)).getMapAsync(this);
-
         //in an activity
         //map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
 
-        return myView;
+        return binding.getRoot();
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
-
 
         // Move the camera instantly to laramie and zoom in .
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(MainActivity.LARAMIE, 15));
@@ -68,6 +57,4 @@ public class CompassFragment extends Fragment implements OnMapReadyCallback {
         //turn on buildings
         //map.setBuildingsEnabled(true);
     }
-
-
 }
