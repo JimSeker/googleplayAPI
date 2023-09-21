@@ -27,73 +27,64 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import edu.cs4730.googlelogindemo.databinding.ActivitySigninBinding;
+
 /**
  * Activity to demonstrate basic retrieval of the Google user's ID, email address, and basic
  * profile, which also adds a request dialog to access the user's Google Drive.
  */
 public class SignInActivityWithDrive extends AppCompatActivity {
-
     private static final String TAG = "SignInActivity";
     ActivityResultLauncher<Intent> myActivityResultLauncher;
-
     private GoogleSignInClient mGoogleSignInClient;
-
-    private TextView mStatusTextView;
+    ActivitySigninBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_signin);
-
-        // Views
-        mStatusTextView = findViewById(R.id.status);
+        binding = ActivitySigninBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Button listeners
-        findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
+        binding.signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 signIn();
             }
         });
-        findViewById(R.id.sign_out_button).setOnClickListener(new View.OnClickListener() {
+        binding.signOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 signOut();
             }
         });
-        findViewById(R.id.disconnect_button).setOnClickListener(new View.OnClickListener() {
+        binding.disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 revokeAccess();
             }
         });
-        myActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
-                        Intent data = result.getData();
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                        handleSignInResult(task);
-                    }
+        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    // There are no request codes
+                    Intent data = result.getData();
+                    Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                    handleSignInResult(task);
                 }
-            });
+            }
+        });
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-            .requestEmail()
-            .build();
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestScopes(new Scope(Scopes.DRIVE_APPFOLDER)).requestEmail().build();
         // Build a GoogleSignInClient with access to the Google Sign-In API and the
         // options specified by gso.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // Customize sign-in button. The sign-in button can be displayed in
         // multiple sizes.
-        SignInButton signInButton = findViewById(R.id.sign_in_button);
-        signInButton.setSize(SignInButton.SIZE_STANDARD);
+        binding.signInButton.setSize(SignInButton.SIZE_STANDARD);
     }
 
     @Override
@@ -138,24 +129,23 @@ public class SignInActivityWithDrive extends AppCompatActivity {
     }
 
     private void revokeAccess() {
-        mGoogleSignInClient.revokeAccess().addOnCompleteListener(this,
-            new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    updateUI(null);
-                }
-            });
+        mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                updateUI(null);
+            }
+        });
     }
 
     private void updateUI(@Nullable GoogleSignInAccount account) {
         if (account != null) {
-            mStatusTextView.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
-            findViewById(R.id.sign_in_button).setVisibility(View.GONE);
-            findViewById(R.id.sign_out_and_disconnect).setVisibility(View.VISIBLE);
+            binding.status.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
+            binding.signInButton.setVisibility(View.GONE);
+            binding.signOutAndDisconnect.setVisibility(View.VISIBLE);
         } else {
-            mStatusTextView.setText(R.string.signed_out);
-            findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
-            findViewById(R.id.sign_out_and_disconnect).setVisibility(View.GONE);
+            binding.status.setText(R.string.signed_out);
+            binding.signInButton.setVisibility(View.VISIBLE);
+            binding.signOutAndDisconnect.setVisibility(View.GONE);
         }
     }
 }
