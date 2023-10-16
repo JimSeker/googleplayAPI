@@ -30,8 +30,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 //https://firebase.google.com/support/release-notes/android, the bom doesn't tell me when there is a update here, like others do.
     implementation platform('com.google.firebase:firebase-bom:32.3.1')
-    //implementation 'com.google.firebase:firebase-firestore:23.0.3'
-    //implementation 'com.google.firebase:firebase-auth:21.0.1'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-auth'
     // FirebaseUI for Firebase Auth
     //see this page for versioning, https://github.com/firebase/FirebaseUI-Android  not automatic, like above.
     implementation 'com.firebaseui:firebase-ui-auth:8.0.2'
