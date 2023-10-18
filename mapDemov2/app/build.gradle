@@ -5,8 +5,8 @@ android {
 
     defaultConfig {
         applicationId "edu.cs4730.mapdemov2"
-        minSdkVersion 26
-        targetSdk 33
+        minSdk 26
+        targetSdk 34
     }
 
     buildTypes {
@@ -28,18 +28,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-base:18.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     //bottomnavigation view
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.10.0'
     //navigation pieces.
-    implementation 'androidx.navigation:navigation-fragment:2.7.2'
-    implementation 'androidx.navigation:navigation-ui:2.7.2'
-    //really dumb, needed to stop a duplicate dependency, even though not use kotlin at all, hopefully at some point won't need it.
-    //but with android view model, doesn't seem to have the same problem.  really weird.  leaving the commented out line just in case.
-    constraints {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
-            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
-        }
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {
-            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
-        }
-    }
+    implementation 'androidx.navigation:navigation-fragment:2.7.4'
+    implementation 'androidx.navigation:navigation-ui:2.7.4'
 }
