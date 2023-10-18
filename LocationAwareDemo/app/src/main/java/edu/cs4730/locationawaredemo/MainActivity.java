@@ -15,7 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
@@ -24,8 +23,6 @@ import androidx.work.WorkManager;
 
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -48,6 +45,8 @@ import com.google.android.gms.tasks.Task;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
+
+import edu.cs4730.locationawaredemo.databinding.ActivityMainBinding;
 
 /**
  * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
@@ -75,8 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient mFusedLocationClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
-    TextView logger;
-    Button btn;
+    ActivityMainBinding binding;
     Boolean mRequestingLocationUpdates = false;
     /**
      * Provides access to the Location Settings API.
@@ -99,8 +97,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        setSupportActionBar(binding.toolbar);
 
         // for checking permissions.
         rpl_onConnected = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
@@ -132,10 +131,9 @@ public class MainActivity extends AppCompatActivity {
             }
         );
 
-        logger = findViewById(R.id.logger);
-        btn = findViewById(R.id.button);
-        btn.setText("Start location updates");
-        btn.setOnClickListener(new View.OnClickListener() {
+
+        binding.button.setText("Start location updates");
+        binding.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mRequestingLocationUpdates = !mRequestingLocationUpdates;
@@ -185,11 +183,11 @@ public class MainActivity extends AppCompatActivity {
         if (mRequestingLocationUpdates) {
             //true, so start them
             startLocationUpdates();
-            btn.setText("Stop location updates");
+            binding.button.setText("Stop location updates");
         } else {
             //false, so stop them.
             stopLocationUpdates();
-            btn.setText("Start location updates");
+            binding.button.setText("Start location updates");
         }
 
     }
@@ -328,7 +326,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     Log.w(TAG, "getLastLocation:onFailure", e);
-                    logger.append("Last location: Fail");
+                    binding.logger.append("Last location: Fail");
                 }
             });
 
@@ -373,6 +371,6 @@ public class MainActivity extends AppCompatActivity {
     //help function to print the screen and log it.
     void logthis(String item) {
         Log.d(TAG, item);
-        logger.append(item + "\n");
+        binding.logger.append(item + "\n");
     }
 }
