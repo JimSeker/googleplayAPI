@@ -8,7 +8,6 @@ import android.os.Bundle;
 /**
  *  A simple example of using nearby messages.
  * https://developers.google.com/nearby/messages/android/get-started
- *
  * it is working as of api 33. 
  * 
  *
