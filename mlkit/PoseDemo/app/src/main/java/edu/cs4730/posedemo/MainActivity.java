@@ -10,6 +10,7 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
+import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
@@ -41,21 +42,28 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+import edu.cs4730.posedemo.databinding.ActivityMainBinding;
 
+/**
+ * an attempt at pose detection.  It's slow compared to googles version.
+ * good animation to try with is that one. https://tenor.com/view/running-man-fantasyfootball-gif-12250137
+ */
+public class MainActivity extends AppCompatActivity {
+    ActivityMainBinding binding;
     String TAG = "MainActivity";
     ActivityResultLauncher<String[]> rpl;
     private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA};
-    PreviewView viewFinder;
     ExecutorService executor = Executors.newSingleThreadExecutor();
     PoseDetector poseDetector;
-    GraphicOverlay graphicOverlay;
+
     int lensFacing = CameraSelector.LENS_FACING_BACK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
@@ -70,13 +78,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         );
-        viewFinder = findViewById(R.id.viewFinder);
-        graphicOverlay = findViewById(R.id.graphic_overlay);
 
         PoseDetectorOptions options =
             new PoseDetectorOptions.Builder()
                 .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
-               // .setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU)
+                // .setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU)
                 .build();
         // Accurate pose detector on static images, when depending on the pose-detection-accurate sdk
 //        AccuratePoseDetectorOptions options =
@@ -96,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
     private void startCamera() {
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-
-
         cameraProviderFuture.addListener(
             new Runnable() {
                 @Override
@@ -105,12 +109,18 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                         Preview preview = (new Preview.Builder()).build();
-                        preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
+                        preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
+
+                        //I'm guessing on this one, there is not a good example with it yet.
+                        ResolutionSelector rs = new ResolutionSelector.Builder()
+                            .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
+                            .build();
 
                         ImageAnalysis imageAnalysis =
                             new ImageAnalysis.Builder()
                                 //.setTargetResolution(new Size(480, 360)) //min resolution to work.
-                                .setTargetResolution(new Size(1280, 720))
+                                //.setTargetResolution(new Size(1280, 720))  //depreciated.
+                                .setResolutionSelector(rs)
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build();
                         imageAnalysis.setAnalyzer(executor, new ImageAnalysis.Analyzer() {
@@ -120,10 +130,10 @@ public class MainActivity extends AppCompatActivity {
                                 int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
                                 boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
                                 if (rotationDegrees == 0 || rotationDegrees == 180) {
-                                    graphicOverlay.setImageSourceInfo(
+                                    binding.graphicOverlay.setImageSourceInfo(
                                         imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
                                 } else {
-                                    graphicOverlay.setImageSourceInfo(
+                                    binding.graphicOverlay.setImageSourceInfo(
                                         imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
                                 }
 
@@ -142,16 +152,16 @@ public class MainActivity extends AppCompatActivity {
                                                     if (!allPoseLandmarks.isEmpty()) {
                                                         logthis("We have landmarks\n");
                                                     }
-                                                    graphicOverlay.clear();
-                                                    graphicOverlay.add(new PoseGraphic(graphicOverlay,pose,true ));
-                                                    graphicOverlay.postInvalidate();
+                                                    binding.graphicOverlay.clear();
+                                                    binding.graphicOverlay.add(new PoseGraphic(binding.graphicOverlay, pose, true));
+                                                    binding.graphicOverlay.postInvalidate();
                                                 }
                                             })
                                         .addOnFailureListener(
                                             new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
-                                                   // logthis(" Task failed " + e.getMessage());
+                                                    // logthis(" Task failed " + e.getMessage());
                                                 }
                                             });
 

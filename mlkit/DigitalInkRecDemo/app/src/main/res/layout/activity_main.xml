@@ -14,7 +14,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintTop_toBottomOf="@+id/recognize" />
 
     <ImageView
         android:id="@+id/imageView"
@@ -31,26 +31,26 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/recognize"
         android:layout_width="208dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Recognize"
-        app:layout_constraintEnd_toStartOf="@+id/button2"
+        app:layout_constraintEnd_toStartOf="@+id/clear"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/clear"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="clear"
-        app:layout_constraintBottom_toBottomOf="@+id/button"
+        app:layout_constraintBottom_toBottomOf="@+id/recognize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/button"
-        app:layout_constraintTop_toTopOf="@+id/button" />
+        app:layout_constraintStart_toEndOf="@+id/recognize"
+        app:layout_constraintTop_toTopOf="@+id/recognize" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

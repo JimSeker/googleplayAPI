@@ -18,7 +18,9 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.media.ExifInterface;
+
+import androidx.exifinterface.media.ExifInterface;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -48,6 +50,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import edu.cs4730.textrecpicdemo.databinding.ActivityMainBinding;
+
 
 /**
  * This is an example of using the mlkit barcode scanner with a picture.
@@ -59,9 +63,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button takePicture, processImage;
-    ImageView iv;
-    TextView logger;
+    ActivityMainBinding binding;
     String imagefile;
     Bitmap imagebmp;
     Canvas imageCanvas;
@@ -72,32 +74,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        takePicture = findViewById(R.id.takepicture);
-        takePicture.setOnClickListener(new View.OnClickListener() {
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        binding.takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getPicture();
             }
         });
-        processImage = findViewById(R.id.process);
-        processImage.setEnabled(false);
-        processImage.setOnClickListener(new View.OnClickListener() {
+
+        binding.process.setEnabled(false);
+        binding.process.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 procesor();
             }
         });
-        logger = findViewById(R.id.logger);
-        iv = findViewById(R.id.imageView);
 
         //if we only want to recognize a few
-        options =
-            new BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(   //default is all formats.
-                    Barcode.FORMAT_QR_CODE,
-                    Barcode.FORMAT_UPC_A)
-                .build();
+        options = new BarcodeScannerOptions.Builder().setBarcodeFormats(   //default is all formats.
+                Barcode.FORMAT_QR_CODE, Barcode.FORMAT_UPC_A).build();
 
         //setup the paint object.
         myColor = new Paint();
@@ -105,27 +102,25 @@ public class MainActivity extends AppCompatActivity {
         myColor.setStyle(Paint.Style.STROKE);
         myColor.setStrokeWidth(10);
         myColor.setTextSize(myColor.getTextSize() * 10);
-        myActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
-                        Intent data = result.getData();
-                        Log.wtf("CAPTURE FILE", "we got a file?");
-                        imagebmp = loadAndRotateImage(imagefile);
-                        if (imagebmp != null) {
-                            imageCanvas = new Canvas(imagebmp);
-                            iv.setImageBitmap(imagebmp);
-                            processImage.setEnabled(true);
-                            logger.setText("Image should have loaded correctly");
-                        } else {
-                            logger.setText("Image failed to load or was canceled.");
-                        }
+        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    // There are no request codes
+                    Intent data = result.getData();
+                    Log.wtf("CAPTURE FILE", "we got a file?");
+                    imagebmp = loadAndRotateImage(imagefile);
+                    if (imagebmp != null) {
+                        imageCanvas = new Canvas(imagebmp);
+                        binding.imageView.setImageBitmap(imagebmp);
+                        binding.process.setEnabled(true);
+                        binding.logger.setText("Image should have loaded correctly");
+                    } else {
+                        binding.logger.setText("Image failed to load or was canceled.");
                     }
                 }
-            });
+            }
+        });
     }
 
     public void getPicture() {
@@ -133,9 +128,7 @@ public class MainActivity extends AppCompatActivity {
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         //  File mediaFile = new File(storageDir.getPath() +File.separator + "IMG_" + timeStamp+ ".jpg");
         File mediaFile = new File(storageDir.getPath() + File.separator + "IMG_working.jpg");
-        Uri photoURI = FileProvider.getUriForFile(this,
-            "edu.cs4730.textrecpicdemo.fileprovider",
-            mediaFile);
+        Uri photoURI = FileProvider.getUriForFile(this, "edu.cs4730.textrecpicdemo.fileprovider", mediaFile);
 
         imagefile = mediaFile.getAbsolutePath();
         Log.wtf("File", imagefile);
@@ -152,42 +145,40 @@ public class MainActivity extends AppCompatActivity {
         TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
         // Or, to specify the formats to recognize:
         // BarcodeScanner scanner = BarcodeScanning.getClient(options);
-        Task<Text> result = recognizer.process(image)
-            .addOnSuccessListener(new OnSuccessListener<Text>() {
-                @Override
-                public void onSuccess(Text visionText) {
+        Task<Text> result = recognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
+            @Override
+            public void onSuccess(Text visionText) {
 
-                    // Task completed successfully
-                    if (visionText == null) {
-                        logger.setText("No barcodes found.");
-                    }
+                // Task completed successfully
+                if (visionText == null) {
+                    binding.logger.setText("No barcodes found.");
+                }
 
-                    for (Text.TextBlock block : visionText.getTextBlocks()) {
-                        Rect blockFrame = block.getBoundingBox();
-                        imageCanvas.drawRect(blockFrame, myColor);
-                        //imageCanvas.drawText(block.getText(), blockFrame.left,blockFrame.bottom, myColor);
-                        for (Text.Line line : block.getLines()) {
-                            Rect lineFrame = line.getBoundingBox();
-                            imageCanvas.drawText(line.getText(), lineFrame.left, lineFrame.bottom, myColor);
-                            //for individual text elements, assuming words on the line.
+                for (Text.TextBlock block : visionText.getTextBlocks()) {
+                    Rect blockFrame = block.getBoundingBox();
+                    imageCanvas.drawRect(blockFrame, myColor);
+                    //imageCanvas.drawText(block.getText(), blockFrame.left,blockFrame.bottom, myColor);
+                    for (Text.Line line : block.getLines()) {
+                        Rect lineFrame = line.getBoundingBox();
+                        imageCanvas.drawText(line.getText(), lineFrame.left, lineFrame.bottom, myColor);
+                        //for individual text elements, assuming words on the line.
 /*                            for (Text.Element element : line.getElements()) {
                                 String elementText = element.getText();
                                 Rect elementFrame = element.getBoundingBox();
                            }
  */
-                        }
                     }
-                    iv.setImageBitmap(imagebmp);
-                    iv.invalidate();
                 }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    // Task failed with an exception
-                    logger.setText("Processor failed!");
-                }
-            });
+                binding.imageView.setImageBitmap(imagebmp);
+                binding.imageView.invalidate();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // Task failed with an exception
+                binding.logger.setText("Processor failed!");
+            }
+        });
 
     }
 
@@ -206,8 +197,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             return null;
         }
-        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
-            ExifInterface.ORIENTATION_NORMAL);
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
         switch (orientation) {
             case ExifInterface.ORIENTATION_ROTATE_270:
                 rotate = 270;
@@ -221,8 +211,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Matrix matrix = new Matrix();
         matrix.postRotate(rotate);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
-            bitmap.getHeight(), matrix, true);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
 

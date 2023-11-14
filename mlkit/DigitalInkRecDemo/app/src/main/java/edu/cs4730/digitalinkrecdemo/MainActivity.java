@@ -12,9 +12,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -29,8 +26,11 @@ import com.google.mlkit.vision.digitalink.DigitalInkRecognizerOptions;
 import com.google.mlkit.vision.digitalink.Ink;
 import com.google.mlkit.vision.digitalink.RecognitionResult;
 
+import edu.cs4730.digitalinkrecdemo.databinding.ActivityMainBinding;
+
 /**
- * https://developers.google.com/ml-kit/vision/digital-ink-recognition 
+ * https://developers.google.com/ml-kit/vision/digital-ink-recognition
+ * This an example using the digital ink recognition.  it seems to work pretty well.
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -39,9 +39,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap theboard;
     Canvas theboardc;
     float startx, starty;
-    Button button, clear;
-    ImageView iv;
-    TextView logger;
+    ActivityMainBinding binding;
     Ink.Builder inkBuilder;
     Ink.Stroke.Builder strokeBuilder;
     Paint paint;
@@ -52,23 +50,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        button = findViewById(R.id.button);
-        clear = findViewById(R.id.button2);
-        iv = findViewById(R.id.imageView);
-        logger = findViewById(R.id.logger);
-
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         theboard = Bitmap.createBitmap(boardsize, boardsize, Bitmap.Config.ARGB_8888);
         theboardc = new Canvas(theboard);
         theboardc.drawColor(Color.WHITE);  //background color for the board.
-        iv.setImageBitmap(theboard);
+        binding.imageView.setImageBitmap(theboard);
 
         inkBuilder = Ink.builder();
         paint = new Paint();
 
-        iv.setOnTouchListener(new View.OnTouchListener() {
+        binding.imageView.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -91,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_MOVE:
                         strokeBuilder.addPoint(Ink.Point.create(x, y, t));
                         theboardc.drawLine(startx, starty, x, y, paint);
-                        iv.setImageBitmap(theboard);
+                        binding.imageView.setImageBitmap(theboard);
                         startx = x;
                         starty = y;
                         return true;
@@ -100,18 +93,18 @@ public class MainActivity extends AppCompatActivity {
                         inkBuilder.addStroke(strokeBuilder.build());
                         strokeBuilder = null;
                         theboardc.drawLine(startx, starty, x, y, paint);
-                        iv.setImageBitmap(theboard);
+                        binding.imageView.setImageBitmap(theboard);
                         return true;
                 }
                 return false;
             }
         });
-        clear.setOnClickListener(new View.OnClickListener() {
+        binding.clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 inkBuilder = Ink.builder();  //clear the builder.
                 theboardc.drawColor(Color.WHITE);  //background color for the board.
-                iv.setImageBitmap(theboard);
+                binding.imageView.setImageBitmap(theboard);
             }
         });
         DigitalInkRecognitionModelIdentifier modelIdentifier = null;
@@ -138,12 +131,12 @@ public class MainActivity extends AppCompatActivity {
 
 
             // Get a recognizer for the language
-           // recognizer = DigitalInkRecognition.getClient(DigitalInkRecognizerOptions.builder(model).build());
+            // recognizer = DigitalInkRecognition.getClient(DigitalInkRecognizerOptions.builder(model).build());
         } else {
             recognizer = null;
         }
 
-        button.setOnClickListener(new View.OnClickListener() {
+        binding.recognize.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Ink ink = inkBuilder.build();
@@ -152,13 +145,13 @@ public class MainActivity extends AppCompatActivity {
                         .addOnSuccessListener(new OnSuccessListener<RecognitionResult>() {
                             @Override
                             public void onSuccess(RecognitionResult result) {
-                                logger.append("\nresult is " + result.getCandidates().get(0).getText());
+                                binding.logger.append("\nresult is " + result.getCandidates().get(0).getText());
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                logger.append("\nFailed to recognize.");
+                                binding.logger.append("\nFailed to recognize.");
                             }
                         });
                 }
