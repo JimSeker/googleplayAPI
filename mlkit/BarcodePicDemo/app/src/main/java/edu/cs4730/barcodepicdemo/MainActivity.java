@@ -17,16 +17,14 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.media.ExifInterface;
+import androidx.exifinterface.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
+
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -43,6 +41,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import edu.cs4730.barcodepicdemo.databinding.ActivityMainBinding;
+
 
 /**
  * This is an example of using the mlkit barcode scanner with a picture.
@@ -57,9 +57,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button takePicture, processImage;
-    ImageView iv;
-    TextView logger;
+   ActivityMainBinding binding;
     String imagefile;
     Bitmap imagebmp;
     Canvas imageCanvas;
@@ -71,24 +69,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        takePicture = findViewById(R.id.takepicture);
-        takePicture.setOnClickListener(new View.OnClickListener() {
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        binding.takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getPicture();
             }
         });
-        processImage = findViewById(R.id.process);
-        processImage.setEnabled(false);
-        processImage.setOnClickListener(new View.OnClickListener() {
+        binding.process.setEnabled(false);
+        binding.process.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 procesor();
             }
         });
-        logger = findViewById(R.id.logger);
-        iv = findViewById(R.id.imageView);
 
         //if we only want to recognize a few
         options =
@@ -117,11 +113,11 @@ public class MainActivity extends AppCompatActivity {
                         imagebmp = loadAndRotateImage(imagefile);
                         if (imagebmp != null) {
                             imageCanvas = new Canvas(imagebmp);
-                            iv.setImageBitmap(imagebmp);
-                            processImage.setEnabled(true);
-                            logger.setText("Image should have loaded correctly");
+                            binding.imageView.setImageBitmap(imagebmp);
+                            binding.process.setEnabled(true);
+                            binding.logger.setText("Image should have loaded correctly");
                         } else {
-                            logger.setText("Image failed to load or was canceled.");
+                            binding.logger.setText("Image failed to load or was canceled.");
                         }
                     }
                 }
@@ -158,19 +154,19 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(List<Barcode> barcodes) {
                     // Task completed successfully
                     if (barcodes == null) {
-                        logger.setText("No barcodes found.");
+                        binding.logger.setText("No barcodes found.");
                         return;
                     }
                     Log.d(TAG, "We have something " + barcodes.size());
                     for (Barcode barcode : barcodes) {
                         Log.wtf(TAG, barcode.getDisplayValue());
-                        logger.setText("Success: " + barcode.getDisplayValue());
+                        binding.logger.setText("Success: " + barcode.getDisplayValue());
                         //lets draw a box around it, since we using the bmp, no scaling is needed either.  a camera image would need to be scaled.
                         Rect rect = barcode.getBoundingBox();
                         imageCanvas.drawRect(rect, myColor);
                         imageCanvas.drawText(barcode.getDisplayValue(), rect.left, rect.bottom, myColor);
-                        iv.setImageBitmap(imagebmp);
-                        iv.invalidate();
+                        binding.imageView.setImageBitmap(imagebmp);
+                        binding.imageView.invalidate();
                     }
                 }
             })
@@ -178,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     // Task failed with an exception
-                    logger.setText("Processor failed!");
+                    binding.logger.setText("Processor failed!");
                 }
             });
 

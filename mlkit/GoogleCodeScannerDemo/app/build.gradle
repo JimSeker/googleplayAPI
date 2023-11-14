@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'edu.cs4730.googlecodescannerdemo'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "edu.cs4730.googlecodescannerdemo"
-        minSdk 26
-        targetSdk 33
+        minSdk 28
+        targetSdk 34
         versionCode 1
         versionName "1.0"
     }
@@ -24,13 +24,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.6.0'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.gms:play-services-code-scanner:16.0.0-beta3'
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
 
 }
