@@ -19,9 +19,13 @@
 
 `GoogleLoginDemo` is a example of how to use the new login APIs.  This example is so very basic that is doesn't do anything other then login.  As note, if you run this example of two devices with the same user and login on one device, then start the activity on the second device, it will already be logged in.
 
-`LocationAwareDemo` shows how to use the APIs to do location better then standard GPS demos.  plus will show the likely address of your location.
+`LocationAwareDemo` shows how to use FusedLocation APIs to do location better then standard GPS demos.  plus will show the likely address of your location.
 
 `Mapdemov2`  is a demo of how to use the maps V2.  There are three fragments first two show different types of maps.  third, how to draw on the maps.
+
+`FusedOrientationDemo`  (java) simple demo of the FusedOrientation APIs
+
+`FusedOrientationDemo_kt`  (kotlin) simple demo of the FusedOrientation APIs
 
 ---
 
