@@ -51,13 +51,13 @@ import edu.cs4730.locationawaredemo.databinding.ActivityMainBinding;
 /**
  * https://github.com/googlesamples/android-play-location/tree/master/LocationAddress/app/src/main
  * http://developer.android.com/training/location/index.html
- *
+ * <p>
  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
- *
+ * <p>
  * This shows how to get location updates, either the last known and continuing.
  * getLastLocation is get the last known location  and startLocationUpdates() is continuing.
  * Also uses the worker to get address locations as well.
- *
+ * <p>
  * use this for the location aware parts, not the android.location.
  * https://developers.google.com/android/reference/com/google/android/gms/location/package-summary
  */
@@ -292,8 +292,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *  This shows how to get a "one off" location.  instead of using the location updates shown in
-     *  above the methods.
+     * This shows how to get a "one off" location.  instead of using the location updates shown in
+     * above the methods.
      */
     @SuppressLint("MissingPermission") //I'm really checking, but studio can't tell.
     public void getLastLocation() {

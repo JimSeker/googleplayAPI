@@ -1,41 +1,28 @@
-package edu.cs4730.locationawaredemo;
+package edu.cs4730.locationawaredemo_kt
 
-import android.content.Context;
-import android.location.Address;
-import android.location.Geocoder;
-import android.text.TextUtils;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-import androidx.work.Data;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.text.TextUtils
+import android.util.Log
+import androidx.work.Data
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import java.io.IOException
+import java.util.Locale
 
 /**
  * This takes the lat and long as parameters.
  * using the Geocoder with the lat and lng, it finds the address.
  * returns the address as a string back.
  */
-
-public class FetchAddressWorker extends Worker {
-    private static final String TAG = "FetchAddressWorker";
-
-    public FetchAddressWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
-        super(context, workerParams);
-    }
-
-    @NonNull
-    @Override
-    public Result doWork() {
-        double mLatitude = getInputData().getDouble(Constants.LATITUDE, 0D);
-        double mLongitude = getInputData().getDouble(Constants.LONGITUDE, 0D);
-        String returnMessage = "";
-        boolean success = false;
+class FetchAddressWorker(context: Context, workerParams: WorkerParameters) :
+    Worker(context, workerParams) {
+    override fun doWork(): Result {
+        val mLatitude = inputData.getDouble(Constants.LATITUDE, 0.0)
+        val mLongitude = inputData.getDouble(Constants.LONGITUDE, 0.0)
+        var returnMessage = ""
+        val success = false
 
         // Errors could still arise from using the Geocoder (for example, if there is no
         // connectivity, or if the Geocoder is given illegal location data). Or, the Geocoder may
@@ -47,11 +34,10 @@ public class FetchAddressWorker extends Worker {
         // Locale, which represents a specific geographical or linguistic region. Locales are used
         // to alter the presentation of information such as numbers or dates to suit the conventions
         // in the region they describe.
-        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+        val geocoder = Geocoder(applicationContext, Locale.getDefault())
 
         // Address found using the Geocoder.
-        List<Address> addresses = null;
-
+        var addresses: List<Address>? = null
         try {
             // Using getFromLocation() returns an array of Addresses for the area immediately
             // surrounding the given latitude and longitude. The results are a best guess and are
@@ -61,28 +47,31 @@ public class FetchAddressWorker extends Worker {
             //sevice is so it can block.  This whole example piece can be rewritten now when I want to.
             addresses = geocoder.getFromLocation(
                 mLatitude, mLongitude,
-                1);// In this sample, we get just a single address.
-        } catch (IOException ioException) {
+                1
+            ) // In this sample, we get just a single address.
+        } catch (ioException: IOException) {
             // Catch network or other I/O problems.
-            returnMessage = getApplicationContext().getString(R.string.service_not_available);
-            Log.e(TAG, returnMessage, ioException);
-        } catch (IllegalArgumentException illegalArgumentException) {
+            returnMessage = applicationContext.getString(R.string.service_not_available)
+            Log.e(TAG, returnMessage, ioException)
+        } catch (illegalArgumentException: IllegalArgumentException) {
             // Catch invalid latitude or longitude values.
-            returnMessage = getApplicationContext().getString(R.string.invalid_lat_long_used);
-            Log.e(TAG, returnMessage + ". " +
-                "Latitude = " + mLatitude +
-                ", Longitude = " + mLongitude, illegalArgumentException);
+            returnMessage = applicationContext.getString(R.string.invalid_lat_long_used)
+            Log.e(
+                TAG, returnMessage + ". " +
+                        "Latitude = " + mLatitude +
+                        ", Longitude = " + mLongitude, illegalArgumentException
+            )
         }
 
         // Handle case where no address was found.
         if (addresses == null || addresses.isEmpty()) {
             if (returnMessage.isEmpty()) {
-                returnMessage = getApplicationContext().getString(R.string.no_address_found);
-                Log.e(TAG, returnMessage);
+                returnMessage = applicationContext.getString(R.string.no_address_found)
+                Log.e(TAG, returnMessage)
             }
         } else {
-            Address address = addresses.get(0);
-            ArrayList<String> addressFragments = new ArrayList<String>();
+            val address = addresses[0]
+            val addressFragments = ArrayList<String?>()
 
             // Fetch the address lines using {@code getAddressLine},
             // join them, and send them to the thread. The {@link android.location.address}
@@ -93,21 +82,22 @@ public class FetchAddressWorker extends Worker {
             // getPostalCode() ("94043", for example)
             // getCountryCode() ("US", for example)
             // getCountryName() ("United States", for example)
-
-            for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+            for (i in 0..address.maxAddressLineIndex) {
                 //Log.d(TAG, "line " + i +" is " +address.getAddressLine(i));
-                addressFragments.add(address.getAddressLine(i));
+                addressFragments.add(address.getAddressLine(i))
             }
-            Log.i(TAG, getApplicationContext().getString(R.string.address_found));
-            returnMessage = TextUtils.join(System.getProperty("line.separator"), addressFragments);
+            Log.i(TAG, applicationContext.getString(R.string.address_found))
+            returnMessage = TextUtils.join(System.getProperty("line.separator"), addressFragments)
         }
         //...set the output, and we're done!
-        Data output = new Data.Builder()
+        val output = Data.Builder()
             .putString(Constants.RESULT_DATA_KEY, returnMessage)
             .putInt(Constants.RESULT_CODE, Constants.SUCCESS_RESULT)
-            .build();
+            .build()
+        return Result.success(output)
+    }
 
-
-        return Result.success(output);
+    companion object {
+        private const val TAG = "FetchAddressWorker"
     }
 }

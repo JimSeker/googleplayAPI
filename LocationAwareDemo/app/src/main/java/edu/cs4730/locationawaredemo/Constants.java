@@ -15,7 +15,5 @@ public final class Constants {
 
     public static final String PACKAGE_NAME =
       "edu.cs4730.locationawaredemo";
-
-
     public static final String RESULT_DATA_KEY = PACKAGE_NAME + ".RESULT_DATA_KEY";
 }
