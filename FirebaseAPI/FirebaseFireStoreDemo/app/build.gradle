@@ -33,6 +33,7 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-auth'
+    implementation("com.google.firebase:firebase-analytics")
     // FirebaseUI for Firebase Auth
     //see this page for versioning, https://github.com/firebase/FirebaseUI-Android  not automatic, like above.
     implementation 'com.firebaseui:firebase-ui-auth:8.0.2'

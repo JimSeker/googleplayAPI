@@ -41,6 +41,7 @@ import edu.cs4730.firebasefirestoredemo.databinding.ActivityMainBinding;
  * <p>
  * This example will have you login first and you can read/write.  If you logout, then
  * you will not be to read/write the data anymore.
+ * Note to self, under the firebaseMLKit project.  check for analytics pieces.
  */
 public class MainActivity extends AppCompatActivity {
 

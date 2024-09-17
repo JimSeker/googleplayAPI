@@ -104,7 +104,13 @@ public class AuthFragment extends Fragment {
                 } else {
                     // user is not signed in.
                     myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
-                            .createSignInIntentBuilder().setIsSmartLockEnabled(false).setAvailableProviders(Arrays.asList(new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.GoogleBuilder().build(), new AuthUI.IdpConfig.PhoneBuilder().build())).build());
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(Arrays.asList(
+                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                            new AuthUI.IdpConfig.PhoneBuilder().build()
+                        )).build());
                 }
             }
         };
