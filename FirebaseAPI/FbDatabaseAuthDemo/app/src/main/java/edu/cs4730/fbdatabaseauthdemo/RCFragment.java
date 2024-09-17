@@ -34,7 +34,7 @@ public class RCFragment extends Fragment {
     FragmentRcBinding binding;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = FragmentRcBinding.inflate(inflater, container, false);
         binding.btnRc.setOnClickListener(new View.OnClickListener() {

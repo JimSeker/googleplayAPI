@@ -16,13 +16,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
@@ -48,16 +45,10 @@ public class DBListFragment extends Fragment {
 
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
-//        TextView tv_title;
-//        TextView tv_note;
-//        View myitemView;
         NoteRowBinding viewBinding;
         public NoteViewHolder(NoteRowBinding viewBinding) {
             super(viewBinding.getRoot());
             this.viewBinding = viewBinding;
-//            tv_title = itemView.findViewById(R.id.title);
-//            tv_note = itemView.findViewById(R.id.note);
-//            myitemView = itemView;
         }
     }
 
@@ -99,7 +90,7 @@ public class DBListFragment extends Fragment {
         //needed for the firebase recyclerview adapter.
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         // mLinearLayoutManager.setStackFromEnd(true);  //causes the list to align at the bottom, instead of the top.
-        //we are extending a firebase recyclerview addapter here, using the viewholder above.
+        //we are extending a firebase recyclerview adapter here, using the viewholder above.
         mFirebaseAdapter = new FirebaseRecyclerAdapter<Note, NoteViewHolder>(options) {
             @NonNull
             @Override
@@ -186,7 +177,7 @@ public class DBListFragment extends Fragment {
         FragmentMyDialogBinding binding = FragmentMyDialogBinding.inflate(LayoutInflater.from(requireContext()));
         binding.etNote.setText(note.getNote());
         binding.etTitle.setText(note.getTitle());
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), androidx.appcompat.R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(binding.getRoot()).setTitle("Update Note");
         builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
             @Override
@@ -218,7 +209,7 @@ public class DBListFragment extends Fragment {
      */
     void showDialog(String title) {
         FragmentMyDialogBinding binding = FragmentMyDialogBinding.inflate(LayoutInflater.from(requireContext()));
-        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), R.style.ThemeOverlay_AppCompat_Dialog));
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireContext(), androidx.appcompat.R.style.ThemeOverlay_AppCompat_Dialog));
         builder.setView(binding.getRoot()).setTitle(title);
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
