@@ -7,6 +7,7 @@ Note: these are using the functioning parts of NearBy, the older Nearby protocol
 `NearbyConStreamDemo` is an example of file passing to create a 4 fps video "stream" from one device to the other device.  It takes pictures and sends them.  
 
 `legacy\` legacy code, that does not work anymore.
+
 ---
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and cosc 4735 Advance Mobile Programing course. 
