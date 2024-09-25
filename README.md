@@ -12,7 +12,9 @@
 
 `visionAPI/` is the older Vision APIs that are sort still in use, but depreciated.
 
-`adMobDemo` is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/releases for more examples.
+`adMobDemo` (java) is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/ for more examples.
+
+`adMobDemo_kt` (kotlin) is a very simple demo of using the Admob API.  Please see https://developers.google.com/admob/android/quick-start for documentation and https://github.com/googleads/googleads-mobile-android-examples/ for more examples.
 
 
 `FitDemo` Currently demo's the Sensor APIs of Google Fit. This is example is based on https://github.com/googlesamples/android-fit  Note you will need a key to run this demo, see https://developers.google.com/fit/android/get-api-key#release-cert to create one you can use. 
