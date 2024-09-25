@@ -8,10 +8,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.google.ads.consent.ConsentInfoUpdateListener;
-import com.google.ads.consent.ConsentInformation;
-import com.google.ads.consent.ConsentStatus;
-import com.google.ads.consent.DebugGeography;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -28,8 +24,13 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import edu.cs4730.admobdemo.databinding.ActivityMainBinding;
 
 /**
- * Ads works.  but currently it can't be API31, because underneath there is a pendingintent that is
- * not correct.
+ * Ads works.   both the banner ad and interstitial ad work again.
+ *  had to change the consent manager since the ads one causes duplication class errors.
+ *  it' had not be updated since 2019.  Using google example code from https://github.com/googleads/googleads-mobile-android-examples/
+ *  which now uses a different consent manager.
+ *
+ *  a note, I don't seem to be need to give consent even in test mode. so I don't actually know if it works or not.
+ *  but its' google's code, so hopefully it works?  idk.
  */
 
 
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG = "MainActivity";
     AdRequest adRequest;
     ActivityMainBinding binding;
+    //public static final String TEST_DEVICE_HASHED_ID = "ABCDEF012345";
+    public static final String TEST_DEVICE_HASHED_ID = "9BCDD15FA3A2C5CDFBB1E0C13599604B";
+    private GoogleMobileAdsConsentManager googleMobileAdsConsentManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,88 +49,35 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        //I'm seeing real adds, if I don't add this.  and sometimes I still see real ads.  be careful not to click them.
-        ConsentInformation.getInstance(getApplicationContext()).addTestDevice("9BCDD15FA3A2C5CDFBB1E0C13599604B");
 
-        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
-        MobileAds.initialize(this, new OnInitializationCompleteListener() { //19.7.0+ version.
-            @Override
-            public void onInitializationComplete(@NonNull InitializationStatus initializationStatus) {
-                logthis("Initialization is completed. " + initializationStatus.toString());
-            }
-        });
+        googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(getApplicationContext());
+        googleMobileAdsConsentManager.gatherConsent(this,
+            consentError -> {
+                if (consentError != null) {
+                    // Consent not obtained in current session.
+                   logthis(String.format("%s: %s", consentError.getErrorCode(), consentError.getMessage()));
+                }
+                if (googleMobileAdsConsentManager.canRequestAds()) {
+                    // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
+                    MobileAds.initialize(this, new OnInitializationCompleteListener() { //19.7.0+ version.
+                        @Override
+                        public void onInitializationComplete(@NonNull InitializationStatus initializationStatus) {
+                            logthis("Initialization is completed. " + initializationStatus.toString());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    loadBanner();
+                                }
+                            });
+                        }
+                    });
+                }
 
-        //for the ad at the bottom of the mainactivity.
-
-        adRequest = new AdRequest.Builder().build();
-
-        binding.adView.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-                logthis("banner ad has finished loading.");
-            }
-
-            @Override
-            public void onAdFailedToLoad(@NonNull LoadAdError error) {
-                // Code to be executed when an ad request fails.
-                logthis("banner ad has failed to load.");
-                // Gets the domain from which the error came.
-                String errorDomain = error.getDomain();
-                // Gets the error code. See
-                // https://developers.google.com/android/reference/com/google/android/gms/ads/AdRequest#constant-summary
-                // for a list of possible codes.
-                int errorCode = error.getCode();
-                // Gets an error message.
-                // For example "Account not approved yet". See
-                // https://support.google.com/admob/answer/9905175 for explanations of
-                // common errors.
-                String errorMessage = error.getMessage();
-                // Gets additional response information about the request. See
-                // https://developers.google.com/admob/android/response-info for more
-                // information.
-                ResponseInfo responseInfo = error.getResponseInfo();
-                // Gets the cause of the error, if available.
-                AdError cause = error.getCause();
-                // All of this information is available via the error's toString() method.
-                logthis(" banner ad error " + error.toString());
-
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when the ad is displayed.
-                logthis("banner ad is displayed.");
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when when the interstitial ad is closed.
-                logthis("banner ad has closed, now do something else.");
-            }
-        });
-
-        binding.adView.loadAd(adRequest);
-
-        ConsentInformation consentInformation = ConsentInformation.getInstance(this);
-        consentInformation.addTestDevice("D1A4B2E34EF63965FDB3E19C432D0D82");
-
-        consentInformation.setDebugGeography(DebugGeography.DEBUG_GEOGRAPHY_EEA);
-        String[] publisherIds = {"pub-0123456789012345"};
-        consentInformation.requestConsentInfoUpdate(publisherIds, new ConsentInfoUpdateListener() {
-            @Override
-            public void onConsentInfoUpdated(ConsentStatus consentStatus) {
-                // User's consent status successfully updated.
-                logthis("consent status successfully updated.");
-            }
-
-            @Override
-            public void onFailedToUpdateConsentInfo(String errorDescription) {
-                // User's consent status failed to update.
-                logthis("consent status failed to update.");
-            }
-
-        });
+                if (googleMobileAdsConsentManager.isPrivacyOptionsRequired()) {
+                    // Regenerate the options menu to include a privacy setting.
+                    invalidateOptionsMenu();
+                }
+            });
 
         /**
          * now setup and load the interstitial add.  The button will when show the ad, hopefully.
@@ -134,11 +85,13 @@ public class MainActivity extends AppCompatActivity {
         binding.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                if (!googleMobileAdsConsentManager.canRequestAds()) {
+                    return;
+                }
                 /**
                  * Now the interstitialad setup and display if possible.
                  */
-
-                //InterstitialAd.load(getApplicationContext(), "ca-app-pub-3940256099942544/1033173712"
                 InterstitialAd.load(getApplicationContext(), getResources().getString(R.string.fullscreen_ad_unit_id), adRequest, new InterstitialAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
@@ -205,6 +158,63 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /*
+     * simple helper function to load the banner ad at the bottom of the screen, once we have consent.
+     */
+    void loadBanner() {
+        //for the ad at the bottom of the mainactivity.
+
+        adRequest = new AdRequest.Builder().build();
+
+        binding.adView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                logthis("banner ad has finished loading.");
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                // Code to be executed when an ad request fails.
+                logthis("banner ad has failed to load.");
+                // Gets the domain from which the error came.
+                String errorDomain = error.getDomain();
+                // Gets the error code. See
+                // https://developers.google.com/android/reference/com/google/android/gms/ads/AdRequest#constant-summary
+                // for a list of possible codes.
+                int errorCode = error.getCode();
+                // Gets an error message.
+                // For example "Account not approved yet". See
+                // https://support.google.com/admob/answer/9905175 for explanations of
+                // common errors.
+                String errorMessage = error.getMessage();
+                // Gets additional response information about the request. See
+                // https://developers.google.com/admob/android/response-info for more
+                // information.
+                ResponseInfo responseInfo = error.getResponseInfo();
+                // Gets the cause of the error, if available.
+                AdError cause = error.getCause();
+                // All of this information is available via the error's toString() method.
+                logthis(" banner ad error " + error.toString());
+
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+                logthis("banner ad is displayed.");
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the interstitial ad is closed.
+                logthis("banner ad has closed, now do something else.");
+            }
+        });
+
+        binding.adView.loadAd(adRequest);
+
+    }
 
     /**
      * Called when leaving the activity
