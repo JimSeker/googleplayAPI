@@ -10,6 +10,9 @@ For instructions on which API or platform to migrate to, visit the [Health Conne
 
 Learn more about [Health Connect](https://developer.android.com/guide/health-and-fitness/health-connect) and how to integrate with the API.
  
+ 
+ `GoogleLoginDemo` is a example of how to use the new login APIs.  This example is so very basic that is doesn't do anything other then login.  As note, if you run this example of two devices with the same user and login on one device, then start the activity on the second device, it will already be logged in.
+Uses the now deprecated play-services-auth. 
 
 These are example code for University of Wyoming, Cosc 4730 Mobile Programming course and Cosc 4735 Advanced Mobile Programming course.
 All examples are for Android.
