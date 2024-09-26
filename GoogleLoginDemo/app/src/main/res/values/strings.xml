@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GoogleLoginDemo</string>
+    <string name="app_name">Google Login Demo</string>
     <string name="action_settings">Settings</string>
 
     <!-- google string values -->

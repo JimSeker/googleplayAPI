@@ -28,32 +28,66 @@
     </com.google.android.material.appbar.AppBarLayout>
 
 
-    <Button
-        android:id="@+id/button1"
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/signIn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="Google Sign Demo"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Google Sign In"
+        app:layout_constraintEnd_toStartOf="@+id/signOut"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
+
+    <Button
+        android:id="@+id/signOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Google Sign Out"
+        app:layout_constraintBottom_toBottomOf="@+id/signIn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/signIn"
+        app:layout_constraintTop_toTopOf="@+id/signIn" />
+
+
 
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button1"
+        android:layout_below="@+id/signIn"
         android:layout_alignParentStart="true"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Google Sign With Google Drive Demo"
+        android:text="Access Google Drive"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button1" />
+        app:layout_constraintTop_toBottomOf="@+id/signIn" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button2">
+
+
+        <TextView
+            android:id="@+id/logger"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Log:\n"
+            tools:ignore="ScrollViewSize" />
+    </ScrollView>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
