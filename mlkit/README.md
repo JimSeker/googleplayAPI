@@ -12,6 +12,8 @@ This directory is specific to the on-device ML kit (not ML cloud) APIs  https://
 
 `MLkitTranslateTextDemo` is a very simple example using the translate APIs.
 
+`FaceMeshDemo` is simple example use camera intent and then draw mesh on the face.  
+
 `PoseDemo` This example of using the pose detection with the CameraX preview.  it has issues and is slow to start, but works okay.  They example is much faster and I've no clue why.
 
 `TextRecPicDemo` This example use an intent to take a picture and then processes the image for Text Recognition APIs.
