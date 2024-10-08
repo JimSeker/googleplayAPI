@@ -43,7 +43,6 @@ import java.util.List;
 
 import edu.cs4730.barcodepicdemo.databinding.ActivityMainBinding;
 
-
 /**
  * This is an example of using the mlkit barcode scanner with a picture.
  * It's pretty simple, but workable example.  It takes picture via an intent
@@ -52,7 +51,7 @@ import edu.cs4730.barcodepicdemo.databinding.ActivityMainBinding;
  * Note, likely the intent should turn down the image size, it really don't need to be that high of resolution.
  *
  * note the QR codes don't seem to read well, while things the camera app can find them, this app fails on the same
- * qr code.
+ * qr code.  Note, updated library seems to have fixed the QR code issues.
  */
 
 public class MainActivity extends AppCompatActivity {
