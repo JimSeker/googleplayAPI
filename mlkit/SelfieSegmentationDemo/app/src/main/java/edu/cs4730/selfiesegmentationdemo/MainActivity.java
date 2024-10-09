@@ -1,4 +1,4 @@
-package edu.cs4730.subjectsegmentationdemo;
+package edu.cs4730.selfiesegmentationdemo;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,7 +15,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 
-import androidx.activity.EdgeToEdge;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,50 +24,44 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.exifinterface.media.ExifInterface;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.common.PointF3D;
-import com.google.mlkit.vision.common.Triangle;
-import com.google.mlkit.vision.segmentation.subject.Subject;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmentationResult;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmenter;
-import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions;
+import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions;
+import com.google.mlkit.vision.segmentation.Segmentation;
+import com.google.mlkit.vision.segmentation.SegmentationMask;
+import com.google.mlkit.vision.segmentation.Segmenter;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.ByteBuffer;
 
-import edu.cs4730.subjectsegmentationdemo.databinding.ActivityMainBinding;
+import edu.cs4730.selfiesegmentationdemo.databinding.ActivityMainBinding;
+
 
 /**
- * Very simple use of the segemtation library, uses a picture, then masks the objects in the foreground.
- * based https://github.com/googlesamples/mlkit/tree/master/android/vision-quickstart
- * ml kit vision code.  but there is so far to complex for a simple example.
+ * Very simple use of the selfie library, uses a picture, then masks out the background in pink leaving
+ * the "selfie" clear.   based https://github.com/googlesamples/mlkit/tree/master/android/vision-quickstart
+ *  ml kit vision code.  but there is so far to complex for a simple example.
  */
-
 
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
+
     String imagefile;
     Bitmap imagebmp;
     Canvas imageCanvas;
     Paint myColor;
     ActivityResultLauncher<Intent> myActivityResultLauncher;
     String TAG = "MainActivity";
-    SubjectSegmenter segmenter;
+    Segmenter segmenter;
     private int imageWidth;
     private int imageHeight;
-    List<Subject> subjects;
+    private int maskWidth;
+    private int maskHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,34 +83,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //The foreground confidence mask lets you distinguish the foreground subject from the background.
-//        SubjectSegmenterOptions options = new SubjectSegmenterOptions.Builder()
-//            .enableForegroundConfidenceMask()
-//            .build();
-        //Similarly, you can also get a bitmap of the foreground subject.
-        //
-        //Call enableForegroundBitmap() in the options lets you to later retrieve the foreground bitmap by
-        // calling getForegroundBitmap() on the SubjectSegmentationResult object returned after
-        // processing the image.
-//        SubjectSegmenterOptions options = new SubjectSegmenterOptions.Builder()
-//            .enableForegroundBitmap()
-//            .build();
-        //multi subject with mask.
-        SubjectSegmenterOptions options = new SubjectSegmenterOptions.Builder()
-            .enableMultipleSubjects(
-                new SubjectSegmenterOptions.SubjectResultOptions.Builder()
-                    .enableConfidenceMask()
-                    .build())
-            .build();
-        //multi subject with bitmap.
-//        SubjectSegmenterOptions options = new SubjectSegmenterOptions.Builder()
-//            .enableMultipleSubjects(
-//                new SubjectSegmenterOptions.SubjectResultOptions.Builder()
-//                    .enableSubjectBitmap()
-//                    .build())
-//            .build();
 
-        segmenter = SubjectSegmentation.getClient(options);
+        SelfieSegmenterOptions options =
+            new SelfieSegmenterOptions.Builder()
+                //.setDetectorMode(SelfieSegmenterOptions.STREAM_MODE)  //for stream mode with a camera.
+                .setDetectorMode(SelfieSegmenterOptions.SINGLE_IMAGE_MODE)
+                // .enableRawSizeMask()  //normally smaller then image size, I've turned it off.
+                .build();
+
+        segmenter = Segmentation.getClient(options);
 
         //setup the paint object.
         myColor = new Paint();
@@ -146,7 +120,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+
     }
+
 
     public void getPicture() {
         //String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -154,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         //  File mediaFile = new File(storageDir.getPath() +File.separator + "IMG_" + timeStamp+ ".jpg");
         File mediaFile = new File(storageDir.getPath() + File.separator + "IMG_working.jpg");
         Uri photoURI = FileProvider.getUriForFile(this,
-            "edu.cs4730.subjectsegmentationdemo.fileprovider",
+            "edu.cs4730.selfiesegmentationdemo.fileprovider",
             mediaFile);
 
         imagefile = mediaFile.getAbsolutePath();
@@ -171,24 +147,20 @@ public class MainActivity extends AppCompatActivity {
         InputImage image = InputImage.fromBitmap(imagebmp, 0);
         imageWidth = image.getWidth();
         imageHeight = image.getHeight();
-        Task<SubjectSegmentationResult> result = segmenter.process(image)
-            .addOnSuccessListener(new OnSuccessListener<SubjectSegmentationResult>() {
+        Task<SegmentationMask> result = segmenter.process(image)
+            .addOnSuccessListener(new OnSuccessListener<SegmentationMask>() {
                 @Override
-                public void onSuccess(SubjectSegmentationResult result) {
+                public void onSuccess(SegmentationMask result) {
                     // Task completed successfully
                     if (result == null) {
-                        binding.logger.setText("No Subjects found.");
+                        binding.logger.setText("No Subject found.");
                         return;
                     }
-                    //to get the list of all the subject bitmaps.
-                    subjects = result.getSubjects();
-//                    List<Bitmap> bitmaps = new ArrayList<Bitmap>();
-//                    for (Subject subject : subjects) {
-//                        bitmaps.add(subject.getBitmap());
-//                    }
-
+                    ByteBuffer mask = result.getBuffer();
+                    maskWidth = result.getWidth();
+                    maskHeight = result.getHeight();
                     Bitmap bitmap =
-                        Bitmap.createBitmap(maskColorsFromFloatBuffer(), imageWidth, imageHeight, Bitmap.Config.ARGB_8888);
+                        Bitmap.createBitmap(maskColorsFromByteBuffer(mask), maskWidth, maskHeight, Bitmap.Config.ARGB_8888);
                     imageCanvas.drawBitmap(bitmap, 0, 0, myColor);
                     binding.imageView.setImageBitmap(imagebmp);
                     binding.imageView.invalidate();
@@ -204,44 +176,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Converts FloatBuffer floats from all subjects to ColorInt array that can be used as a mask.
+     * Converts byteBuffer floats to ColorInt array that can be used as a mask.
      */
     @ColorInt
-    private int[] maskColorsFromFloatBuffer() {
-        @ColorInt int[] colors = new int[imageWidth * imageHeight];
-        for (int k = 0; k < subjects.size(); k++) {
-            Subject subject = subjects.get(k);
-            int[] rgb = COLORS[k % COLORS.length];
-            int color = Color.argb(128, rgb[0], rgb[1], rgb[2]);
-            FloatBuffer mask = subject.getConfidenceMask();
-            for (int j = 0; j < subject.getHeight(); j++) {
-                for (int i = 0; i < subject.getWidth(); i++) {
-                    if (mask.get() > 0.5) {
-                        colors[(subject.getStartY() + j) * imageWidth + subject.getStartX() + i] = color;
-                    }
-                }
+    private int[] maskColorsFromByteBuffer(ByteBuffer byteBuffer) {
+        @ColorInt int[] colors = new int[maskWidth * maskHeight];
+        for (int i = 0; i < maskWidth * maskHeight; i++) {
+            float backgroundLikelihood = 1 - byteBuffer.getFloat();
+            if (backgroundLikelihood > 0.9) {
+                colors[i] = Color.argb(128, 255, 0, 255);
+            } else if (backgroundLikelihood > 0.2) {
+                // Linear interpolation to make sure when backgroundLikelihood is 0.2, the alpha is 0 and
+                // when backgroundLikelihood is 0.9, the alpha is 128.
+                // +0.5 to round the float value to the nearest int.
+                int alpha = (int) (182.9 * backgroundLikelihood - 36.6 + 0.5);
+                colors[i] = Color.argb(alpha, 255, 0, 255);
             }
-            // Reset FloatBuffer pointer to beginning, so that the mask can be redrawn if screen is
-            // refreshed
-            mask.rewind();
         }
         return colors;
     }
-
-    private static final int[][] COLORS = {
-        {255, 0, 255},
-        {0, 255, 255},
-        {255, 255, 0},
-        {255, 0, 0},
-        {0, 255, 0},
-        {0, 0, 255},
-        {128, 0, 128},
-        {0, 128, 128},
-        {128, 128, 0},
-        {128, 0, 0},
-        {0, 128, 0},
-        {0, 0, 128}
-    };
 
     /**
      * loads and rotates a file as needed, based on the orientation found in the file
@@ -276,6 +229,5 @@ public class MainActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
             bitmap.getHeight(), matrix, true);
     }
-
 
 }
