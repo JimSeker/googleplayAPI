@@ -12,6 +12,8 @@ This directory is specific to the on-device ML kit (not ML cloud) APIs  https://
 
 `MLkitTranslateTextDemo` is a very simple example using the translate APIs.
 
+`DocumentScannerDemo` shows how to get the document scanner working. It's only set to one page and doesn't seem to work as well the website says.  but it does work.
+
 `FaceMeshDemo` is simple example, that uses camera intent and then draw mesh on the face.  
 
 `SelfieSegmentationDemo` is a simple example, that uses the camera intent, then draws over the background in pink, highlighting the "selfie".
