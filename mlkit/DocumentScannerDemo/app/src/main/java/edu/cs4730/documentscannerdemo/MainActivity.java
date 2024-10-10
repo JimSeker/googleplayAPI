@@ -22,8 +22,10 @@ import edu.cs4730.documentscannerdemo.databinding.ActivityMainBinding;
 
 
 /**
- * Simple example of the document scanner.  It doesn't work as well as they say it will on the web pages
- * but it does work.   Press the take picture button and then it wil scan your document and display it here.
+ * Simple example of the document scanner.  So once it takes the picutres, then you have access
+ * to the tootls to clean everything and then it will return back a cleaned picture to the app.
+ *
+ * Press the take picture button and then it wil scan your document and display it here.
  * https://developers.google.com/ml-kit/vision/doc-scanner
  *
  */
