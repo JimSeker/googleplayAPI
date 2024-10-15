@@ -1,4 +1,4 @@
-#the play-services-location library: location, orientation, activity and sleep recognition APIs
+# play-services-location library: location, orientation, activity and sleep recognition APIs
 
 `AcitivtyRecognition` is Google's example code from https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition and will should likely be removed from this repo
 
