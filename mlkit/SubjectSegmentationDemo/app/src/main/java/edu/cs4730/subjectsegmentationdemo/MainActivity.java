@@ -180,8 +180,10 @@ public class MainActivity extends AppCompatActivity {
                         binding.logger.setText("No Subjects found.");
                         return;
                     }
-                    //to get the list of all the subject bitmaps.
+                    //to get the list of all the subject .
                     subjects = result.getSubjects();
+
+                    //to get the list of all the subject bitmaps
 //                    List<Bitmap> bitmaps = new ArrayList<Bitmap>();
 //                    for (Subject subject : subjects) {
 //                        bitmaps.add(subject.getBitmap());

@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,7 +46,7 @@ import edu.cs4730.googlelogindemo.databinding.ActivityMainBinding;
  * a demo for logging into google with the google play services
  * https://developer.android.com/identity/sign-in/credential-manager-siwg
  * https://developers.google.com/identity/authorization/android
- *
+ * <p>
  * note, currently I can't figure out how cancel/remove Authorization Request process programmatically.
  */
 
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     GoogleIdTokenCredential googleIdTokenCredential;
     int REQUEST_AUTHORIZE = 12;
     boolean failedtologin = false;
+    ActivityResultLauncher<IntentSenderRequest> authLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,13 +107,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.button2.setOnClickListener(new View.OnClickListener() {
+        binding.authorize.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 authorize();
             }
         });
+
+        authLauncher = registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult activityResult) {
+                if (activityResult.getResultCode() == RESULT_OK) {
+                    try {
+                        Intent data = activityResult.getData();
+                        AuthorizationResult authorizationResult = Identity.getAuthorizationClient(MainActivity.this).getAuthorizationResultFromIntent(data);
+                        for (String scope : authorizationResult.getGrantedScopes()) {
+                            logthis("Authorized: " + scope);
+                        }
+                    } catch (ApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+            }
+        });
+
     }
+
 
     @Override
     public void onResume() {
@@ -212,13 +234,13 @@ public class MainActivity extends AppCompatActivity {
         if (account != null) {
             binding.signIn.setEnabled(false);
             binding.signOut.setEnabled(true);
-            binding.button2.setEnabled(true);
+            binding.authorize.setEnabled(true);
             logthis("User: " + account.getDisplayName());
 
         } else {
             binding.signIn.setEnabled(true);
             binding.signOut.setEnabled(false);
-            binding.button2.setEnabled(false);
+            binding.authorize.setEnabled(false);
             logthis("Signed Out");
 
         }
@@ -246,37 +268,15 @@ public class MainActivity extends AppCompatActivity {
                     if (authorizationResult.hasResolution()) {
                         // Access needs to be granted by the user
                         PendingIntent pendingIntent = authorizationResult.getPendingIntent();
-                        try {
-                            startIntentSenderForResult(pendingIntent.getIntentSender(),
-                                REQUEST_AUTHORIZE, null, 0, 0, 0);
-                        } catch (IntentSender.SendIntentException e) {
-                           logthis("Error: "+ e.getMessage());
-                        };
+                        authLauncher.launch(new IntentSenderRequest.Builder(
+                            pendingIntent.getIntentSender()).build());
 
                     } else {
                         // Access already granted, continue with user action
-                      logthis("already Authorized to access google drive.");
+                        logthis("already Authorized to access google drive.");
                     }
                 })
-            .addOnFailureListener(e -> logthis( "Failed to authorize"+ e.getMessage()));
-
+            .addOnFailureListener(e -> logthis("Failed to authorize" + e.getMessage()));
     }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_AUTHORIZE) {
-            try {
-                AuthorizationResult authorizationResult = Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(data);
-                for(String scope :  authorizationResult.getGrantedScopes()) {
-                    logthis("Authorized: " + scope);
-                }
-            } catch (ApiException e) {
-                throw new RuntimeException(e);
-            }
-
-        }
-    }
-
 
 }

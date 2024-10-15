@@ -8,7 +8,7 @@
 
 `NearBy/` is the NearBy protocols
 
-`RecognitionAPI/` is activity and sleep recognition APIs
+`LocationAPI/` covers the play-services-location library: location, orientation, activity and sleep recognition APIs
 
 `visionAPI/` is the older Vision APIs that are sort still in use, but depreciated.
 

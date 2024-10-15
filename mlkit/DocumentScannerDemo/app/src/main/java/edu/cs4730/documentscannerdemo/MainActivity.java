@@ -22,8 +22,8 @@ import edu.cs4730.documentscannerdemo.databinding.ActivityMainBinding;
 
 
 /**
- * Simple example of the document scanner.  So once it takes the picutres, then you have access
- * to the tootls to clean everything and then it will return back a cleaned picture to the app.
+ * Simple example of the document scanner.  So once it takes the pictures, then you have access
+ * to the tools to clean everything and then it will return back a cleaned picture to the app.
  *
  * Press the take picture button and then it wil scan your document and display it here.
  * https://developers.google.com/ml-kit/vision/doc-scanner
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             .setGalleryImportAllowed(false)
             .setPageLimit(1)  //just one page for this example.
             .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG, GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
-            //use ml to clean up the document even removing stains and fingers?
+            //use ml to clean up the document even removing stains and fingers
             .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
             .build();
 
