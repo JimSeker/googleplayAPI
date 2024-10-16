@@ -8,6 +8,8 @@ This directory is specific to the on-device ML kit (not ML cloud) APIs  https://
 
 `GoogleCodeScannerDemo` This example how to use the new bar code scanner.  this very quick and easy code and returns back the data  for you app to deal with.
 
+`ImageLabelingDemo` This example how to use image labeling. it takes a picture and prints the object name it finds on the picture.
+
 `mlkitFaceTrackerDemo` is a stripped down version of goggles examples to just do facetracking with a camera.  It's still very complex.
 
 `MLkitTranslateTextDemo` is a very simple example using the translate APIs.
