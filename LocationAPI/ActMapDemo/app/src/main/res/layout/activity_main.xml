@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:keepScreenOn="true"
+    android:id="@+id/main"
     tools:context="edu.cs4730.actmapdemo.MainActivity">
 
 

@@ -21,6 +21,9 @@ import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.Priority;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.content.ContextCompat;
@@ -102,7 +105,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
         mViewModel = new ViewModelProvider(this).get(DataViewModel.class);
         //setup fragments
         listfrag = new myListFragment();
@@ -273,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION));
+        registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION), Context.RECEIVER_NOT_EXPORTED);
     }
 
     //onstop turn off updates and remove the receiver.
@@ -436,6 +443,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Gets a PendingIntent to be sent for each activity detection.
      */
+    @SuppressLint("MutableImplicitPendingIntent")
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
