@@ -2,16 +2,22 @@ package edu.cs4730.firebasemessagedemo;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -49,6 +55,8 @@ import edu.cs4730.firebasemessagedemo.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     String TAG = "MainActivity";
+    ActivityResultLauncher<String[]> rpl;
+    private String[] REQUIRED_PERMISSIONS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +64,26 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {  //For API 33+
+            REQUIRED_PERMISSIONS = new String[]{android.Manifest.permission.POST_NOTIFICATIONS};
+        } else {
+            REQUIRED_PERMISSIONS = new String[]{};
+        }
+        //Use this to check permissions.
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    if (allPermissionsGranted()) {
+                        for (Map.Entry<String, Boolean> x : isGranted.entrySet())
+                            logthis(x.getKey() + " is " + x.getValue());
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }
+            }
+        );
         //adding listener to view
         binding.buttonRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
         });
         //create channels for the notifications.
         createchannel();
+        //check the post permissions.
+        if (!allPermissionsGranted()) {
+            rpl.launch(REQUIRED_PERMISSIONS);
+        }
     }
     //helper method
     void logthis(String item) {
@@ -191,5 +223,16 @@ public class MainActivity extends AppCompatActivity {
         mChannel.setShowBadge(true);
         mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
         nm.createNotificationChannel(mChannel);
+    }
+    /**
+     * This a helper method to check for the permissions.
+     */
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 }

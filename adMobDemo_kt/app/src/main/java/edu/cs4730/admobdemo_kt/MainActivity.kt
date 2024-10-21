@@ -2,7 +2,10 @@ package edu.cs4730.admobdemo_kt
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 //import com.google.ads.consent.ConsentInfoUpdateListener
 //import com.google.ads.consent.ConsentInformation
 //import com.google.ads.consent.ConsentStatus
@@ -43,6 +46,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(
+            findViewById(binding.main.id)
+        ) { v: View, insets: WindowInsetsCompat ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(this)
         googleMobileAdsConsentManager.gatherConsent(this) { consentError ->
