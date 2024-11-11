@@ -18,8 +18,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognition;
@@ -28,6 +26,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Map;
+
+import edu.cs4730.sleepapidemo.databinding.ActivityMainBinding;
 
 
 /**
@@ -45,17 +45,17 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<String[]> rpl;
     private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.ACTIVITY_RECOGNITION};
 
-    Button subscribe, unsubscribe;
-    TextView logger;
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+            return WindowInsetsCompat.CONSUMED;
         });
         // for checking permissions.
         rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
@@ -74,23 +74,19 @@ public class MainActivity extends AppCompatActivity {
             }
         );
 
-
-        logger = findViewById(R.id.logger);
-        subscribe = findViewById(R.id.start);
-        unsubscribe = findViewById(R.id.stop);
-        subscribe.setOnClickListener(new View.OnClickListener() {
+        binding.start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 CheckPerm();
             }
         });
-        unsubscribe.setOnClickListener(new View.OnClickListener() {
+        binding.stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 unsubscriptToSleep();
             }
         });
-        unsubscribe.setEnabled(false);
+        binding.stop.setEnabled(false);
 
     }
 
@@ -115,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
                                       public void onSuccess(Void aVoid) {
                                           logthis("Successfully subscribed to sleep data");
                                           logthis("Note, all data goes the logcat, not the screen.");
-                                          subscribe.setEnabled(false);
-                                          unsubscribe.setEnabled(true);
+                                          binding.start.setEnabled(false);
+                                          binding.stop.setEnabled(true);
                                       }
                                   }
 
@@ -124,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     logthis("Failed to subscribe to sleep data");
-                    subscribe.setEnabled(true);
-                    unsubscribe.setEnabled(false);
+                    binding.start.setEnabled(true);
+                    binding.stop.setEnabled(false);
                 }
             });
 
@@ -148,8 +144,8 @@ public class MainActivity extends AppCompatActivity {
                                       @Override
                                       public void onSuccess(Void aVoid) {
                                           logthis("Successfully Unsubscribed to sleep data");
-                                          subscribe.setEnabled(true);
-                                          unsubscribe.setEnabled(false);
+                                          binding.start.setEnabled(true);
+                                          binding.stop.setEnabled(false);
                                       }
                                   }
 
@@ -158,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
                 public void onFailure(@NonNull Exception e) {
                     logthis("Failed to Unsubscribe to sleep data");
                     //not sure if we are subscribed or not.
-                    subscribe.setEnabled(true);
-                    unsubscribe.setEnabled(false);
+                    binding.start.setEnabled(true);
+                    binding.stop.setEnabled(false);
                 }
             });
 
@@ -188,6 +184,6 @@ public class MainActivity extends AppCompatActivity {
     //helper function to print the screen and log it.
     void logthis(String item) {
         Log.v(TAG, item);
-        logger.append("\n" + item);
+        binding.logger.append("\n" + item);
     }
 }
