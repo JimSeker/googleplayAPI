@@ -199,7 +199,7 @@ public class Camera2CapturePic {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
             values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-            values.put(MediaStore.MediaColumns.DATA, file.toString());
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, file.toString());
             context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
            // Toast.makeText(context, "Saved:" + file, Toast.LENGTH_SHORT).show();

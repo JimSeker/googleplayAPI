@@ -77,7 +77,7 @@ public class HelpFragment extends Fragment {
         View myView = inflater.inflate(R.layout.fragment_help, container, false);
         logger = myView.findViewById(R.id.logger1);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            REQUIRED_PERMISSIONS = new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.NEARBY_WIFI_DEVICES};
+            REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA,Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.NEARBY_WIFI_DEVICES};
         } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.ACCESS_FINE_LOCATION};
             logthis("Android 12+, we need scan, advertise, and connect.");
