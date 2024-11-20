@@ -17,6 +17,9 @@ android {
         }
     }
     namespace 'edu.cs4730.activityrecognitiondemo'
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {

@@ -168,10 +168,15 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     }
 
     //on start setup the receiver
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION), Context.RECEIVER_NOT_EXPORTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION), Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(mActivityReceiver, new IntentFilter(ACTIVITY_RECEIVER_ACTION));
+        }
     }
 
     //onstop turn off updates and remove the receiver.
@@ -248,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
         } else {
             return PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
         }
