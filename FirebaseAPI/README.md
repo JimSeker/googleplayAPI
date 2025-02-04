@@ -6,7 +6,9 @@
 
 `firebaseFireStoreDemo` This uses firestore database instead of realtime and authentications to demo how the firestore db works.  You can have the same project with realtime and firestore. 
 
-`FirebaseMessageDemo` is a start at an example for Cloud Messaging.  It works pretty well.   As of 9/17/24  ~The webcode needed is in the php directory of the project~, you will need a webserver to get this project running.  Google has updated to HTTP v1 API for the backend web services.  all the code will likely need to be rewritten.  I can't get the authorization to work in php, likely need to move to javascript code as firebase is not supported in php, which is the only way to authentication to send messages.
+`FirebaseMessageDemo` is a start at an example for Cloud Messaging.  It works pretty well.  
+There is also a javascript directory that is the back end system.  You will need node.js and mariadb (or change to what you want).  
+You need create .env file and get the serviceAccount.json file from you google account [seek here](https://firebase.google.com/docs/cloud-messaging/migrate-v1)
 
 
 
