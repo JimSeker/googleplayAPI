@@ -9,8 +9,8 @@ package edu.cs4730.firebasemessagedemo;
  */
 
 public class EndPoints {
-    public static final String URL_REGISTER_DEVICE = "http://10.216.218.12/FcmDemo/RegisterDevice.php";
-    public static final String URL_SEND_SINGLE_PUSH = "http://10.216.218.12/FcmDemo/sendSinglePush.php";
-    public static final String URL_SEND_MULTIPLE_PUSH = "http://10.216.218.12/FcmDemo/sendMultiplePush.php";
-    public static final String URL_FETCH_DEVICES = "http://10.216.218.12/FcmDemo/GetRegisteredDevices.php";
+    public static final String URL_REGISTER_DEVICE = "http://wardpi.eecs.uwyo.edu:3000/devices";
+    public static final String URL_SEND_SINGLE_PUSH = "http://wardpi.eecs.uwyo.edu:3000/message/";
+    public static final String URL_SEND_MULTIPLE_PUSH = "http://wardpi.eecs.uwyo.edu:3000/message";
+    public static final String URL_FETCH_DEVICES = "http://wardpi.eecs.uwyo.edu:3000/devices";
 }

@@ -63,19 +63,29 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         //Displaying data in log
         //It is optional
         Log.wtf(TAG, "From: " + remoteMessage.getFrom());
-        String message = remoteMessage.getData().toString();
-        //getData should have the data we need, but when sending from the console, it's in getBody,
-        //so this is accounting for the possibilities.
-        if (message.compareTo("{}") != 0) {  //none empty message
-            Log.d(TAG, "Notification Message Data: " + message);
+        //google rewrite this and I didn't see the update.
+//        String message = remoteMessage.getData().toString();
+//        //getData should have the data we need, but when sending from the console, it's in getBody,
+//        //so this is accounting for the possibilities.
+//        if (message.compareTo("{}") != 0) {  //none empty message
+//            Log.d(TAG, "Notification Message Data: " + message);
+//        } else {
+//            message = remoteMessage.getNotification().getBody();
+//            Log.d(TAG, "Notification Message Body: " + message);
+//        }
+        String message = "default";
+        if (remoteMessage.getNotification() != null) {
+            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getTitle());
+            sendNotification(remoteMessage.getNotification().getTitle(), remoteMessage.getNotification().getBody());
         } else {
-            message = remoteMessage.getNotification().getBody();
-            Log.d(TAG, "Notification Message Body: " + message);
+            sendNotification(message, message);
         }
+
 
         //if ( shorter then 10 seconds)
         //Calling method to generate notification
-        sendNotification(message);
+
         // } else {  //processing will take too long, must use a job scheduler.
         //scheduleJob();
         //
@@ -117,7 +127,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * If there is correctly formatted json, it will use it, other just display the message
      */
 
-    private void sendNotification(String messageBody) {
+    private void sendNotification(String title, String message) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent;
@@ -129,27 +139,26 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
         }
-        String title = "", message;
 
-        //read for a json object.  if that fails, just show the data as message body.
-
-        try {
-            JSONObject json = new JSONObject(messageBody);
-            JSONObject data = json.getJSONObject("data");
-            title = data.getString("title");
-            if (title == null || title.compareTo("{}") == 0) {
-                //something wrong the json or there is no json.
-                title = "Firebase Push Notification";
-                message = messageBody;
-            } else {
-                title = "FCM: " + title;
-                message = data.getString("message");
-            }
-        } catch (JSONException e) {
-            Log.v(TAG, "no JSON, fail back.");
-            title = "Firebase Push Notification";
-            message = messageBody;
-        }
+//        //read for a json object.  if that fails, just show the data as message body.
+//        Log.v(TAG, "mssages: " + messageBody);
+//        try {
+//            JSONObject json = new JSONObject(messageBody);
+//            JSONObject data = json.getJSONObject("data");
+//            title = data.getString("title");
+//            if (title == null || title.compareTo("{}") == 0) {
+//                //something wrong the json or there is no json.
+//                title = "Firebase Push Notification";
+//                message = messageBody;
+//            } else {
+//                title = "FCM: " + title;
+//                message = data.getString("message");
+//            }
+//        } catch (JSONException e) {
+//            Log.v(TAG, "no JSON, fail back.");
+//            title = "Firebase Push Notification";
+//            message = messageBody;
+//        }
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
 
