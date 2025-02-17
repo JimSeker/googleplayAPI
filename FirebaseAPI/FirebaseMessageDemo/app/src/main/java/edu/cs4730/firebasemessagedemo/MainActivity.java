@@ -77,20 +77,18 @@ public class MainActivity extends AppCompatActivity {
             REQUIRED_PERMISSIONS = new String[]{};
         }
         //Use this to check permissions.
-        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
-            new ActivityResultCallback<Map<String, Boolean>>() {
-                @Override
-                public void onActivityResult(Map<String, Boolean> isGranted) {
-                    if (allPermissionsGranted()) {
-                        for (Map.Entry<String, Boolean> x : isGranted.entrySet())
-                            logthis(x.getKey() + " is " + x.getValue());
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
+            @Override
+            public void onActivityResult(Map<String, Boolean> isGranted) {
+                if (allPermissionsGranted()) {
+                    for (Map.Entry<String, Boolean> x : isGranted.entrySet())
+                        logthis(x.getKey() + " is " + x.getValue());
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                    finish();
                 }
             }
-        );
+        });
         //adding listener to view
         binding.buttonRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,12 +111,14 @@ public class MainActivity extends AppCompatActivity {
             rpl.launch(REQUIRED_PERMISSIONS);
         }
     }
+
     //helper method
     void logthis(String item) {
         Log.d(TAG, item);
         binding.logger.append("\n");
         binding.logger.append(item);
     }
+
     /**
      * This will send the token to the backend server (which is mysql/php/apache.  see
      * the php directory in this project for the source code.
@@ -190,9 +190,9 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject d = jsonDevices.getJSONObject(i);
                             if (d.getString("name").compareTo(thisName) == 0) {
                                 if (d.getString("token").compareTo(thisToken) == 0) {
-                                    logthis( name + " Device already registered as " + d.getString("name"));
+                                    logthis(name + " Device already registered as " + d.getString("name"));
                                 } else {
-                                    logthis( name + " Name registered doesn't match our Token as  " + d.getString("name"));
+                                    logthis(name + " Name registered doesn't match our Token as  " + d.getString("name"));
                                 }
                                 return;
                             }
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
     private void createchannel() {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel mChannel = new NotificationChannel(getString(R.string.default_notification_channel_id), getString(R.string.channel_name),  //name of the channel
-                NotificationManager.IMPORTANCE_DEFAULT);   //importance level
+            NotificationManager.IMPORTANCE_DEFAULT);   //importance level
         //important level: default is is high on the phone.  high is urgent on the phone.  low is medium, so none is low?
         // Configure the notification channel.
         mChannel.setDescription(getString(R.string.channel_description));
@@ -231,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
         mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
         nm.createNotificationChannel(mChannel);
     }
+
     /**
      * This a helper method to check for the permissions.
      */
