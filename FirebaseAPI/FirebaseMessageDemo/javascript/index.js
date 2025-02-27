@@ -7,6 +7,7 @@ const db = require('./db');
 const app = express();
 const port = process.env.PORT || 3000;
 const msg = require('./message');
+const topics = require('./topics');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -80,7 +81,7 @@ app.post('/message/:name', async (req, res) => {
     }
     console.log("sending message");
     try {
-     msg.sendSingleMessage(name, title, message);
+     await msg.sendSingleMessage(name, title, message);
         res.status(200).json({ message: 'Message sent successfully' });
     } catch (err) {
         res.status(200).json({ error: 'Failed to send message' });
@@ -95,11 +96,41 @@ app.post('/message', async (req, res) => {
         return;
     }
     try {
-       msg.sendMultipleMessages(title, message);
+      await  msg.sendMultipleMessages(title, message);
         res.status(200).json({ message: 'Message sent successfully' });
     } catch (err) {
         res.status(200).json({ error: 'Failed to send message' });
     }
+});
+
+//send message to a topic
+app.post('/topic/:name', async (req, res) => {
+    const { name } = req.params;
+    const { title, message } = req.body;
+    if (name == '' || title == '' || message == '') {
+        res.status(400).json({ error: 'Invalid input' });
+        return;
+    }
+    try {
+      await  msg.sendTopicsMessage(name, title, message);
+        res.status(200).json({ message: 'Message sent successfully' });
+    } catch (err) {
+        res.status(200).json({ error: 'Failed to send message' });
+    }
+});
+
+app.post('/subscribe/:topic', async (req, res) => {   
+    const { topic } = req.params;
+    const { token } = req.body;
+    const ret = await topics.subscribeToTopic(topic, token);
+    res.status(200).json({ ret });
+}); 
+
+app.post('/unsubscribe/:topic', async (req, res) => {
+    const { topic } = req.params;
+    const { token } = req.body;
+    const ret = await topics.unsubscribeFromTopic(topic, token);
+    res.status(200).json({ ret });
 });
 
 app.listen(port, () => {

@@ -112,13 +112,16 @@ function buildOverrideMessage() {
  * common parts of a notification message that will be sent
  * to any app instance subscribed to the news topic.
  */
-function buildCommonMessage() {
+function buildCommonMessage(topic, title, body) {
   return {
     'message': {
-      'topic': 'news',
+      'topic': topic,
       'notification': {
-        'title': 'FCM Notification',
-        'body': 'Notification from FCM'
+        'title': title,
+        'body': body
+      }, 
+      "data": {
+       "Story_id": "story_12345"
       }
     }
   };
@@ -180,5 +183,9 @@ function sendMultipleMessages(title, body) {
 
 }
 
-module.exports = { sendSingleMessage, sendMultipleMessages };
+function sendTopicsMessage(topic, title, body) {
+  sendFcmMessage(buildCommonMessage(topic, title, body));
+}
+
+module.exports = { sendSingleMessage, sendMultipleMessages, sendTopicsMessage };
 
