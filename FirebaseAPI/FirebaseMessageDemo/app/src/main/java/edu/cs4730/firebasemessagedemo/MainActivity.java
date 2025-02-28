@@ -10,6 +10,7 @@ import android.graphics.Color;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -29,6 +30,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -102,6 +106,43 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 startActivity(new Intent(getApplicationContext(), SendActivity.class));
 
+            }
+        });
+        binding.subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //final String token = SharedPrefManager.getInstance(MainActivity.this).getDeviceToken();
+                FirebaseMessaging.getInstance().subscribeToTopic("news")
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            logthis("Successfully subscribed to news Topics");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            logthis("failed to  subscribed to news Topics " +e.getMessage() );
+                        }
+                    });
+            }
+        });
+        binding.unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String token = SharedPrefManager.getInstance(MainActivity.this).getDeviceToken();
+                FirebaseMessaging.getInstance().unsubscribeFromTopic("news")
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            logthis("Successfully unsubscribed to news Topics");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            logthis("failed to  subscribed to news Topics " + e.getMessage());
+                        }
+                    });
             }
         });
         //create channels for the notifications.

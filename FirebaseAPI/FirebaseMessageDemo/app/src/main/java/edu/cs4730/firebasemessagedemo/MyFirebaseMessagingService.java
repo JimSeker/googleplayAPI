@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Constraints;
 import androidx.work.Data;
@@ -48,7 +49,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * @param token
      */
     @Override
-    public void onNewToken(String token) {
+    public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
 
         Log.wtf(TAG, "FCM Token: " + token);
