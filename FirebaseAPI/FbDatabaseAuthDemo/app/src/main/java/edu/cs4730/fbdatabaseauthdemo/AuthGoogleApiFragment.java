@@ -1,28 +1,32 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.credentials.ClearCredentialStateRequest;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.ClearCredentialException;
+import androidx.credentials.exceptions.GetCredentialException;
 import androidx.fragment.app.Fragment;
 
+import android.os.CancellationSignal;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.ApiException;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -30,6 +34,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+
+import java.util.concurrent.Executors;
 
 import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentAuthGoogleApiBinding;
 
@@ -48,6 +54,7 @@ public class AuthGoogleApiFragment extends Fragment {
     private String mUsername;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
+    private CredentialManager credentialManager;
     private GoogleSignInClient mGoogleSignInClient;
     ActivityResultLauncher<Intent> myActivityResultLauncher;
 
@@ -60,9 +67,8 @@ public class AuthGoogleApiFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentAuthGoogleApiBinding.inflate(inflater, container, false);
 
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.default_web_client_id)).requestEmail().build();
-        //get the sign in client.
-        mGoogleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
+        credentialManager = CredentialManager.create(requireContext());
+
         // google sign in button and pieces.
         binding.gSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,31 +85,7 @@ public class AuthGoogleApiFragment extends Fragment {
         });
 
 
-        //using the new startActivityForResult method.
-        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-            @Override
-            public void onActivityResult(ActivityResult result) {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
-                    Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                    try {
-                        GoogleSignInAccount account = task.getResult(ApiException.class);
-                        logthis("successful login, now firebase.");
-                        // Google Sign In was successful, authenticate with Firebase
-                        firebaseAuthWithGoogle(account);
-
-                    } catch (ApiException e) {
-                        // The ApiException status code indicates the detailed failure reason.
-                        // Please refer to the GoogleSignInStatusCodes class reference for more information.
-                        Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
-                        logthis("signInResult:failed code=" + e.getStatusCode());
-                        binding.gSignInButton.setEnabled(true);
-                    }
-                }
-            }
-        });
-
-
+        // Initialize everything else.
         mUsername = ANONYMOUS;
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -132,13 +114,63 @@ public class AuthGoogleApiFragment extends Fragment {
 
     //start the signin to google authentication, when we will then sign into firebase (in onactivityresult method below)
     private void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        myActivityResultLauncher.launch(signInIntent);
+
+        // Instantiate a Google sign-in request
+        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(true)
+            .setServerClientId(getString(R.string.default_web_client_id))
+            .build();
+
+        // Create the Credential Manager request
+        GetCredentialRequest request = new GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build();
+
+
+        // Launch Credential Manager UI
+        credentialManager.getCredentialAsync(
+            requireContext(),
+            request,
+            new CancellationSignal(),
+            Executors.newSingleThreadExecutor(),
+            new CredentialManagerCallback<>() {
+                @Override
+                public void onResult(GetCredentialResponse result) {
+                    // Extract credential from the result returned by Credential Manager
+                    logthis("successful login, now firebase.");
+                    handleSignIn(result.getCredential());
+                }
+
+                @Override
+                public void onError(@NonNull GetCredentialException e) {
+                    Log.e(TAG, "Couldn't retrieve user's credentials: " + e.getLocalizedMessage());
+                    //Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                        logthis("signInResult:failed code=" + e.getLocalizedMessage());
+                        binding.gSignInButton.setEnabled(true);
+                }
+            }
+        );
     }
 
     private void signOut() {
         //sign out of google
-        mGoogleSignInClient.signOut();
+        // When a user signs out, clear the current user credential state from all credential providers.
+        ClearCredentialStateRequest clearRequest = new ClearCredentialStateRequest();
+        credentialManager.clearCredentialStateAsync(
+            clearRequest,
+            new CancellationSignal(),
+            Executors.newSingleThreadExecutor(),
+            new CredentialManagerCallback<>() {
+                @Override
+                public void onResult(@NonNull Void result) {
+                    logthis("Signed out of google");
+                }
+
+                @Override
+                public void onError(@NonNull ClearCredentialException e) {
+                    Log.e(TAG, "Couldn't clear user credentials: " + e.getLocalizedMessage());
+                }
+            });
         //sign out firebase, don't know if this is necessary, but seems like a good idea.
         mFirebaseAuth.signOut();
 
@@ -155,9 +187,26 @@ public class AuthGoogleApiFragment extends Fragment {
      * This is a helper function, so with have authentication with google, but we still need to
      * login to firebase.
      */
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.wtf(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+
+    private void handleSignIn(Credential credential) {
+        // Check if credential is of type Google ID
+        if (credential instanceof CustomCredential customCredential
+            && credential.getType().equals(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
+            // Create Google ID Token
+            Bundle credentialData = customCredential.getData();
+            GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);
+
+            // Sign in to Firebase with using the token
+            firebaseAuthWithGoogle(googleIdTokenCredential.getIdToken());
+        } else {
+            Log.w(TAG, "Credential is not of type Google ID!");
+        }
+    }
+
+
+    private void firebaseAuthWithGoogle(String idToken) {
+        Log.wtf(TAG, "firebaseAuthWithGoogle:" + idToken);
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mFirebaseAuth.signInWithCredential(credential).addOnCompleteListener(requireActivity(), new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
@@ -172,7 +221,7 @@ public class AuthGoogleApiFragment extends Fragment {
                 } else {
                     logthis("SignIn Success");
                     mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                    mUsername = mFirebaseUser.getDisplayName();
+                    mUsername = mFirebaseUser.getDisplayName() == null ? "No Display Name" : mFirebaseUser.getDisplayName();
                     logthis("username is" + mUsername);
                     binding.gAccName.setText(mUsername);
                     binding.gSignInButton.setEnabled(false);

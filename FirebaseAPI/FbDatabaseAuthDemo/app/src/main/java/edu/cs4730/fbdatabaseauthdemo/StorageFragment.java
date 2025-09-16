@@ -66,8 +66,11 @@ public class StorageFragment extends Fragment {
         //auth, so I can get the username.
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        if (mFirebaseUser != null) mUsername = mFirebaseUser.getDisplayName();
+        if (mFirebaseUser != null)
+            getUsername();
         else mUsername = "anonymous";
+
+        binding.logger.append("username is " + mUsername + "\n");
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         //init storage methods.
         mFirebaseStorage = FirebaseStorage.getInstance();
@@ -104,6 +107,24 @@ public class StorageFragment extends Fragment {
             }
         };
         return binding.getRoot();
+    }
+
+    void getUsername() {
+        if (mFirebaseUser == null) {
+            logthis("Error: No user");
+            mUsername = "No User";
+        } else {
+            logthis("User id is " + mFirebaseUser.getUid());
+            logthis("User email is " + mFirebaseUser.getEmail());
+            logthis("User name is " + mFirebaseUser.getDisplayName());
+            if (mFirebaseUser.getDisplayName() != null) {
+                mUsername = mFirebaseUser.getDisplayName();
+            } else if (mFirebaseUser.getEmail() != null) {
+                mUsername = mFirebaseUser.getEmail();
+            } else {
+                mUsername = "Unknown User";
+            }
+        }
     }
 
     void DownloadImage(String imageUrl) {
@@ -206,5 +227,13 @@ public class StorageFragment extends Fragment {
     public void onResume() {
         super.onResume();
         myRef.addValueEventListener(myValueEventlistener);
+    }
+
+    /**
+     * this is a helper function
+     */
+    void logthis(String item) {
+        Log.d(TAG, item);
+        binding.logger.append(item + "\n");
     }
 }

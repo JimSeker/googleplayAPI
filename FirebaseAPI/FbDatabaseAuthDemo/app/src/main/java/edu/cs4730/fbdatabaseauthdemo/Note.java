@@ -32,11 +32,11 @@ public class Note {
     }
 
     public String getTitle() {
-        return title;
+        return title == null ? "No Title" : title;
     }
 
     public String getNote() {
-        return note;
+        return note == null ? "No Note" : note;
     }
 
     public void setTitle(String title) {

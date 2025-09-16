@@ -4,10 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
@@ -18,6 +16,8 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -67,35 +67,45 @@ public class AuthFragment extends Fragment {
         });
 
         //using the new startActivityForResult method.
-        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-            @Override
-            public void onActivityResult(ActivityResult result) {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    //Intent data = result.getData();
-                    Toast.makeText(getContext(), "Authentication success.", Toast.LENGTH_SHORT).show();
-                    logthis("Google Sign In success.");
-                    mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                    mUsername = mFirebaseUser.getDisplayName();
-                    logthis("username is" + mUsername);
-                    binding.accName.setText(mUsername);
-                    binding.signInButton.setEnabled(false);
-                } else {
-                    // Google Sign In failed
-                    Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
-                    logthis("Google Sign In failed.");
-                    binding.signInButton.setEnabled(true);
+        myActivityResultLauncher = registerForActivityResult(new FirebaseAuthUIActivityResultContract(),
+            new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
+                @Override
+                public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // Successfully signed in
+                        Toast.makeText(getContext(), "Authentication success.", Toast.LENGTH_SHORT).show();
+                        logthis("Google Sign In success.");
+                        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+                        if (mFirebaseUser != null) {
+                            logthis("Error: No user");
+                        } else {
+                           getUsername();
+                            logthis("username is" + mUsername);
+                            binding.accName.setText(mUsername);
+                            binding.signInButton.setEnabled(false);
+                        }
+                    } else {
+                        // Google Sign In failed
+                        // Toast.makeText(getContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                        logthis("Google Sign In failed.");
+                        binding.signInButton.setEnabled(true);
+                    }
+
                 }
             }
-        });
+        );
 
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+
+
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
                 if (mFirebaseUser != null) {
-                    mUsername = mFirebaseUser.getDisplayName();
+                    getUsername();
+                    logthis("Username " + mUsername + " is signed in.");
                     if (mFirebaseUser.getPhotoUrl() != null) {
                         mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
                     }
@@ -105,7 +115,7 @@ public class AuthFragment extends Fragment {
                     // user is not signed in.
                     myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
                         .createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false)
+                        .setTheme(R.style.AppTheme)
                         .setAvailableProviders(Arrays.asList(
                             new AuthUI.IdpConfig.EmailBuilder().build(),
                             new AuthUI.IdpConfig.GoogleBuilder().build(),
@@ -115,10 +125,9 @@ public class AuthFragment extends Fragment {
             }
         };
 
-        // mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         mUsername = ANONYMOUS;
         binding.accName.setText(mUsername);
-
         return binding.getRoot();
     }
 
@@ -126,6 +135,12 @@ public class AuthFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+
+        if (mFirebaseAuth.getCurrentUser() != null) {
+            logthis("currently logged in");
+        } else {
+            logthis("not logged in");
+        }
     }
 
     private void signIn() {
@@ -149,6 +164,24 @@ public class AuthFragment extends Fragment {
     public void onPause() {
         mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         super.onPause();
+    }
+
+    void getUsername() {
+        if (mFirebaseUser == null) {
+            logthis("Error: No user");
+            mUsername = "No User";
+        } else {
+            logthis("User id is " + mFirebaseUser.getUid());
+            logthis("User email is " + mFirebaseUser.getEmail());
+            logthis("User name is " + mFirebaseUser.getDisplayName());
+            if (mFirebaseUser.getDisplayName() != null) {
+                mUsername = mFirebaseUser.getDisplayName();
+            } else if (mFirebaseUser.getEmail() != null) {
+                mUsername = mFirebaseUser.getEmail();
+            } else {
+                mUsername = "Unknown User";
+            }
+        }
     }
 
     /**

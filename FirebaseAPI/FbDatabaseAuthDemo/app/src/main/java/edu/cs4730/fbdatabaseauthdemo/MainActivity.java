@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //put the default first fragment into place.
         getSupportFragmentManager().beginTransaction()
-                // .add(binding.container.getId(), authFragment).commit();
-                .add(binding.container.getId(), authGoogleApiFragment).commit();
+                 .add(binding.container.getId(), authFragment).commit();
+                //.add(binding.container.getId(), authGoogleApiFragment).commit();
 
     }
 
