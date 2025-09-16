@@ -20,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private String mUsername;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,21 +84,35 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     // user is not signed in.
                     myActivityResultLauncher.launch(AuthUI.getInstance()  //see firebase UI for documentation.
-                            .createSignInIntentBuilder().setIsSmartLockEnabled(false).setAvailableProviders(Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build(), new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.PhoneBuilder().build())).build());
+                        .createSignInIntentBuilder()
+                        .setTheme(R.style.AppTheme)
+                        .setAvailableProviders(Arrays.asList(
+                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                            new AuthUI.IdpConfig.PhoneBuilder().build()
+                        )).build());
                 }
             }
         };
 
         //using the new startActivityForResult method.
-        myActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        myActivityResultLauncher = registerForActivityResult(new FirebaseAuthUIActivityResultContract(),
+            new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
             @Override
-            public void onActivityResult(ActivityResult result) {
+            public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
+                    // Successfully signed in
                     Toast.makeText(MainActivity.this, "Authentication success.", Toast.LENGTH_SHORT).show();
                     logthis("Google Sign In success.");
+                    if (mFirebaseUser.getDisplayName() != null) {
+                        mUsername = mFirebaseUser.getDisplayName();
+                    } else if (mFirebaseUser.getEmail() != null) {
+                        mUsername = mFirebaseUser.getEmail();
+                    } else {
+                        mUsername = "Unknown User";
+                    }
                     mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                    logthis("username is" + mFirebaseUser.getDisplayName());
+                    logthis("username is" + mUsername);
                     binding.signInButton.setEnabled(false);
                 } else {
                     // Google Sign In failed
