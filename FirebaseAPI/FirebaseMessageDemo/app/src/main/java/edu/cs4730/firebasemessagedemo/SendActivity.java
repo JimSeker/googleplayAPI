@@ -1,20 +1,16 @@
 package edu.cs4730.firebasemessagedemo;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import android.os.Bundle;
-import android.app.ProgressDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -45,14 +41,9 @@ import edu.cs4730.firebasemessagedemo.databinding.ActivitySendBinding;
  * images, etc.
  */
 
-public class SendActivity extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener, View.OnClickListener {
+public class SendActivity extends AppCompatActivity {
     String TAG = "SendActivity";
     private ActivitySendBinding binding;
-    //private RadioGroup radioGroup;
-    //private Spinner spinner;
-    //private ProgressDialog progressDialog;
-
-    //private EditText editTextTitle, editTextMessage;
 
     private boolean isSendAllChecked;
     private List<String> devices;
@@ -67,21 +58,39 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
-//        radioGroup = findViewById(R.id.radioGroup);
-//        spinner = findViewById(R.id.spinnerDevices);
-//        buttonSendPush = findViewById(R.id.buttonSendPush);
-//
-//        editTextTitle = findViewById(R.id.editTextTitle);
-//        editTextMessage = findViewById(R.id.editTextMessage);
-
 
         devices = new ArrayList<>();
 
-        binding.radioGroup.setOnCheckedChangeListener(this);
-        binding.buttonSendPush.setOnClickListener(this);
+        binding.radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(@NonNull RadioGroup radioGroup, int i) {
+                //figure out which radio button is checked and enable/disable the spinner as needed.
+                //setting which method to call when the send button is clicked.
+                if (radioGroup.getCheckedRadioButtonId() == binding.radioButtonSendAll.getId()) {
+                    isSendAllChecked = true;
+                    binding.spinnerDevices.setEnabled(false);
+                } else if (radioGroup.getCheckedRadioButtonId() == binding.radioButtonSendOne.getId()) {
+                    isSendAllChecked = false;
+                    binding.spinnerDevices.setEnabled(true);
+                }
+            }
+        });
+        binding.buttonSendPush.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //calling the method send push on button click
+                if (isSendAllChecked) {
+                    sendMultiplePush();
+                } else {
+                    sendSinglePush();
+                }
+            }
+        });
+
 
         loadRegisteredDevices();
     }
+
     //helper method
     void logthis(String item) {
         Log.d(TAG, item);
@@ -96,55 +105,37 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
     private void loadRegisteredDevices() {
         logthis("Fetching Devices...");
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, EndPoints.URL_FETCH_DEVICES,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    JSONObject obj = null;
-                    try {
-                        obj = new JSONObject(response);
-                        if (!obj.getBoolean("error")) {
-                            JSONArray jsonDevices = obj.getJSONArray("devices");
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, EndPoints.URL_FETCH_DEVICES, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                JSONObject obj = null;
+                try {
+                    obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        JSONArray jsonDevices = obj.getJSONArray("devices");
 
-                            for (int i = 0; i < jsonDevices.length(); i++) {
-                                JSONObject d = jsonDevices.getJSONObject(i);
-                                devices.add(d.getString("name"));
-                            }
-
-                            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                                SendActivity.this,
-                                android.R.layout.simple_spinner_dropdown_item,
-                                devices);
-
-                            binding.spinnerDevices.setAdapter(arrayAdapter);
+                        for (int i = 0; i < jsonDevices.length(); i++) {
+                            JSONObject d = jsonDevices.getJSONObject(i);
+                            devices.add(d.getString("name"));
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
 
+                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(SendActivity.this, android.R.layout.simple_spinner_dropdown_item, devices);
+
+                        binding.spinnerDevices.setAdapter(arrayAdapter);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            }) {
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }) {
 
         };
         MyVolley.getInstance(this).addToRequestQueue(stringRequest);
-    }
-
-    /**
-     * this method will send the push
-     * from here we will call sendMultiple() or sendSingle() push method
-     * depending on the selection
-     */
-    private void sendPush() {
-        if (isSendAllChecked) {
-            sendMultiplePush();
-        } else {
-            sendSinglePush();
-        }
     }
 
     //this method will send a message to all registered devices.
@@ -155,19 +146,17 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         logthis("Sending Push");
 
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_MULTIPLE_PUSH,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    logthis( response);
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_MULTIPLE_PUSH, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                logthis(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
-                }
-            }) {
+            }
+        }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
@@ -190,19 +179,17 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         logthis("Sending Push");
         String endpoint = EndPoints.URL_SEND_SINGLE_PUSH + name;
         //StringRequest stringRequest = new StringRequest(Request.Method.POST, EndPoints.URL_SEND_SINGLE_PUSH,
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, endpoint,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    logthis( response);
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, endpoint, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                logthis(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
-                }
-            }) {
+            }
+        }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
@@ -216,25 +203,5 @@ public class SendActivity extends AppCompatActivity implements RadioGroup.OnChec
         MyVolley.getInstance(this).addToRequestQueue(stringRequest);
     }
 
-    @Override
-    public void onCheckedChanged(RadioGroup radioGroup, int i) {
-        switch (radioGroup.getCheckedRadioButtonId()) {
-            case R.id.radioButtonSendAll:
-                isSendAllChecked = true;
-                binding.spinnerDevices.setEnabled(false);
-                break;
 
-            case R.id.radioButtonSendOne:
-                isSendAllChecked = false;
-                binding.spinnerDevices.setEnabled(true);
-                break;
-
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        //calling the method send push on button click
-        sendPush();
-    }
 }
