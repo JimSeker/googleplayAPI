@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "edu.cs4730.subjectsegmentationdemo"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "edu.cs4730.subjectsegmentationdemo"
-        minSdk = 29
-        targetSdk = 35
+        minSdk = 31
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -26,8 +26,9 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11+
+                +
     }
     buildFeatures {
         viewBinding = true
@@ -41,5 +42,5 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
-    implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("androidx.exifinterface:exifinterface:1.4.1")
 }

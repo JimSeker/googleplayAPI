@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 35
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "edu.cs4730.admobdemo"
-        minSdk 29
-        targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        applicationId = "edu.cs4730.admobdemo"
+        minSdk = 31
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
     }
     buildTypes {
         release {
@@ -16,21 +16,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
     buildFeatures {
         viewBinding = true
     }
-    namespace 'edu.cs4730.admobdemo'
+    namespace = 'edu.cs4730.admobdemo'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.13.0")
     //https://developers.google.com/android/guides/releases
-    implementation("com.google.android.gms:play-services-ads:23.3.0")
-    //implementation ("com.google.firebase:firebase-ads:23.3.0'  //likely the same library as gp ads at this point.
+    implementation("com.google.android.gms:play-services-ads:24.6.0")
+    //implementation ("com.google.firebase:firebase-ads:23.6.0")  //likely the same library as gp ads at this point.
     //implementation("com.google.android.ads.consent:consent-library:1.0.8")
-    implementation ("com.google.android.ump:user-messaging-platform:3.0.0")
-    implementation("androidx.work:work-runtime:2.9.1")
+    implementation("com.google.android.ump:user-messaging-platform:3.2.0")
+    implementation("androidx.work:work-runtime:2.10.4")
 
 }

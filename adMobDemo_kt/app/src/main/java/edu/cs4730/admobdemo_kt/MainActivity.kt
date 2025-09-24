@@ -1,24 +1,26 @@
 package edu.cs4730.admobdemo_kt
 
+//import com.google.ads.consent.ConsentInfoUpdateListener
+//import com.google.ads.consent.ConsentInformation
+//import com.google.ads.consent.ConsentStatus
+//import com.google.ads.consent.DebugGeography
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-//import com.google.ads.consent.ConsentInfoUpdateListener
-//import com.google.ads.consent.ConsentInformation
-//import com.google.ads.consent.ConsentStatus
-//import com.google.ads.consent.DebugGeography
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import edu.cs4730.admobdemo_kt.databinding.ActivityMainBinding
+import java.util.Arrays
 
 /**
  * Ads works.   both the banner ad and interstitial ad work again.
@@ -39,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         //const val TEST_DEVICE_HASHED_ID = "ABCDEF012345"
-        const val TEST_DEVICE_HASHED_ID = "9BCDD15FA3A2C5CDFBB1E0C13599604B"  //pixel4a I think.
+        const val TEST_DEVICE_HASHED_ID = "E22BABDE6629D48DB648360B39DC2623"  //pixel4a I think.
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +64,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (googleMobileAdsConsentManager.canRequestAds) {
+
+                // Set your test devices.
+                MobileAds.setRequestConfiguration(
+                    RequestConfiguration.Builder()
+                        .setTestDeviceIds(listOf(TEST_DEVICE_HASHED_ID))
+                        .build()
+                )
                 // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
                 MobileAds.initialize(
                     this

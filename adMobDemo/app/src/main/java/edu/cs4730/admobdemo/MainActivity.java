@@ -18,11 +18,14 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.ResponseInfo;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+
+import java.util.Arrays;
 
 import edu.cs4730.admobdemo.databinding.ActivityMainBinding;
 
@@ -43,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     AdRequest adRequest;
     ActivityMainBinding binding;
     //public static final String TEST_DEVICE_HASHED_ID = "ABCDEF012345";
-    public static final String TEST_DEVICE_HASHED_ID = "9BCDD15FA3A2C5CDFBB1E0C13599604B";
+    public static final String TEST_DEVICE_HASHED_ID = "E22BABDE6629D48DB648360B39DC2623";  //pixel 7
     private GoogleMobileAdsConsentManager googleMobileAdsConsentManager;
 
     @Override
@@ -57,7 +60,9 @@ public class MainActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
+       // new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("E22BABDE6629D48DB648360B39DC2623"));
         googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(getApplicationContext());
+
         googleMobileAdsConsentManager.gatherConsent(this,
             consentError -> {
                 if (consentError != null) {
@@ -65,6 +70,12 @@ public class MainActivity extends AppCompatActivity {
                    logthis(String.format("%s: %s", consentError.getErrorCode(), consentError.getMessage()));
                 }
                 if (googleMobileAdsConsentManager.canRequestAds()) {
+                    // Set your test devices.
+                    MobileAds.setRequestConfiguration(
+                        new RequestConfiguration.Builder()
+                            .setTestDeviceIds(Arrays.asList(TEST_DEVICE_HASHED_ID))
+                            .build());
+
                     // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
                     MobileAds.initialize(this, new OnInitializationCompleteListener() { //19.7.0+ version.
                         @Override
