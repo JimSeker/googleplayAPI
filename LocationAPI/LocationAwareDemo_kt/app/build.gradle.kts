@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "edu.cs4730.locationawaredemo_kt"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "edu.cs4730.locationawaredemo_kt"
-        minSdk = 28
-        targetSdk = 34
+        minSdk = 31
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
@@ -25,11 +25,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         viewBinding = true

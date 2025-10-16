@@ -9,7 +9,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -22,15 +30,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
@@ -40,6 +39,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.List;
 import java.util.Map;
 
+import edu.cs4730.activityrecognitiondemo.databinding.ActivityMainBinding;
+
 /**
  * it will say the most probable action and then anything at least 50%
  * for testing purposes inside, you can simple move the phone up and down slowly to get walking
@@ -48,7 +49,7 @@ import java.util.Map;
  * <p>
  * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognition
  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
- *
+ * <p>
  * This does not auto start, the user click the button to start it.
  * this is very slow to receive if nothing changes early on, but afterwards it responds on pretty regularly.
  */
@@ -78,25 +79,23 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
     boolean gettingupdates = false;
 
-    //widgets
-    Button btn;
-    TextView logger;
     static String TAG = "MainActivity";
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
         //one of these should keep the screen on.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setTurnScreenOn(true);
-        }
+        setTurnScreenOn(true);
+
         // for checking permissions.
         rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
@@ -118,15 +117,13 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             }
         );
 
-        btn = findViewById(R.id.button);
-        btn.setOnClickListener(new View.OnClickListener() {
+        binding.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 CheckPerm();
 
             }
         });
-        logger = findViewById(R.id.logger);
 
         // startActivityForResult method for the speech engine.
         ActivityResultLauncher<Intent> myActivityResultLauncher = registerForActivityResult(
@@ -205,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                 public void onSuccess(Void result) {
                     gettingupdates = true;
                     logthis("Success, activity updates enabled.");
-                    btn.setText("Stop Recognition");
+                    binding.button.setText("Stop Recognition");
                 }
             })
 
@@ -214,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                 public void onFailure(@NonNull Exception e) {
                     logthis("Failed to enable activity updates");
                     gettingupdates = false;
-                    btn.setText("Start Recognition");
+                    binding.button.setText("Start Recognition");
                 }
             });
     }
@@ -232,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                 public void onSuccess(Void result) {
                     logthis("Activity updates removed");
                     gettingupdates = false;
-                    btn.setText("Start Recognition");
+                    binding.button.setText("Start Recognition");
                 }
             })
             .addOnFailureListener(new OnFailureListener() {
@@ -240,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                 public void onFailure(@NonNull Exception e) {
                     logthis("Failed to remove activity updates ?!");
                     gettingupdates = true;  //I think this is true???
-                    btn.setText("Stop Recognition");
+                    binding.button.setText("Stop Recognition");
                 }
             });
     }
@@ -252,8 +249,10 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     //it's actually handled, but studio doesn't believe me.
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
         } else {
             return PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
         }
@@ -318,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     //help function to print the screen and log it.
     void logthis(String item) {
         Log.d(TAG, item);
-        logger.append(item + "\n");
+        binding.logger.append(item + "\n");
     }
 
     /**

@@ -26,6 +26,8 @@ import edu.cs4730.fusedorienationdemo.databinding.ActivityMainBinding;
 
 /**
  * A simple demo of the FusedOrientation APIs in google play.
+ *
+ * note the activity is locked to portrait mode, but the code does handle rotation.
  */
 
 public class MainActivity extends AppCompatActivity {

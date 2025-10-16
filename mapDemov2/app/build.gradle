@@ -1,35 +1,41 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 35
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "edu.cs4730.mapdemov2"
-        minSdk 29
-        targetSdk 35
+        applicationId = "edu.cs4730.mapdemov2"
+        minSdk = 31
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
         }
     }
     buildFeatures {
         viewBinding = true
     }
-    namespace 'edu.cs4730.mapdemov2'
+    namespace = 'edu.cs4730.mapdemov2'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.gms:play-services-maps:19.0.0'
-    implementation 'com.google.android.gms:play-services-base:18.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.gms:play-services-maps:19.2.0'
+    implementation 'com.google.android.gms:play-services-base:18.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     //bottomnavigation view
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'com.google.android.material:material:1.13.0'
     //navigation pieces.
-    implementation 'androidx.navigation:navigation-fragment:2.8.3'
-    implementation 'androidx.navigation:navigation-ui:2.8.3'
+    implementation 'androidx.navigation:navigation-fragment:2.9.5'
+    implementation 'androidx.navigation:navigation-ui:2.9.5'
 }
