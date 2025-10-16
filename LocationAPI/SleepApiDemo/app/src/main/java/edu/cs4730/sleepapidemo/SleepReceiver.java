@@ -25,7 +25,7 @@ public class SleepReceiver extends BroadcastReceiver {
         } else if (SleepClassifyEvent.hasEvents(intent)) {
             List<SleepClassifyEvent> sleepClassifyEvents = SleepClassifyEvent.extractEvents(intent);
             for (SleepClassifyEvent event : sleepClassifyEvents) {
-              Log.e(TAG, "SleepClass " + event.toString());
+                Log.e(TAG, "SleepClass " + event.toString());
             }
         } else {
             Log.wtf(TAG, "sleep receiver called, but intent is not a sleep.");
