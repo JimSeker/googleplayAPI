@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -58,21 +59,19 @@ public class MainActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
         // for checking permissions.
-        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
-            new ActivityResultCallback<Map<String, Boolean>>() {
-                @Override
-                public void onActivityResult(Map<String, Boolean> isGranted) {
-                    if (allPermissionsGranted()) {
-                        //We have permissions, so ...
-                        logthis("We have permission, starting");
-                        subscribeToSleep();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
+            @Override
+            public void onActivityResult(Map<String, Boolean> isGranted) {
+                if (allPermissionsGranted()) {
+                    //We have permissions, so ...
+                    logthis("We have permission, starting");
+                    subscribeToSleep();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                    finish();
                 }
             }
-        );
+        });
 
         binding.start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,21 +90,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @SuppressLint({"MissingPermission", "UnspecifiedImmutableFlag"})
+    @SuppressLint({"MissingPermission"})
         //it's already handled.
     void subscribeToSleep() {
-        PendingIntent pi;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
-                PendingIntent.FLAG_MUTABLE);
-        } else {
-            pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
-                PendingIntent.FLAG_CANCEL_CURRENT);
-        }
-        ActivityRecognition.getClient(getApplicationContext()).requestSleepSegmentUpdates(
-                pi, SleepSegmentRequest.getDefaultSleepSegmentRequest())
+        PendingIntent pi = getActivityDetectionPendingIntent();
+
+        ActivityRecognition
+            .getClient(getApplicationContext())
+            .requestSleepSegmentUpdates(pi, SleepSegmentRequest.getDefaultSleepSegmentRequest())
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                       @Override
                                       public void onSuccess(Void aVoid) {
@@ -115,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
                                           binding.stop.setEnabled(true);
                                       }
                                   }
-
             ).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
@@ -124,22 +115,15 @@ public class MainActivity extends AppCompatActivity {
                     binding.stop.setEnabled(false);
                 }
             });
-
     }
 
-    @SuppressLint({"MissingPermission", "UnspecifiedImmutableFlag"})
+    @SuppressLint({"MissingPermission"})
     void unsubscriptToSleep() {
-        PendingIntent pi;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
-                PendingIntent.FLAG_MUTABLE);
-        } else {
-            pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class),
-                PendingIntent.FLAG_CANCEL_CURRENT);
-        }
-        ActivityRecognition.getClient(getApplicationContext()).removeActivityUpdates(pi)
+        PendingIntent pi = getActivityDetectionPendingIntent();
+
+        ActivityRecognition
+            .getClient(getApplicationContext())
+            .removeActivityUpdates(pi)
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                       @Override
                                       public void onSuccess(Void aVoid) {
@@ -158,8 +142,23 @@ public class MainActivity extends AppCompatActivity {
                     binding.stop.setEnabled(false);
                 }
             });
-
     }
+
+    /**
+     * Gets a PendingIntent to be sent for each sleep detection.
+     */
+    @SuppressLint({"UnspecifiedImmutableFlag", "MutableImplicitPendingIntent"})
+    //it's actually handled, but studio doesn't believe me.
+    private PendingIntent getActivityDetectionPendingIntent() {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_MUTABLE);
+        } else {
+            return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+        }
+    }
+
 
     //ask for permissions when we start.
     public void CheckPerm() {
