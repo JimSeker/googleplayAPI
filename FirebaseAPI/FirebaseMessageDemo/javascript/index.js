@@ -1,13 +1,18 @@
 "use strict";
-const express = require('express');
-const bodyParser = require('body-parser');
-require("dotenv").config()
-const db = require('./db');
+import express from 'express';
+import { default as bodyParser } from 'body-parser';
+import { configDotenv } from 'dotenv';
+configDotenv(); //load the env file
+
+//const db = require('./db');
+import db from './db.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
-const msg = require('./message');
-const topics = require('./topics');
+import msg from './message.js';
+//const msg = require('./message');
+import topics from './topics.js';
+//const topics = require('./topics');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

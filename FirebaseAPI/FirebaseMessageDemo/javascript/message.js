@@ -6,16 +6,23 @@
  * a notification message (display notification) with platform specific customizations. For example,
  * a badge is added to messages that are sent to iOS devices.
  */
-const https = require('https');
-const { google } = require('googleapis');
 
-const PROJECT_ID = 'fir-messagedemo-5f1f1';
+//write as ES6 module
+import https from 'https';
+import { google } from 'googleapis';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import key from './serviceAccountKey.json' with { type: "json" };
+
+const PROJECT_ID = process.env.PROJECT_ID;
 const HOST = 'fcm.googleapis.com';
 const PATH = '/v1/projects/' + PROJECT_ID + '/messages:send';
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
 
-const db = require('./db');
+//const db = require('./db');
+import db from './db.js';
 
 /**
  * Get a valid access token.
@@ -23,7 +30,8 @@ const db = require('./db');
 // [START retrieve_access_token]
 function getAccessToken() {
   return new Promise(function (resolve, reject) {
-    const key = require('./serviceAccountKey.json');
+    //const key = require('./serviceAccountKey.json');
+    
     const jwtClient = new google.auth.JWT(
       key.client_email,
       null,
@@ -187,5 +195,5 @@ function sendTopicsMessage(topic, title, body) {
   sendFcmMessage(buildCommonMessage(topic, title, body));
 }
 
-module.exports = { sendSingleMessage, sendMultipleMessages, sendTopicsMessage };
+export default { sendSingleMessage, sendMultipleMessages, sendTopicsMessage };
 

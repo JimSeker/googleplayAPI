@@ -1,7 +1,0 @@
-create a .env file with the following info.
-PORT=3000
-MDB_HOST ='127.0.0.1'
-MDB_PORT = 3306
-MDB_USER = fcm
-MDB_PASS = password
-MDB_NAME = "FcmDemo"

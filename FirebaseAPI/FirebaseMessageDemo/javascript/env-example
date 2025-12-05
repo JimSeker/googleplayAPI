@@ -1,0 +1,11 @@
+#example file for .env
+PORT=3000
+MDB_HOST ='127.0.0.1'
+MDB_PORT = 3306
+MDB_USER = user
+MDB_PASS = password 
+MDB_DB = "database"
+#note database name needs to be in double quotes.
+cookieSecret = 'coming strength nothing half'
+PROJECT_ID = Firebase-project-name
+

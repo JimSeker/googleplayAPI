@@ -1,6 +1,8 @@
 "use strict";
-const mariadb = require("mariadb");
-require("dotenv").config();
+
+import mariadb from "mariadb";
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function getConnection() {
     let conn;
@@ -10,8 +12,7 @@ async function getConnection() {
             port: process.env.MDB_PORT,
             user: process.env.MDB_USER,
             password: process.env.MDB_PASS,
-            database: "FcmDemo",
-            //database: process.env.MDB_DB, //doesn't work?!
+            database: process.env.MDB_DB,
         });
     } catch (err) {
         console.log("SQL error in establishing a connection: ", err);
@@ -110,4 +111,4 @@ async function getToken (name) {
 
 
 //only 4 funcitons are exported and can be used by the handler.js or index.js code.
-module.exports = {getData, addData, updateData, deleteData, getToken};
+export default {getData, addData, updateData, deleteData, getToken};
