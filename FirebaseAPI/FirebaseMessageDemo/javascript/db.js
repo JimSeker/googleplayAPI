@@ -1,6 +1,6 @@
 "use strict";
 
-import mariadb from "mariadb";
+import * as mariadb from "mariadb";
 import dotenv from 'dotenv';
 dotenv.config();
 

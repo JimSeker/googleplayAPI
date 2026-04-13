@@ -32,6 +32,7 @@ function getAccessToken() {
   return new Promise(function (resolve, reject) {
     //const key = require('./serviceAccountKey.json');
     
+/* old way. googleapis v144 and below
     const jwtClient = new google.auth.JWT(
       key.client_email,
       null,
@@ -39,6 +40,13 @@ function getAccessToken() {
       SCOPES,
       null
     );
+*/
+    //new way 
+    const jwtClient = new google.auth.JWT();
+    jwtClient.email = key.client_email;
+    jwtClient.key = key.private_key;
+    jwtClient.scopes = SCOPES;
+
     jwtClient.authorize(function (err, tokens) {
       if (err) {
         reject(err);
