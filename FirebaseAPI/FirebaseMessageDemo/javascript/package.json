@@ -15,8 +15,12 @@
     "body-parse": "^0.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase-admin": "^13.8.0",
-    "googleapis": "^171.4.0",
+    "firebase-admin": "^14.0.0",
+    "googleapis": "^173.0.0",
     "mariadb": "^3.4.0"
+  },
+  "allowScripts": {
+    "protobufjs@7.6.4": true,
+    "@firebase/util@1.15.1": true
   }
 }
