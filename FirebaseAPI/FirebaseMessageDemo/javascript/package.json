@@ -16,11 +16,11 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase-admin": "^14.0.0",
-    "googleapis": "^173.0.0",
+    "googleapis": "^174.0.0",
     "mariadb": "^3.4.0"
   },
   "allowScripts": {
-    "protobufjs@7.6.4": true,
-    "@firebase/util@1.15.1": true
+    "@firebase/util@1.15.2": true,
+    "protobufjs@7.6.5": true
   }
 }
