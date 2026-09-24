@@ -26,17 +26,18 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 import java.util.Arrays;
+import java.util.List;
 
 import edu.cs4730.admobdemo.databinding.ActivityMainBinding;
 
 /**
  * Ads works.   both the banner ad and interstitial ad work again.
- *  had to change the consent manager since the ads one causes duplication class errors.
- *  it' had not be updated since 2019.  Using google example code from https://github.com/googleads/googleads-mobile-android-examples/
- *  which now uses a different consent manager.
- *
- *  a note, I don't seem to be need to give consent even in test mode. so I don't actually know if it works or not.
- *  but its' google's code, so hopefully it works?  idk.
+ * had to change the consent manager since the ads one causes duplication class errors.
+ * it' had not be updated since 2019.  Using google example code from https://github.com/googleads/googleads-mobile-android-examples/
+ * which now uses a different consent manager.
+ * <p>
+ * a note, I don't seem to be need to give consent even in test mode. so I don't actually know if it works or not.
+ * but its' google's code, so hopefully it works?  idk.
  */
 
 
@@ -60,20 +61,20 @@ public class MainActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
-       // new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("E22BABDE6629D48DB648360B39DC2623"));
+        // new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("E22BABDE6629D48DB648360B39DC2623"));
         googleMobileAdsConsentManager = GoogleMobileAdsConsentManager.getInstance(getApplicationContext());
 
         googleMobileAdsConsentManager.gatherConsent(this,
             consentError -> {
                 if (consentError != null) {
                     // Consent not obtained in current session.
-                   logthis(String.format("%s: %s", consentError.getErrorCode(), consentError.getMessage()));
+                    logthis(String.format("%s: %s", consentError.getErrorCode(), consentError.getMessage()));
                 }
                 if (googleMobileAdsConsentManager.canRequestAds()) {
                     // Set your test devices.
                     MobileAds.setRequestConfiguration(
                         new RequestConfiguration.Builder()
-                            .setTestDeviceIds(Arrays.asList(TEST_DEVICE_HASHED_ID))
+                            .setTestDeviceIds(List.of(TEST_DEVICE_HASHED_ID))
                             .build());
 
                     // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
@@ -107,9 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 if (!googleMobileAdsConsentManager.canRequestAds()) {
                     return;
                 }
-                /**
-                 * Now the interstitialad setup and display if possible.
-                 */
+
+                // Now the interstitial setup and display if possible.
                 InterstitialAd.load(getApplicationContext(), getResources().getString(R.string.fullscreen_ad_unit_id), adRequest, new InterstitialAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                         // an ad is loaded.
                         mInterstitialAd = interstitialAd;
                         logthis("interstitial ad loaded.");
-                        /**
+                        /*
                          * This add is loaded, so now we can show it.  You likely want to load the ad elsewhere, so it ready to show.
                          * but this is a simple example.
                          */

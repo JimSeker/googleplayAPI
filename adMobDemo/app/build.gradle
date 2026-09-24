@@ -1,24 +1,24 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "edu.cs4730.admobdemo"
-        minSdk = 31
-        targetSdk = 36
+        minSdk = 32
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding = true
@@ -28,13 +28,13 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
     //https://developers.google.com/android/guides/releases
-    implementation("com.google.android.gms:play-services-ads:24.6.0")
-    //implementation ("com.google.firebase:firebase-ads:23.6.0")  //likely the same library as gp ads at this point.
+    implementation("com.google.android.gms:play-services-ads:25.5.0")
+    //implementation ("com.google.firebase:firebase-ads:25.5.0")  //likely the same library as gp ads at this point.
     //implementation("com.google.android.ads.consent:consent-library:1.0.8")
-    implementation("com.google.android.ump:user-messaging-platform:3.2.0")
-    implementation("androidx.work:work-runtime:2.10.4")
+    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
+    implementation("androidx.work:work-runtime:2.12.0")
 
 }

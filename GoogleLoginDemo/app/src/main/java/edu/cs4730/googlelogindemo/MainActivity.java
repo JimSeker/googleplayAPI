@@ -1,9 +1,8 @@
 package edu.cs4730.googlelogindemo;
 
-import android.app.Activity;
+
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.os.Bundle;
 import android.view.View;
 
@@ -11,7 +10,6 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
-import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,7 +37,6 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -165,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onError(GetCredentialException e) {
+                public void onError(@NonNull GetCredentialException e) {
                     logthis("Failed to login " + e.getMessage());
                 }
             });
@@ -186,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onError(GetCredentialException e) {
+                public void onError(@NonNull GetCredentialException e) {
                     logthis("Failed to login " + e.getMessage());
                     failedtologin = true;
                 }
@@ -267,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     void authorize() {
-        List<Scope> requestedScopes = Arrays.asList(new Scope(Scopes.DRIVE_APPFOLDER));
+        List<Scope> requestedScopes = List.of(new Scope(Scopes.DRIVE_APPFOLDER));
         AuthorizationRequest authorizationRequest = AuthorizationRequest.builder().setRequestedScopes(requestedScopes).build();
         Identity.getAuthorizationClient(this)
             .authorize(authorizationRequest)

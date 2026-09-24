@@ -1,20 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "edu.cs4730.admobdemo_kt"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "edu.cs4730.admobdemo_kt"
-        minSdk = 31
-        targetSdk = 36
+        minSdk = 32
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -27,11 +24,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { viewBinding = true }
 }
@@ -44,7 +38,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.play.services.ads)
-    implementation("com.google.android.ump:user-messaging-platform:3.2.0")
+    implementation(libs.user.messaging.platform)
     // implementation (libs.consent.library)
     implementation(libs.androidx.work.runtime)
 }
