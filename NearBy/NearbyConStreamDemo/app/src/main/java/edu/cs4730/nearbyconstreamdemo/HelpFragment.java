@@ -2,6 +2,7 @@ package edu.cs4730.nearbyconstreamdemo;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -78,16 +79,16 @@ public class HelpFragment extends Fragment {
         logger = myView.findViewById(R.id.logger1);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA,Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.NEARBY_WIFI_DEVICES};
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        } else {  //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.ACCESS_FINE_LOCATION};
             logthis("Android 12+, we need scan, advertise, and connect.");
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)   //For API 29+ (q), for 26 to 28.  for file write permissions.
-                REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH};
-            else
-                REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, "android.permission.WRITE_EXTERNAL_STORAGE"};
-
-            logthis("Android 11 or less, bluetooth permissions only ");
+//        } else {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)   //For API 29+ (q), for 26 to 28.  for file write permissions.
+//                REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH};
+//            else
+//                REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, "android.permission.WRITE_EXTERNAL_STORAGE"};
+//
+//            logthis("Android 11 or less, bluetooth permissions only ");
         }
 
         myView.findViewById(R.id.btn_permi).setOnClickListener(new View.OnClickListener() {
@@ -123,7 +124,8 @@ public class HelpFragment extends Fragment {
     //This code will check to see if there is a bluetooth device and
     //turn it on if is it turned off.
     public void startbt() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager bluetoothManager = requireContext().getSystemService(BluetoothManager.class);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
             // Device does not support Bluetooth
             logthis("This device does not support bluetooth");

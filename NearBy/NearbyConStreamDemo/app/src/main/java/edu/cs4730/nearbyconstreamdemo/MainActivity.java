@@ -16,7 +16,7 @@ import com.google.android.gms.nearby.connection.Strategy;
  * https://developers.google.com/nearby/connections/overview
  *
  * the server (advertise) opens the camera once connected will send pictures to the
- * client since (discovery).  It's very slow actually.  but it does work.  A stream would
+ * client since (discovery).  It's very slow, actually.  but it does work.  A stream would
  * work much better, but I couldn't get that part to work.
  *
  */
