@@ -72,7 +72,7 @@ public class BasicMapFragment extends Fragment implements OnMapReadyCallback {
         map.setMapType(GoogleMap.MAP_TYPE_NORMAL); //normal map
         //map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 
-        //allow user to use zoom controls (ie the + - buttons on the map.
+        //allow user to use zoom controls (ie the + - buttons on the map).
         map.getUiSettings().setZoomControlsEnabled(true);
 
         //add a marker click event.
