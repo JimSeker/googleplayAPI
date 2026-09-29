@@ -1,13 +1,12 @@
 [versions]
-agp = "9.1.0"
-kotlin = "2.2.21"
-coreKtx = "1.17.0"
-appcompat = "1.7.1"
-material = "1.13.0"
-activity = "1.11.0"
-constraintlayout = "2.2.1"
-playServicesBase = "18.9.0"
-playServicesLocation = "21.3.0"
+agp = "9.4.1"
+coreKtx = "1.19.1"
+appcompat = "1.8.0"
+material = "1.14.0"
+activity = "1.13.0"
+constraintlayout = "2.2.2"
+playServicesBase = "18.11.0"
+playServicesLocation = "21.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -20,5 +19,5 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
 
