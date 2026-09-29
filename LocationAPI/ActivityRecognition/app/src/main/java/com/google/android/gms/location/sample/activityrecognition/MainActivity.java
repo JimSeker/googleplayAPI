@@ -25,7 +25,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -166,8 +167,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onSuccess(Void result) {
                 Toast.makeText(mContext,
-                    getString(R.string.activity_updates_enabled),
-                    Toast.LENGTH_SHORT)
+                        getString(R.string.activity_updates_enabled),
+                        Toast.LENGTH_SHORT)
                     .show();
                 setUpdatesRequestedState(true);
                 updateDetectedActivitiesList();
@@ -179,8 +180,8 @@ public class MainActivity extends AppCompatActivity
             public void onFailure(@NonNull Exception e) {
                 Log.w(TAG, getString(R.string.activity_updates_not_enabled));
                 Toast.makeText(mContext,
-                    getString(R.string.activity_updates_not_enabled),
-                    Toast.LENGTH_SHORT)
+                        getString(R.string.activity_updates_not_enabled),
+                        Toast.LENGTH_SHORT)
                     .show();
                 setUpdatesRequestedState(false);
             }
@@ -195,14 +196,14 @@ public class MainActivity extends AppCompatActivity
      */
     @SuppressLint("MissingPermission") //it's checked.
     public void removeActivityUpdatesButtonHandler(View view) {
-         Task<Void> task = ActivityRecognition.getClient(this).removeActivityUpdates(
+        Task<Void> task = ActivityRecognition.getClient(this).removeActivityUpdates(
             getActivityDetectionPendingIntent());
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
                 Toast.makeText(mContext,
-                    getString(R.string.activity_updates_removed),
-                    Toast.LENGTH_SHORT)
+                        getString(R.string.activity_updates_removed),
+                        Toast.LENGTH_SHORT)
                     .show();
                 setUpdatesRequestedState(false);
                 // Reset the display.
@@ -233,10 +234,10 @@ public class MainActivity extends AppCompatActivity
         PendingIntent pendingIntent;
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
-        }else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            pendingIntent =  PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_MUTABLE);
-        } else {
-            pendingIntent =  PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {   //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_MUTABLE);
+//        } else {
+//            pendingIntent =  PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
         return pendingIntent;
     }

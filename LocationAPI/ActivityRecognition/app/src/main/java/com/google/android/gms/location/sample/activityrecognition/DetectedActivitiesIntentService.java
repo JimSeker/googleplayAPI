@@ -19,7 +19,7 @@ package com.google.android.gms.location.sample.activityrecognition;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -31,6 +31,8 @@ import java.util.ArrayList;
  *  IntentService for handling incoming intents that are generated as a result of requesting
  *  activity updates using
  *  {@link com.google.android.gms.location.ActivityRecognitionClient#requestActivityUpdates}.
+ *
+ *  the intentSerivce is deprecated, but as google example, I'm not going to replace it.
  */
 public class DetectedActivitiesIntentService extends IntentService {
 

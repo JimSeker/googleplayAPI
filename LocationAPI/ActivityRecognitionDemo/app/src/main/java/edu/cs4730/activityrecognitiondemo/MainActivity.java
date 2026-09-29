@@ -15,8 +15,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -43,7 +41,7 @@ import edu.cs4730.activityrecognitiondemo.databinding.ActivityMainBinding;
 
 /**
  * it will say the most probable action and then anything at least 50%
- * for testing purposes inside, you can simple move the phone up and down slowly to get walking
+ * for testing purposes inside, you can do a simple move the phone up and down slowly to get walking
  * pretty fast for running.  You don't actually have move for those.   walking as good pace and holding
  * the device study, which result in driving.   At least on a Moto G (v1) GPE device.
  * <p>
@@ -51,7 +49,7 @@ import edu.cs4730.activityrecognitiondemo.databinding.ActivityMainBinding;
  * https://github.com/googlesamples/android-play-location/tree/master/ActivityRecognition
  * <p>
  * This does not auto start, the user click the button to start it.
- * this is very slow to receive if nothing changes early on, but afterwards it responds on pretty regularly.
+ * this is very slow to receive if nothing changes early on, but afterward it responds on pretty regularly.
  */
 
 public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
@@ -61,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
 
     //speech pieces.
     private TextToSpeech mTts;
-    private String myUtteranceId = "txt2spk";
+    private final String myUtteranceId = "txt2spk";
     private boolean canspeak = false;
 
     /**
@@ -250,12 +248,11 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-           return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
-
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
+        } else { //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
-        } else {
-            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+//        } else {
+//            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
     }
 
@@ -292,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
      */
     public void speech(String words) {
         //Speech is simple.  send the words to speech aloud via the
-        //the text to speech end and add it to the end queue. (maybe others already in line.)
+        //text to speech end and add it to the end queue. (maybe others already in line.)
         if (canspeak)
             mTts.speak(words, TextToSpeech.QUEUE_ADD, null, myUtteranceId);
     }
