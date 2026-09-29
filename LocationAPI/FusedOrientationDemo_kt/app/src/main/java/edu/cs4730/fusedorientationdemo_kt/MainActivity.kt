@@ -1,7 +1,6 @@
 package edu.cs4730.fusedorientationdemo_kt
 
 import android.hardware.SensorManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Surface
@@ -57,7 +56,9 @@ class MainActivity : AppCompatActivity() {
             } else if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) { //holding it landscape
                 msg = "X axis (0 to 360 degrees): " + deviceOrientation.headingDegrees
             }
-            binding.logger.text = msg
+
+            //we are on a thread, so update only the main thread.
+            runOnUiThread { binding.logger.text = msg }
 
             //math to convert the information to useful information.
             SensorManager.getRotationMatrixFromVector(
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                 mPitch,
                 Math.toDegrees(prefValues[2].toDouble())
             )
-            binding.preferred.text = msg
+            runOnUiThread { binding.preferred.text = msg }
         }
 
         rotation = rotationInfo()
@@ -89,12 +90,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun rotationInfo(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display!!.rotation
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
-        }
+//        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+           return  display!!.rotation
+//        } else {
+//            @Suppress("DEPRECATION")
+//            windowManager.defaultDisplay.rotation
+//        }
     }
 
     override fun onStart() {

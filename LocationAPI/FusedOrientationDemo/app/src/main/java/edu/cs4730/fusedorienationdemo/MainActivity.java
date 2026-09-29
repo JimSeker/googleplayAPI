@@ -4,6 +4,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -26,7 +27,7 @@ import edu.cs4730.fusedorienationdemo.databinding.ActivityMainBinding;
 
 /**
  * A simple demo of the FusedOrientation APIs in google play.
- *
+ * <p>
  * note the activity is locked to portrait mode, but the code does handle rotation.
  */
 
@@ -66,8 +67,14 @@ public class MainActivity extends AppCompatActivity {
                 } else if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) { //holding it landscape
                     msg = "X axis (0 to 360 degrees): " + deviceOrientation.getHeadingDegrees();
                 }
-                binding.logger.setText(msg);
-
+                //we are on a thread, so update only the main thread.
+                final String finalMsg = msg;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.logger.setText(finalMsg);
+                    }
+                });
                 //math to convert the information to useful information.
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, deviceOrientation.getAttitude());
                 // got a good rotation matrix
@@ -83,7 +90,14 @@ public class MainActivity extends AppCompatActivity {
                     mAzimuth, //heading
                     mPitch,
                     Math.toDegrees(prefValues[2]));
-                binding.preferred.setText(msg);
+                //we are on a thread, so update only the main thread.
+                final String finalMsg2 = msg;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.preferred.setText(finalMsg2);
+                    }
+                });
             }
         };
         rotation = rotationInfo();
@@ -92,12 +106,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public int rotationInfo() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             return getDisplay().getRotation();
-        } else {
-
-            return getWindowManager().getDefaultDisplay().getRotation();
-        }
+//        } else {
+//        return getWindowManager().getDefaultDisplay().getRotation();
+//        }
     }
 
 
