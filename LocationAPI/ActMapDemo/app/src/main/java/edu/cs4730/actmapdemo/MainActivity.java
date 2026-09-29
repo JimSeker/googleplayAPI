@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 
@@ -51,7 +52,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -61,13 +61,13 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.Map;
 
 /**
- * This example demo's how you can combine multiple pieces together to form a more interesting app.
+ * This example demos how you can combine multiple pieces together to form a more interesting app.
  * Once the user turns on the gps/locationaware via the menu, it monitors the user "activity", ie (walking, etc)
  * and as it gets new gps points, it draws them on the map.  different activities are drawn in different
  * colors.  It also lists each one in the list fragment.
- *
+ * <p>
  * The data is handled via the viewModel.
- *
+ * <p>
  * it appears, I've got the distance variables messed up, I'll see about fixing this later.  but hard to
  * test and debug when I can't be connected to the studio.
  *
@@ -446,10 +446,11 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MutableImplicitPendingIntent")
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(ACTIVITY_RECEIVER_ACTION);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
         } else {
-            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
         }
     }
 
@@ -501,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
             newData.distance = mViewModel.getDistance(newData.myLatlng);
             //add everything and add to the data structures.
             mViewModel.add(newData);
-           // mapfrag.updateMapDraw(newData);
+            // mapfrag.updateMapDraw(newData);
             //I've forgotten what this is supposed to do.
             if (newData.distance >= Milecheck) {
                 mapfrag.mileMarker(newData, Milecheck / 5280 + " Miles");
@@ -544,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
                 case 1:
                     return listfrag;
                 default:
-                    return null;
+                    return mapfrag;
             }
         }
 
