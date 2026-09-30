@@ -1,17 +1,22 @@
 package edu.cs4730.facetrackerdemo2;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
@@ -21,44 +26,61 @@ import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
+import java.util.Map;
+
+import edu.cs4730.facetrackerdemo2.databinding.ActivityMainBinding;
 
 /**
-  * This example uses the face tracker (only one face though), so show if the eyes are open and
-  * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
-  * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
+ * This example uses the face tracker (only one face though), so show if the eyes are open and
+ * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
+ * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
 
     private CameraSource mCameraSource;
-    private CameraSourcePreview mPreview;
-    private GraphicOverlay mGraphicOverlay;
-    TextView mLogger;
+    ActivityMainBinding binding;
     //for getting permissions to use the camara in API 23+
-    final String[] permissions = new String[]{Manifest.permission.CAMERA};
-    private static final int RC_HANDLE_CAMERA_PERM = 2;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
+    ActivityResultLauncher<String[]> rpl;
     //handler, since the facetracker is on another thread.
     protected Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mLogger = findViewById(R.id.mylogger);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+
         //message handler for textivew.
-        handler = new Handler(new Handler.Callback() {
+        handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
             @Override
-            public boolean handleMessage(Message msg) {
+            public boolean handleMessage(@NonNull Message msg) {
 
                 Bundle stuff = msg.getData();
-                mLogger.setText(stuff.getString("logthis"));
-                mLogger.invalidate();  //should not need this...
+                binding.logger.setText(stuff.getString("logthis"));
+                binding.logger.invalidate();  //should not need this...
                 return true;
             }
         });
 
-        mPreview =  findViewById(R.id.CameraView);
-        mGraphicOverlay = findViewById(R.id.faceOverlay);
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    boolean granted = true;
+                    for (Map.Entry<String, Boolean> x : isGranted.entrySet())
+                        if (!x.getValue()) granted = false;
+                    if (granted) startCameraSource();
+                    // else finish();
+                }
+            }
+        );
 
         createCameraSource();
 
@@ -67,14 +89,14 @@ public class MainActivity extends AppCompatActivity {
     public void createCameraSource() {
         Context context = getApplicationContext();
         FaceDetector detector = new FaceDetector.Builder(context)
-                //.setProminentFaceOnly(true)   //track only one face... makes it faster.
-               // .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
+            //.setProminentFaceOnly(true)   //track only one face... makes it faster.
+            // .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
             .setClassificationType(FaceDetector.ALL_LANDMARKS)  //allows for eye and smile detection!
-                .build();
+            .build();
 
         detector.setProcessor(
-                //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
-                new LargestFaceFocusingProcessor(detector, new GraphicFaceTracker(mGraphicOverlay)));
+            //new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
+            new LargestFaceFocusingProcessor(detector, new GraphicFaceTracker(binding.faceOverlay)));
 
         if (!detector.isOperational()) {
             // Note: The first time that an app using face API is installed on a device, GMS will
@@ -89,19 +111,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mCameraSource = new CameraSource.Builder(context, detector)
-                .setRequestedPreviewSize(640, 480)
-                .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                .setRequestedFps(30.0f)
-                .build();
+            .setRequestedPreviewSize(640, 480)
+            .setFacing(CameraSource.CAMERA_FACING_FRONT)
+            .setRequestedFps(30.0f)
+            .build();
     }
 
-    /**
-     * Restarts the camera.
-     */
     @Override
     protected void onResume() {
         super.onResume();
-        startCameraSource();
+        if (!allPermissionsGranted()) {
+            rpl.launch(REQUIRED_PERMISSIONS);
+        } else
+            startCameraSource();
     }
 
     /**
@@ -110,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mPreview.stop();
+        binding.CameraView.stop();
     }
 
     /**
@@ -155,6 +177,16 @@ public class MainActivity extends AppCompatActivity {
             " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
 
     }
+
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     //==============================================================================================
     // Camera Source Preview
     //==============================================================================================
@@ -165,18 +197,14 @@ public class MainActivity extends AppCompatActivity {
      * again when the camera source is created.
      */
     private void startCameraSource() {
-
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
-        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
-            return;
+        if (!allPermissionsGranted()) {
+            return;  //permissions are asked elsewhere.  but the surface created, calls this at start and will crash otherwise.
+            //asking permissions twice causes one of them to say no, while waiting on the other.
         }
-
         try {
-            mPreview.start(mCameraSource, mGraphicOverlay);
+            binding.CameraView.start(mCameraSource, binding.faceOverlay);
         } catch (IOException e) {
             Log.e(TAG, "Unable to start camera source.", e);
             mCameraSource.release();
@@ -193,9 +221,10 @@ public class MainActivity extends AppCompatActivity {
      * uses this factory to create face trackers as needed -- one for each individual.
      */
     private class GraphicFaceTrackerFactory implements MultiProcessor.Factory<Face> {
+        @NonNull
         @Override
-        public Tracker<Face> create(Face face) {
-            return new GraphicFaceTracker(mGraphicOverlay);
+        public Tracker<Face> create(@NonNull Face face) {
+            return new GraphicFaceTracker(binding.faceOverlay);
         }
     }
 
@@ -204,8 +233,8 @@ public class MainActivity extends AppCompatActivity {
      * associated face overlay.
      */
     private class GraphicFaceTracker extends Tracker<Face> {
-        private GraphicOverlay mOverlay;
-        private FaceGraphic mFaceGraphic;
+        private final GraphicOverlay mOverlay;
+        private final FaceGraphic mFaceGraphic;
 
         GraphicFaceTracker(GraphicOverlay overlay) {
             mOverlay = overlay;
@@ -216,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
          * Start tracking the detected face instance within the face overlay.
          */
         @Override
-        public void onNewItem(int faceId, Face item) {
+        public void onNewItem(int faceId, @NonNull Face item) {
             mFaceGraphic.setId(faceId);
         }
 
@@ -224,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
          * Update the position/characteristics of the face within the overlay.
          */
         @Override
-        public void onUpdate(FaceDetector.Detections<Face> detectionResults, Face face) {
+        public void onUpdate(@NonNull FaceDetector.Detections<Face> detectionResults, @NonNull Face face) {
             mOverlay.add(mFaceGraphic);
             mFaceGraphic.updateFace(face);
         }
@@ -235,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
          * view).
          */
         @Override
-        public void onMissing(FaceDetector.Detections<Face> detectionResults) {
+        public void onMissing(@NonNull FaceDetector.Detections<Face> detectionResults) {
             mOverlay.remove(mFaceGraphic);
         }
 
