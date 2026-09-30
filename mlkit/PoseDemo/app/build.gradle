@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = 'edu.cs4730.posedemo'
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "edu.cs4730.posedemo"
-        minSdk = 31
-        targetSdk = 36
+        minSdk = 32
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
     }
@@ -21,8 +21,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding = true
@@ -31,17 +31,17 @@ android {
 
 dependencies {
 
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
     // CameraX core library using camera2 implementation
-    implementation("androidx.camera:camera-camera2:1.5.0")
+    implementation("androidx.camera:camera-camera2:1.6.2")
     // CameraX Lifecycle Library
-    implementation("androidx.camera:camera-lifecycle:1.5.0")
+    implementation("androidx.camera:camera-lifecycle:1.6.2")
     // CameraX View class
-    implementation("androidx.camera:camera-view:1.5.0")
+    implementation("androidx.camera:camera-view:1.6.2")
     // If you want to additionally use the CameraX Extensions library, not used in this example.
-    implementation("androidx.camera:camera-extensions:1.5.0")
+    implementation("androidx.camera:camera-extensions:1.6.2")
     // If you want to use the base sdk  https://developers.google.com/ml-kit/release-notes
     implementation("com.google.mlkit:pose-detection:18.0.0-beta5")
     // If you want to use the accurate sdk
