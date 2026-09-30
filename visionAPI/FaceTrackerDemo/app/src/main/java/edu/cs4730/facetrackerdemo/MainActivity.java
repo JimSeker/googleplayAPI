@@ -1,25 +1,29 @@
 package edu.cs4730.facetrackerdemo;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.view.SurfaceHolder;
-
 import android.util.Log;
-import android.view.SurfaceView;
-import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -29,11 +33,14 @@ import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
+import java.util.Map;
+
+import edu.cs4730.facetrackerdemo.databinding.ActivityMainBinding;
 
 /**
  * very simple example using the facetracker.  it checks if the eyes are open and the person is
  * smiling.  It doesn't draw anything.  but speaks telling you too open eyes, smile etc.
- *
+ * <p>
  * note this api is deprecated.  the landmarks have failed (which is why it doesn't draw).  I fully
  * expect the rest ot fail at any time.  https://developers.google.com/vision
  */
@@ -41,16 +48,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     String TAG = "MainActivity";
     CameraSource mCameraSource;
-    SurfaceView mPreview;
-    TextView mLogger;
+    ActivityMainBinding binding;
     private boolean mSurfaceAvailable;
-    boolean alreadyaskingpremission = false;
     //for getting permissions to use the camara in API 23+
     final String[] permissions = new String[]{Manifest.permission.CAMERA};
     private static final int RC_HANDLE_CAMERA_PERM = 2;
     //handler, since the facetracker is on another thread.
     protected Handler handler;
-
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
+    ActivityResultLauncher<String[]> rpl;
     //speech variables.
     private static final int REQ_TTS_STATUS_CHECK = 0;
     private TextToSpeech mTts;
@@ -60,33 +66,64 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        //get the views first.
-        mPreview = findViewById(R.id.CameraView);
-        //finally, setup the preview pieces
-        mPreview.getHolder().addCallback(this);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
-        mLogger = findViewById(R.id.mylogger);
-
+        // setup the preview pieces
+        binding.CameraView.getHolder().addCallback(this);
 
         //message handler for textivew.
-        handler = new Handler(new Handler.Callback() {
+        handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
             @Override
-            public boolean handleMessage(Message msg) {
+            public boolean handleMessage(@NonNull Message msg) {
 
                 Bundle stuff = msg.getData();
-                mLogger.setText(stuff.getString("logthis"));
-                mLogger.invalidate();  //should not need this...
+                binding.logger.setText(stuff.getString("logthis"));
+                binding.logger.invalidate();  //should not need this...
                 return true;
             }
         });
 
+        //using the new startActivityForResult method.
+        ActivityResultLauncher<Intent> myActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    // if (result.getResultCode() == Activity.RESULT_OK) {
+                    if (result.getResultCode() == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                        // TTS is up and running
+                        mTts = new TextToSpeech(getApplicationContext(), MainActivity.this);
+                        Log.v(TAG, "Pico is installed okay");
+                    } else
+                        Log.e(TAG, "Got a failure. TTS apparently not available");
+                }
+            });
         // Check to be sure that TTS exists and is okay to use
         Intent checkIntent = new Intent();
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        //The result will come back in onActivityResult with our REQ_TTS_STATUS_CHECK number
-        startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+        myActivityResultLauncher.launch(checkIntent);
+
+
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    boolean granted = true;
+                    for (Map.Entry<String, Boolean> x : isGranted.entrySet())
+                        if (!x.getValue()) granted = false;
+                    if (granted) startPreview();
+                    // else finish();
+                }
+            }
+        );
         createCameraSource();
+        startPreview();
     }
 
 
@@ -95,12 +132,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         Context context = getApplicationContext();
 
         FaceDetector detector = new FaceDetector.Builder(context)
-                .setProminentFaceOnly(true)   //track only one face... makes it faster.
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
-                .build();
+            .setProminentFaceOnly(true)   //track only one face... makes it faster.
+            .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
+            .build();
 
         detector.setProcessor(
-                new LargestFaceFocusingProcessor(detector, new FaceTracker()));
+            new LargestFaceFocusingProcessor(detector, new FaceTracker()));
 
 
         if (!detector.isOperational()) {
@@ -116,27 +153,25 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
 
         mCameraSource = new CameraSource.Builder(context, detector)
-                .setRequestedPreviewSize(640, 480)
-                .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                .setRequestedFps(30.0f)
-                .build();
+            .setRequestedPreviewSize(640, 480)
+            .setFacing(CameraSource.CAMERA_FACING_FRONT)
+            .setRequestedFps(30.0f)
+            .build();
 
     }
 
-
+    @SuppressLint("MissingPermission")
     void startPreview() {
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            if (!alreadyaskingpremission) {
-                ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
-                alreadyaskingpremission = true;
-            }
-            return;
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        if (!allPermissionsGranted()) {
+            return;  //permissions are asked elsewhere.  but the surface created, calls this at start and will crash otherwise.
+            //asking permissions twice causes one of them to say no, while waiting on the other.
         }
         if (mSurfaceAvailable && mCameraSource != null) {
 
             try {
-                mCameraSource.start(mPreview.getHolder());
+                mCameraSource.start(binding.CameraView.getHolder());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -148,7 +183,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onResume() {
         super.onResume();
-        startPreview();
+        if (!allPermissionsGranted()) {
+            rpl.launch(REQUIRED_PERMISSIONS);
+        } else
+            startPreview();
     }
 
     /**
@@ -175,55 +213,33 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mTts.shutdown();
     }
 
-    /**
-     * Callback for the result from requesting permissions. This method
-     * is invoked for every call on {@link #requestPermissions(String[], int)}.
-     * <p>
-     * <strong>Note:</strong> It is possible that the permissions request interaction
-     * with the user is interrupted. In this case you will receive empty permissions
-     * and results arrays which should be treated as a cancellation.
-     * </p>
-     *
-     * @param requestCode  The request code passed in {@link #requestPermissions(String[], int)}.
-     * @param permissions  The requested permissions. Never null.
-     * @param grantResults The grant results for the corresponding permissions
-     *                     which is either {@link PackageManager#PERMISSION_GRANTED}
-     *                     or {@link PackageManager#PERMISSION_DENIED}. Never null.
-     * @see #requestPermissions(String[], int)
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        alreadyaskingpremission = false;
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so start the preview now.
-            startPreview();
-            return;
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
         }
-        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-            " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-        Toast.makeText(this, "Camera permission not granted, so exiting", Toast.LENGTH_LONG).show();
-        finish();
-
+        return true;
     }
+
+
     /*
      *  methods needed for the surfaceView callback methods.
      */
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
         mSurfaceAvailable = true;
         startPreview();
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
         //should not be called, app is locked in portrait mode.
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         mSurfaceAvailable = false;
     }
 
@@ -235,13 +251,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         boolean AskRight, AskLeft, AskSmile;
         String TAG = " Tracker";
 
-        public void onNewItem(int id, Face face) {
+        public void onNewItem(int id, @NonNull Face face) {
             Log.i(TAG, "Awesome person detected.  Hello!");
             //mLogger.setText("New Face");
             sendmessage("New Face");
         }
 
-        public void onUpdate(Detector.Detections<Face> detections, Face face) {
+        public void onUpdate(@NonNull Detector.Detections<Face> detections, Face face) {
 
 
             //Is the left Eye open?
@@ -315,31 +331,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         // System.out.println("Sent message"+ logthis);
     }
 
-    /*
-     *  for the speech part of this code.
-     */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == REQ_TTS_STATUS_CHECK) {
-            switch (resultCode) {
-                case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
-                    // TTS is up and running
-                    mTts = new TextToSpeech(this, this);
-                    Log.v(TAG, "Pico is installed okay");
-                    break;
-                case TextToSpeech.Engine.CHECK_VOICE_DATA_FAIL:
-                default:
-                    Log.e(TAG, "Got a failure. TTS apparently not available");
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
     @Override
     public void onInit(int status) {
         // Now that the TTS engine is ready, we enable the button
         if (status == TextToSpeech.SUCCESS) {
+            Log.wtf(TAG, "TextToSpeech.SUCCESS");
             canspeak = true;
+        } else if (status == TextToSpeech.ERROR) {
+            Log.wtf(TAG, "TextToSpeech.ERROR");
+        } else {
+            Log.wtf(TAG, "status is " + status);
         }
     }
 }
