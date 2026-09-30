@@ -1,10 +1,14 @@
 package edu.cs4730.ocrdemo;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -12,7 +16,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.widget.TextView;
+
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -20,35 +24,57 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.util.Map;
+
+import edu.cs4730.ocrdemo.databinding.ActivityMainBinding;
 
 /**
  * This is a simpler example of the text detector then android example code.  It's also in line with the rest of my examples.
- *
+ * <p>
  * This does in a gesture detector so you can tap the text and it will show up in the logger and at the top of the screen.
  *
  */
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "FaceTracker";
+    private static final String TAG = "OCRDemo";
 
     private CameraSource mCameraSource;
-    private CameraSourcePreview mPreview;
+    ActivityMainBinding binding;
     private GraphicOverlay<OcrGraphic> mGraphicOverlay;
-    TextView mLogger;
-    //for getting permissions to use the camara in API 23+
-    final String[] permissions = new String[]{Manifest.permission.CAMERA};
-    private static final int RC_HANDLE_CAMERA_PERM = 2;
+
+    //for getting permissions to use the Camara in API 23+
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
+    ActivityResultLauncher<String[]> rpl;
     private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
-        mLogger = findViewById(R.id.mylogger);
-        mPreview =  findViewById(R.id.CameraView);
-        mGraphicOverlay = findViewById(R.id.faceOverlay);
+        //this is an odd one with the cast,but it is correct.  don't fix it.
+        mGraphicOverlay = (GraphicOverlay<OcrGraphic>) binding.faceOverlay;
         gestureDetector = new GestureDetector(this, new myGestureListener());
+
+
+        rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+            new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> isGranted) {
+                    boolean granted = true;
+                    for (Map.Entry<String, Boolean> x : isGranted.entrySet())
+                        if (!x.getValue()) granted = false;
+                    if (granted) startCameraSource();
+                    // else finish();
+                }
+            }
+        );
 
         createCameraSource();
 
@@ -86,14 +112,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        return  gestureDetector.onTouchEvent(e)|| super.onTouchEvent(e);
+        return gestureDetector.onTouchEvent(e) || super.onTouchEvent(e);
     }
+
     private class myGestureListener extends GestureDetector.SimpleOnGestureListener {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
 
-           float rawX = e.getRawX(), rawY= e.getRawY();
+            float rawX = e.getRawX(), rawY = e.getRawY();
             OcrGraphic graphic = mGraphicOverlay.getGraphicAtLocation(rawX, rawY);
             TextBlock text = null;
             if (graphic != null) {
@@ -114,7 +141,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startCameraSource();
+        if (!allPermissionsGranted()) {
+            rpl.launch(REQUIRED_PERMISSIONS);
+        } else
+            startCameraSource();
     }
 
     /**
@@ -123,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mPreview.stop();
+        binding.CameraView.stop();
     }
 
     /**
@@ -139,35 +169,16 @@ public class MainActivity extends AppCompatActivity {
 
     void logthis(String item) {
         Log.d(TAG, "text block is" + item);
-        mLogger.setText(item);
+        binding.logger.setText(item);
     }
-    /**
-     * Callback for the result from requesting permissions. This method
-     * is invoked for every call on {@link #requestPermissions(String[], int)}.
-     * <p>
-     * <strong>Note:</strong> It is possible that the permissions request interaction
-     * with the user is interrupted. In this case you will receive empty permissions
-     * and results arrays which should be treated as a cancellation.
-     * </p>
-     *
-     * @param requestCode  The request code passed in {@link #requestPermissions(String[], int)}.
-     * @param permissions  The requested permissions. Never null.
-     * @param grantResults The grant results for the corresponding permissions
-     *                     which is either {@link PackageManager#PERMISSION_GRANTED}
-     *                     or {@link PackageManager#PERMISSION_DENIED}. Never null.
-     * @see #requestPermissions(String[], int)
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so create the camerasource
-            startCameraSource();
-            return;
-        }
-        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-            " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
 
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
     //==============================================================================================
     // Camera Source Preview
@@ -179,18 +190,14 @@ public class MainActivity extends AppCompatActivity {
      * again when the camera source is created.
      */
     private void startCameraSource() {
-
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
-        //this is the quick and dirty version and it doesn't explain why we want permission.  Which is not how google wants us to do it.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
-            return;
+        if (!allPermissionsGranted()) {
+            return;  //permissions are asked elsewhere.  but the surface created, calls this at start and will crash otherwise.
+            //asking permissions twice causes one of them to say no, while waiting on the other.
         }
-
         try {
-            mPreview.start(mCameraSource, mGraphicOverlay);
+            binding.CameraView.start(mCameraSource, mGraphicOverlay);
         } catch (IOException e) {
             Log.e(TAG, "Unable to start camera source.", e);
             mCameraSource.release();
@@ -208,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
-        private GraphicOverlay<OcrGraphic> mGraphicOverlay;
+        private final GraphicOverlay<OcrGraphic> mGraphicOverlay;
 
         OcrDetectorProcessor(GraphicOverlay<OcrGraphic> ocrGraphicOverlay) {
             mGraphicOverlay = ocrGraphicOverlay;

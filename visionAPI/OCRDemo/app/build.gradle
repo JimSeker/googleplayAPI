@@ -1,13 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    compileSdk = 37
+    namespace = "edu.cs4730.ocrdemo"
     defaultConfig {
-        applicationId "edu.cs4730.ocrdemo"
-        minSdkVersion 26
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
+        applicationId = "edu.cs4730.ocrdemo"
+        minSdk = 32
+        targetSdk = 37
+        versionCode = 1
+        versionName = "1.0"
     }
     buildTypes {
         release {
@@ -15,11 +16,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    namespace = 'edu.cs4730.ocrdemo'
+
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation("androidx.activity:activity:1.13.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation 'com.google.android.gms:play-services-vision:20.1.3'
-    implementation 'com.google.android.gms:play-services-base:18.1.0'
-    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'com.google.android.gms:play-services-base:18.11.0'
 }
