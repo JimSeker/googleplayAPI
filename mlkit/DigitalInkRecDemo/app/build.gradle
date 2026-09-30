@@ -3,14 +3,14 @@ plugins {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
-        applicationId ="edu.cs4730.digitalinkrecdemo"
-        minSdk =31
-        targetSdk =36
-        versionCode =1
-        versionName ="1.0"
+        applicationId = "edu.cs4730.digitalinkrecdemo"
+        minSdk = 32
+        targetSdk = 37
+        versionCode = 1
+        versionName = "1.0"
 
     }
 
@@ -21,20 +21,20 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding = true
     }
-    namespace ='edu.cs4730.digitalinkrecdemo'
+    namespace = 'edu.cs4730.digitalinkrecdemo'
 }
 
 dependencies {
 
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("androidx.activity:activity:1.11.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
+    implementation("androidx.activity:activity:1.13.0")
     implementation("com.google.mlkit:digital-ink-recognition:19.0.0")
 }
