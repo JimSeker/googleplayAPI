@@ -50,15 +50,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     CameraSource mCameraSource;
     ActivityMainBinding binding;
     private boolean mSurfaceAvailable;
-    //for getting permissions to use the camara in API 23+
-    final String[] permissions = new String[]{Manifest.permission.CAMERA};
-    private static final int RC_HANDLE_CAMERA_PERM = 2;
     //handler, since the facetracker is on another thread.
     protected Handler handler;
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
     ActivityResultLauncher<String[]> rpl;
     //speech variables.
-    private static final int REQ_TTS_STATUS_CHECK = 0;
     private TextToSpeech mTts;
     private String myUtteranceId = "txt2spk";
     private boolean canspeak;
@@ -123,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             }
         );
         createCameraSource();
-        startPreview();
     }
 
 
