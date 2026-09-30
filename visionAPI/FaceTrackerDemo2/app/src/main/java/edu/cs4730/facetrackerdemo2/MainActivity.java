@@ -34,6 +34,10 @@ import edu.cs4730.facetrackerdemo2.databinding.ActivityMainBinding;
  * This example uses the face tracker (only one face though), so show if the eyes are open and
  * the face is smiling.  It needs a graphic overloay, which camerapreview to do the grpahics overlay.
  * the cameraSourcePreview and GraphicOverlay is googles code, unchanged.
+ *
+ * NOTE, this does not work anymore.  landmarks are decprecated.  so the drawing fails.
+ * only eye and mouth predictions work.
+ *
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
