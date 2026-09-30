@@ -12,10 +12,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
 
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+
+
+import edu.cs4730.barcodereader.databinding.FragmentMyDialogBinding;
 
 
 /**
@@ -29,8 +29,8 @@ public class myDialogFragment extends DialogFragment {
 
     private String mParam1;
 
-    private Button btn_web, btn_amazon;
-    private TextView tv_bc;
+    FragmentMyDialogBinding binding;
+
 
     /**
      * Use this factory method to create a new instance of
@@ -63,13 +63,10 @@ public class myDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
-        // Inflate the layout for this fragment
-        View myView = inflater.inflate(R.layout.fragment_my_dialog,  null);
-        tv_bc = myView.findViewById(R.id.barcode);
-        tv_bc.setText(mParam1);
-        btn_amazon = myView.findViewById(R.id.btn_amazon);
-        btn_amazon.setOnClickListener(new View.OnClickListener() {
+        binding = FragmentMyDialogBinding.inflate(getLayoutInflater());
+
+        binding.barcode.setText(mParam1);
+        binding.btnAmazon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dismiss();
@@ -81,13 +78,12 @@ public class myDialogFragment extends DialogFragment {
             }
         });
 
-        btn_web = myView.findViewById(R.id.btn_web);
-        btn_web.setOnClickListener(new View.OnClickListener() {
+        binding.btnWeb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dismiss();
 
-                String url = "http://www.google.com/search?q="+mParam1;
+                String url = "http://www.google.com/search?q=" + mParam1;
                 Log.i("URL is", url);
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
@@ -95,9 +91,9 @@ public class myDialogFragment extends DialogFragment {
             }
         });
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.Theme_AppCompat));
-        builder.setView(myView);
-        return  builder.create();
+        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), androidx.appcompat.R.style.Theme_AppCompat));
+        builder.setView(binding.getRoot());
+        return builder.create();
     }
 
 

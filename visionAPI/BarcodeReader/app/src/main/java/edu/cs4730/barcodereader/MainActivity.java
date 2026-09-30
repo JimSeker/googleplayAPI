@@ -5,22 +5,22 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
@@ -30,6 +30,8 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
 import java.util.Map;
+
+import edu.cs4730.barcodereader.databinding.ActivityMainBinding;
 
 /**
  * This is a simple example to using the barcode via the vision api's.
@@ -44,8 +46,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
     String TAG = "MainActivity";
     CameraSource mCameraSource;
-    SurfaceView mPreview;
-    TextView mLogger;
+    ActivityMainBinding binding;
     private boolean mSurfaceAvailable;
     boolean alreadyaskingpremission = false;
     //for getting permissions to use the camara in API 23+
@@ -59,23 +60,27 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        //get the views first.
-        mPreview = findViewById(R.id.CameraView);
-        //finally, setup the preview pieces
-        mPreview.getHolder().addCallback(this);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
-        mLogger = findViewById(R.id.logger);
+        //setup the preview pieces
+        binding.CameraView.getHolder().addCallback(this);
+
 
         //handler to display a dialog about what to do with the barcode
-        handler = new Handler(new Handler.Callback() {
+        handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(@NonNull Message msg) {
 
                 Bundle stuff = msg.getData();
                 String bc = stuff.getString("barcode");
-                mLogger.setText(bc);
-                mLogger.invalidate();  //should not need this...
+                binding.logger.setText(bc);
+                binding.logger.invalidate();  //should not need this...
                 //now start a dialog about web or amazon search.
                 myDialogFragment myDialog = myDialogFragment.newInstance(bc);
                 myDialog.show(getSupportFragmentManager(), null);
@@ -99,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     }
 
-    //create the create source.  Once the permissions have been granted above/below.
+    //create the create Camera source.  Once the permissions have been granted above/below.
     public void createCameraSource() {
         //Setup the BarCodeDetector
         Context context = getApplicationContext();
@@ -142,12 +147,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         // permission is not granted yet, request permission.
         if (!allPermissionsGranted()) {
             return;  //permissions are asked elsewhere.  but the surface created, calls this at start and will crash otherwise.
-                    //asking permissions twice causes one of them to say no, while waiting on the other.
+            //asking permissions twice causes one of them to say no, while waiting on the other.
         }
 
         if (mSurfaceAvailable && mCameraSource != null) {
             try {
-                mCameraSource.start(mPreview.getHolder());
+                mCameraSource.start(binding.CameraView.getHolder());
                 Log.v("TAG", "started, I think");
             } catch (IOException e) {
                 e.printStackTrace();
