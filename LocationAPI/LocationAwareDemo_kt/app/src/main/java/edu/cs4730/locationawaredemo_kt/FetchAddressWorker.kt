@@ -43,8 +43,9 @@ class FetchAddressWorker(context: Context, workerParams: WorkerParameters) :
             // surrounding the given latitude and longitude. The results are a best guess and are
             // not guaranteed to be accurate.
             //https://stackoverflow.com/questions/73456748/geocoder-getfromlocation-deprecated
-            //basically this is blocking and google doesn't want that anymore.  of course, the point
-            //sevice is so it can block.  This whole example piece can be rewritten now when I want to.
+            //basically this is blocking and Google doesn't want that anymore.  of course, the point
+            //service is so it can block.  This whole example piece can be rewritten now when I want to.
+            //When the minsdk is 33+, I remove the service and just do it in MainActivity.
             addresses = geocoder.getFromLocation(
                 mLatitude, mLongitude,
                 1

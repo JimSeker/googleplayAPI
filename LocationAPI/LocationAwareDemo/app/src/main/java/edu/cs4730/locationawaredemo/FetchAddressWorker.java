@@ -57,8 +57,9 @@ public class FetchAddressWorker extends Worker {
             // surrounding the given latitude and longitude. The results are a best guess and are
             // not guaranteed to be accurate.
             //https://stackoverflow.com/questions/73456748/geocoder-getfromlocation-deprecated
-            //basically this is blocking and google doesn't want that anymore.  of course, the point
-            //sevice is so it can block.  This whole example piece can be rewritten now when I want to.
+            //basically this is blocking and Google doesn't want that anymore.  of course, the point
+            //service is so it can block.  This whole example piece can be rewritten now when I want to.
+            //waiting for minsdk to be 33+, then the service can go away.
             addresses = geocoder.getFromLocation(
                 mLatitude, mLongitude,
                 1);// In this sample, we get just a single address.
