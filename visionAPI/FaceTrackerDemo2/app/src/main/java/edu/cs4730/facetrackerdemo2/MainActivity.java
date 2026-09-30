@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     public void createCameraSource() {
         Context context = getApplicationContext();
         FaceDetector detector = new FaceDetector.Builder(context)
-            //.setProminentFaceOnly(true)   //track only one face... makes it faster.
+            .setProminentFaceOnly(true)   //track only one face... makes it faster.
             // .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)  //allows for eye and smile detection!
             .setClassificationType(FaceDetector.ALL_LANDMARKS)  //allows for eye and smile detection!
             .build();
@@ -144,37 +144,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (mCameraSource != null)
             mCameraSource.release();
-
-    }
-
-
-    /**
-     * Callback for the result from requesting permissions. This method
-     * is invoked for every call on {@link #requestPermissions(String[], int)}.
-     * <p>
-     * <strong>Note:</strong> It is possible that the permissions request interaction
-     * with the user is interrupted. In this case you will receive empty permissions
-     * and results arrays which should be treated as a cancellation.
-     * </p>
-     *
-     * @param requestCode  The request code passed in {@link #requestPermissions(String[], int)}.
-     * @param permissions  The requested permissions. Never null.
-     * @param grantResults The grant results for the corresponding permissions
-     *                     which is either {@link PackageManager#PERMISSION_GRANTED}
-     *                     or {@link PackageManager#PERMISSION_DENIED}. Never null.
-     * @see #requestPermissions(String[], int)
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so create the camerasource
-            startCameraSource();
-            return;
-        }
-        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-            " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
 
     }
 
