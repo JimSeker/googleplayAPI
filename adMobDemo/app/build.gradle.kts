@@ -1,4 +1,6 @@
-apply plugin: 'com.android.application'
+plugins {
+    alias(libs.plugins.android.application)
+}
 
 android {
     compileSdk = 37
@@ -12,8 +14,8 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -23,18 +25,16 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    namespace = 'edu.cs4730.admobdemo'
+    namespace = "edu.cs4730.admobdemo"
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation("androidx.appcompat:appcompat:1.8.0")
-    implementation("com.google.android.material:material:1.14.0")
+    implementation(libs.appcompat)
+    implementation(libs.material)
     //https://developers.google.com/android/guides/releases
-    implementation("com.google.android.gms:play-services-ads:25.5.0")
+    implementation(libs.play.services.ads)
     //implementation ("com.google.firebase:firebase-ads:25.5.0")  //likely the same library as gp ads at this point.
     //implementation("com.google.android.ads.consent:consent-library:1.0.8")
-    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
-    implementation("androidx.work:work-runtime:2.12.0")
-
+    implementation(libs.user.messaging.platform)
+    implementation(libs.work.runtime)
 }

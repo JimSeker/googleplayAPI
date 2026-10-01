@@ -1,0 +1,17 @@
+[versions]
+agp = "9.4.1"
+appcompat = "1.8.0"
+material = "1.14.0"
+play-services-ads = "25.5.0"
+user-messaging-platform = "4.0.0"
+work-runtime = "2.12.0"
+
+[libraries]
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play-services-ads" }
+user-messaging-platform = { module = "com.google.android.ump:user-messaging-platform", version.ref = "user-messaging-platform" }
+work-runtime = { module = "androidx.work:work-runtime", version.ref = "work-runtime" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
