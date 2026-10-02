@@ -1,0 +1,25 @@
+[versions]
+activity = "1.13.0"
+agp = "9.4.1"
+google-services = "4.5.0"
+appcompat = "1.8.0"
+constraintlayout = "2.2.2"
+material = "1.14.0"
+firebase-bom = "34.19.0"
+firebaseui = "9.1.1"
+
+[libraries]
+activity = { module = "androidx.activity:activity", version.ref = "activity" }
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebaseui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseui" }
+firebaseui-firestore = { module = "com.firebaseui:firebase-ui-firestore", version.ref = "firebaseui" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }

@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     String WEB_CLIENT_ID = "106312478965-2hob0i3m66dsseghi7uvqjfveihlt2c5.apps.googleusercontent.com";
     CredentialManager credentialManager;
     GoogleIdTokenCredential googleIdTokenCredential;
-    int REQUEST_AUTHORIZE = 12;
     boolean failedtologin = false;
     ActivityResultLauncher<IntentSenderRequest> authLauncher;
 

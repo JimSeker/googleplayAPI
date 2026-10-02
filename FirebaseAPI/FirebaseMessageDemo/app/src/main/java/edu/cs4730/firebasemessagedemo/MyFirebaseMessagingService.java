@@ -40,14 +40,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMsgService";
 
 
+    @Override
+    public void onRegistered(@NonNull String token) {
+        super.onRegistered(token);
+        // Send the new installationId to your backend server instead of the token
+
+        Log.wtf(TAG, "FCM Token: " + token);
+        //store the token for later use in the app.
+        SharedPrefManager.getInstance(getApplicationContext()).saveDeviceToken(token);
+    }
     /**
-     * Replacement for the FirebaseInstanceID service, which was depreciated in 17.x
+     * onNewToken is deprecated, but it also bitches if I don't have it.  So either onRegistered
+     * or onNewToken is called.
      * <p>
-     * This is called on at least the first startup.  it generates a unique token that is
-     * used by the cloud messaging system.  definitely save the token for later use.
-     *
-     * @param token
      */
+    @SuppressWarnings("deprecation")   //I removed this and check next if I can remove onNewToken.
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
