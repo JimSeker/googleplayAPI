@@ -41,8 +41,11 @@ import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentAuthGoogleApiBinding;
 
 
 /**
- * Uses the GoogleSignIn and GoogleSignInClient to sign into a google account
- * It then signs into firebase with that account.  since google sign in doesn't sign into firebase.
+ * Uses the GoogleSignIn and GoogleSignInClient to sign in to a Google account
+ * It then signs into firebase with that account.  since google sign in doesn't sign in to firebase.
+ *
+ * the signin is deprecated.  googlelogin example has the updated version, but I need to time
+ * to fix this one as well.  coming soon.
  */
 public class AuthGoogleApiFragment extends Fragment {
 
