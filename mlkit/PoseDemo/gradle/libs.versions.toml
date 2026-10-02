@@ -1,0 +1,21 @@
+[versions]
+agp = "9.4.1"
+appcompat = "1.8.0"
+material = "1.14.0"
+constraintlayout = "2.2.2"
+camera = "1.6.2"
+pose-detection = "18.0.0-beta5"
+
+[libraries]
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camera" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camera" }
+camera-view = { module = "androidx.camera:camera-view", version.ref = "camera" }
+camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "camera" }
+mlkit-pose-detection = { module = "com.google.mlkit:pose-detection", version.ref = "pose-detection" }
+mlkit-pose-detection-accurate = { module = "com.google.mlkit:pose-detection-accurate", version.ref = "pose-detection" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
