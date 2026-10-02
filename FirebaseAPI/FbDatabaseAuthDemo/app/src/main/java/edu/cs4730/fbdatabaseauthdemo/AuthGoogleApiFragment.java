@@ -24,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -43,9 +42,6 @@ import edu.cs4730.fbdatabaseauthdemo.databinding.FragmentAuthGoogleApiBinding;
 /**
  * Uses the GoogleSignIn and GoogleSignInClient to sign in to a Google account
  * It then signs into firebase with that account.  since google sign in doesn't sign in to firebase.
- *
- * the signin is deprecated.  googlelogin example has the updated version, but I need to time
- * to fix this one as well.  coming soon.
  */
 public class AuthGoogleApiFragment extends Fragment {
 
@@ -58,7 +54,6 @@ public class AuthGoogleApiFragment extends Fragment {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private CredentialManager credentialManager;
-    private GoogleSignInClient mGoogleSignInClient;
     ActivityResultLauncher<Intent> myActivityResultLauncher;
 
     public AuthGoogleApiFragment() {
@@ -121,6 +116,9 @@ public class AuthGoogleApiFragment extends Fragment {
         // Instantiate a Google sign-in request
         GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(true)
+            //okay, honesty, I've no idea with default_web_client_id comes from, but it works,
+            //likely from the JSON I think, but sometimes won't work, retype it (android uses the wrong one)
+            //and it works.
             .setServerClientId(getString(R.string.default_web_client_id))
             .build();
 
