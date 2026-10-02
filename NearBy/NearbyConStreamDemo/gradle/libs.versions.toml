@@ -1,0 +1,15 @@
+[versions]
+agp = "9.4.1"
+appcompat = "1.8.0"
+play-services-nearby = "19.5.1"
+material = "1.14.0"
+activity = "1.13.0"
+
+[libraries]
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+play-services-nearby = { module = "com.google.android.gms:play-services-nearby", version.ref = "play-services-nearby" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+activity = { module = "androidx.activity:activity", version.ref = "activity" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
