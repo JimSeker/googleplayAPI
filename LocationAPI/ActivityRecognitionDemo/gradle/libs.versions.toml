@@ -1,0 +1,15 @@
+[versions]
+agp = "9.4.1"
+appcompat = "1.8.0"
+material = "1.14.0"
+play-services-location = "21.4.0"
+play-services-base = "18.11.0"
+
+[libraries]
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+play-services-base = { module = "com.google.android.gms:play-services-base", version.ref = "play-services-base" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }

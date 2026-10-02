@@ -1,0 +1,28 @@
+[versions]
+agp = "9.4.1"
+appcompat = "1.8.0"
+material = "1.14.0"
+recyclerview = "1.4.0"
+cardview = "1.0.0"
+viewpager2 = "1.1.0"
+activity = "1.13.0"
+play-services-location = "21.4.0"
+play-services-maps = "20.0.0"
+play-services-base = "18.11.0"
+lifecycle = "2.11.0"
+
+[libraries]
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
+viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
+activity = { module = "androidx.activity:activity", version.ref = "activity" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "play-services-maps" }
+play-services-base = { module = "com.google.android.gms:play-services-base", version.ref = "play-services-base" }
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata", version.ref = "lifecycle" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
