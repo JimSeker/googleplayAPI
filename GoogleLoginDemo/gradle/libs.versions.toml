@@ -5,6 +5,7 @@ material = "1.14.0"
 credentials = "1.6.0"
 googleid = "1.2.1"
 play-services-auth = "22.0.0"
+google-services = "4.5.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -16,3 +17,4 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
