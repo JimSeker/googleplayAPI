@@ -3,26 +3,20 @@ plugins {
 }
 
 android {
-    namespace = "edu.cs4730.subjectsegmentationdemo"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "edu.cs4730.subjectsegmentationdemo"
+        applicationId = "edu.cs4730.textrecpicdemo"
         minSdk = 32
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -32,14 +26,16 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    namespace = "edu.cs4730.textrecpicdemo"
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation(libs.subject.segmentation)
     implementation(libs.exifinterface)
+    //barcode scanner parts.
+    implementation(libs.mlkit.barcode.scanning)
+    //    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.0'
+    implementation(libs.mlkit.text.recognition)
 }
