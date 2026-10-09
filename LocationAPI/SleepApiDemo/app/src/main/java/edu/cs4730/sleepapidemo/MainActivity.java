@@ -36,7 +36,7 @@ import edu.cs4730.sleepapidemo.databinding.ActivityMainBinding;
  * will send to the logcat the information. Likely you really want a database (like room) and the main activity
  * could then show you what it thinks is your sleep cycles.
  * <p>
- * Note if you don't unsubscribe, it will still calls to the broadcast receiver until the phone is rebooted.
+ * Note if you don't unsubscribe, it will still call to the broadcast receiver until the phone is rebooted.
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -152,10 +152,10 @@ public class MainActivity extends AppCompatActivity {
     private PendingIntent getActivityDetectionPendingIntent() {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        } else {  //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_MUTABLE);
-        } else {
-            return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+//        } else {
+//            return PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), SleepReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
         }
     }
 
