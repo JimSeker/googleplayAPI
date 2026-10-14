@@ -10,7 +10,7 @@ This directory is specific to the on-device ML kit (not ML cloud) APIs  https://
 
 `ImageLabelingDemo` This example how to use image labeling. it takes a picture and prints the object name it finds on the picture.
 
-`mlkitFaceTrackerDemo` is a stripped down version of goggles examples to just do facetracking with a camera.  It's still very complex.
+`mlkitFaceTrackerDemo` is a stripped down version of goggles examples to just do facetracking with a camera.  It's still very complex.  Also the camera code is deprecated.  It needs converted to CameraX, but their own code is not converted either.
 
 `MLkitTranslateTextDemo` is a very simple example using the translate APIs.
 
