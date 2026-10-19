@@ -22,7 +22,7 @@ This directory is specific to the on-device ML kit (not ML cloud) APIs  https://
 
 `SubjectSegmentationDemo` is a simple example, that uses the camera intent, then draws over the subjects found to highlight them.  There is unused code to pull the subjects images as well.
 
-`PoseDemo` This example of using the pose detection with the CameraX preview.  it has issues and is slow to start, but works okay.  They example is much faster and I've no clue why.
+`PoseDemo` This example of using the pose detection with the CameraX preview.   It maybe slow to start (downloading model), but now runs very quickly with the real-time strategy enabled. 
 
 `TextRecPicDemo` This example use an intent to take a picture and then processes the image for Text Recognition APIs.
 

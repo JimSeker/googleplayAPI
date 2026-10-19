@@ -10,6 +10,7 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
+import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -21,11 +22,13 @@ import android.content.pm.PackageManager;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.pose.Pose;
@@ -84,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         PoseDetectorOptions options =
             new PoseDetectorOptions.Builder()
                 .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
-                // .setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU)
+                .setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU)
                 .build();
         // Accurate pose detector on static images, when depending on the pose-detection-accurate sdk
 //        AccuratePoseDetectorOptions options =
@@ -113,15 +116,19 @@ public class MainActivity extends AppCompatActivity {
                         Preview preview = (new Preview.Builder()).build();
                         preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
 
-                        //I'm guessing on this one, there is not a good example with it yet.
+                        // Set resolution strategy to 640x480 for real-time ML processing
                         ResolutionSelector rs = new ResolutionSelector.Builder()
+                            .setResolutionStrategy(
+                                new ResolutionStrategy(
+                                    new Size(640, 480),
+                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                                )
+                            )
                             .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
                             .build();
 
                         ImageAnalysis imageAnalysis =
                             new ImageAnalysis.Builder()
-                                //.setTargetResolution(new Size(480, 360)) //min resolution to work.
-                                //.setTargetResolution(new Size(1280, 720))  //depreciated.
                                 .setResolutionSelector(rs)
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build();
@@ -139,11 +146,10 @@ public class MainActivity extends AppCompatActivity {
                                         imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
                                 }
 
-                                // insert your code here.
                                 Image mediaImage = imageProxy.getImage();
                                 if (mediaImage != null) {
                                     InputImage image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
-                                    // Pass image to an ML Kit Vision API
+                                    // Pass image to ML Kit Vision API
                                     poseDetector.process(image)
                                         .addOnSuccessListener(executor,
                                             new OnSuccessListener<Pose>() {
@@ -163,14 +169,16 @@ public class MainActivity extends AppCompatActivity {
                                             new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
-                                                    // logthis(" Task failed " + e.getMessage());
+                                                    Log.e(TAG, "Pose detection failed: " + e.getMessage());
                                                 }
-                                            });
-
-
+                                            })
+                                        .addOnCompleteListener(
+                                            executor,
+                                            task -> imageProxy.close()
+                                        );
+                                } else {
+                                    imageProxy.close();
                                 }
-                                // after done, release the ImageProxy object
-                                imageProxy.close();
                             }
                         });
 
@@ -208,3 +216,4 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, item);
     }
 }
+
