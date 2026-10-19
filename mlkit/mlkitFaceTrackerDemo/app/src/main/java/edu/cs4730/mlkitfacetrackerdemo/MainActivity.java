@@ -25,7 +25,9 @@ import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import androidx.core.content.ContextCompat;
@@ -34,15 +36,12 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.common.annotation.KeepName;
-
-import edu.cs4730.mlkitfacetrackerdemo.facedetector.FaceDetectorProcessor;
-
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.cs4730.mlkitfacetrackerdemo.facedetector.FaceDetectorProcessor;
 
 /**
  * Live preview demo for ML Kit APIs.
@@ -58,7 +57,7 @@ public final class MainActivity extends AppCompatActivity
     private static final int PERMISSION_REQUESTS = 1;
 
     private CameraSource cameraSource = null;
-    private CameraSourcePreview preview;
+    private PreviewView preview;
     private GraphicOverlay graphicOverlay;
     private String selectedModel = FACE_DETECTION;
 
@@ -87,17 +86,17 @@ public final class MainActivity extends AppCompatActivity
         ToggleButton facingSwitch = findViewById(R.id.facing_switch);
         facingSwitch.setOnCheckedChangeListener(this);
 
-        //check for permissions and start the face recognation.
+        //check for permissions and start the face recognition.
         if (allPermissionsGranted()) {
             createCameraSource(selectedModel);
+            startCameraSource();
         } else {
             getRuntimePermissions();
         }
     }
 
-
     @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+    public void onCheckedChanged(@NonNull CompoundButton buttonView, boolean isChecked) {
         Log.d(TAG, "Set facing");
         if (cameraSource != null) {
             if (isChecked) {
@@ -106,7 +105,6 @@ public final class MainActivity extends AppCompatActivity
                 cameraSource.setFacing(CameraSource.CAMERA_FACING_BACK);
             }
         }
-        preview.stop();
         startCameraSource();
     }
 
@@ -118,23 +116,18 @@ public final class MainActivity extends AppCompatActivity
 
         //always start the face recognition model.
         try {
-
             Log.i(TAG, "Using Face Detector Processor");
-            //this is the setup for the face recog.  need to remove the settings here.
-
 
             FaceDetectorOptions.Builder optionsBuilder =
                 new FaceDetectorOptions.Builder()
-                    .setLandmarkMode( FaceDetectorOptions.LANDMARK_MODE_ALL)
+                    .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
                     .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)   //can't use contour and landmarks together.
                     .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
                     .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)  //FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE
-                    .enableTracking() //this is causing a pixel2 to die, so enable if you want to.
+                    .enableTracking()
                     .setMinFaceSize(0.1f);
 
-
             FaceDetectorOptions faceDetectorOptions = optionsBuilder.build();
-
 
             //start the model here.
             cameraSource.setMachineLearningFrameProcessor(
@@ -151,25 +144,11 @@ public final class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Starts or restarts the camera source, if it exists. If the camera source doesn't exist yet
-     * (e.g., because onResume was called before the camera source was created), this will be called
-     * again when the camera source is created.
+     * Starts or restarts the camera source, if it exists.
      */
     private void startCameraSource() {
-        if (cameraSource != null) {
-            try {
-                if (preview == null) {
-                    Log.d(TAG, "resume: Preview is null");
-                }
-                if (graphicOverlay == null) {
-                    Log.d(TAG, "resume: graphOverlay is null");
-                }
-                preview.start(cameraSource, graphicOverlay);
-            } catch (IOException e) {
-                Log.e(TAG, "Unable to start camera source.", e);
-                cameraSource.release();
-                cameraSource = null;
-            }
+        if (cameraSource != null && preview != null) {
+            cameraSource.start(this, preview);
         }
     }
 
@@ -177,8 +156,10 @@ public final class MainActivity extends AppCompatActivity
     public void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        createCameraSource(selectedModel);
-        startCameraSource();
+        if (allPermissionsGranted()) {
+            createCameraSource(selectedModel);
+            startCameraSource();
+        }
     }
 
     /**
@@ -187,7 +168,9 @@ public final class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        preview.stop();
+        if (cameraSource != null) {
+            cameraSource.stop();
+        }
     }
 
     @Override
@@ -243,6 +226,7 @@ public final class MainActivity extends AppCompatActivity
         Log.i(TAG, "Permission granted!");
         if (allPermissionsGranted()) {
             createCameraSource(selectedModel);
+            startCameraSource();
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }

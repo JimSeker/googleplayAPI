@@ -33,4 +33,10 @@ dependencies {
     implementation(libs.activity)
     //mlkit for face detection
     implementation(libs.face.detection)
+
+    // CameraX
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
 }

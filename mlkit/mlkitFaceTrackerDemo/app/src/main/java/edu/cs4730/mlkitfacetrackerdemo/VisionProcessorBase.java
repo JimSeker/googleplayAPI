@@ -20,6 +20,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.media.Image;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,12 +28,11 @@ import android.widget.Toast;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
+import androidx.camera.core.ImageProxy;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
 import com.google.mlkit.vision.common.InputImage;
-
 
 import java.nio.ByteBuffer;
 import java.util.Timer;
@@ -99,6 +99,43 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                 },
                 /* delay= */ 0,
                 /* period= */ 1000);
+    }
+
+    // -----------------Code for processing live preview frame from CameraX API-----------------------
+    @androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
+    @Override
+    public void processImageProxy(
+            final ImageProxy imageProxy,
+            final GraphicOverlay graphicOverlay,
+            final boolean isLensFacingFront) {
+        if (isShutdown) {
+            imageProxy.close();
+            return;
+        }
+
+        Image mediaImage = imageProxy.getImage();
+        if (mediaImage == null) {
+            imageProxy.close();
+            return;
+        }
+
+        int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+        if (rotationDegrees == 90 || rotationDegrees == 270) {
+            graphicOverlay.setImageSourceInfo(imageProxy.getHeight(), imageProxy.getWidth(), isLensFacingFront);
+        } else {
+            graphicOverlay.setImageSourceInfo(imageProxy.getWidth(), imageProxy.getHeight(), isLensFacingFront);
+        }
+
+        InputImage inputImage = InputImage.fromMediaImage(mediaImage, rotationDegrees);
+        long frameStartMs = SystemClock.elapsedRealtime();
+
+        requestDetectInImage(
+                inputImage,
+                graphicOverlay,
+                /* originalCameraImage= */ null,
+                /* shouldShowFps= */ true,
+                frameStartMs)
+                .addOnCompleteListener(task -> imageProxy.close());
     }
 
 

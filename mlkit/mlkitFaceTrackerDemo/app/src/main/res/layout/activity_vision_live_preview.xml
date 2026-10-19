@@ -7,11 +7,14 @@
     android:id="@+id/main"
     android:keepScreenOn="true">
 
-  <edu.cs4730.mlkitfacetrackerdemo.CameraSourcePreview
+  <androidx.camera.view.PreviewView
       android:id="@+id/preview_view"
-      android:layout_width="match_parent"
+      android:layout_width="0dp"
       android:layout_height="0dp"
-      app:layout_constraintTop_toTopOf="parent" />
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent" />
 
   <edu.cs4730.mlkitfacetrackerdemo.GraphicOverlay
       android:id="@+id/graphic_overlay"
@@ -21,8 +24,6 @@
       app:layout_constraintRight_toRightOf="@id/preview_view"
       app:layout_constraintTop_toTopOf="@id/preview_view"
       app:layout_constraintBottom_toBottomOf="@id/preview_view"/>
-
-
 
   <ToggleButton
       android:id="@+id/facing_switch"
@@ -35,7 +36,5 @@
       android:textOn=""
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintStart_toStartOf="parent" />
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
