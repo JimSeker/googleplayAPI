@@ -1,6 +1,7 @@
 package edu.cs4730.fbdatabaseauthdemo;
 
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
@@ -22,6 +23,7 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -46,6 +48,7 @@ public class DBListFragment extends Fragment {
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
         NoteRowBinding viewBinding;
+
         public NoteViewHolder(NoteRowBinding viewBinding) {
             super(viewBinding.getRoot());
             this.viewBinding = viewBinding;
@@ -71,8 +74,32 @@ public class DBListFragment extends Fragment {
         SnapshotParser<Note> parser = new SnapshotParser<Note>() {
             @NonNull
             @Override
-            public Note parseSnapshot(DataSnapshot dataSnapshot) {
-                Note note = dataSnapshot.getValue(Note.class);
+            public Note parseSnapshot(@NonNull DataSnapshot dataSnapshot) {
+                Note note = null;
+                try {
+                    note = dataSnapshot.getValue(Note.class);
+                } catch (DatabaseException e) {
+                    // This block runs if there is a type mismatch or Firebase conversion error
+                    Log.e("FirebaseError", "Type mismatch or data corruption: " + e.getMessage());
+                    //try manually to create it.
+                    note = new Note();
+                    note.setTitle(dataSnapshot.child("title").getValue(String.class));
+                    //so what happens if it's a number or something else?  this attempts to deal with it.
+                    //I won't guarantee it works in all cases.
+                    String noteString;
+                    try {
+                        noteString = dataSnapshot.child("note").getValue(String.class).toString();
+                    } catch (Exception e1) {
+                        Log.e("FirebaseError", "Type mismatch or data corruption: " + e1.getMessage());
+                        noteString = dataSnapshot.child("note").getValue().toString();
+                    }
+                    note.setNote(noteString);
+                } catch (Exception e) {
+                    // Optional: Catch any other unexpected exceptions
+                    Log.e("GenericError", "An error occurred: " + e.getMessage());
+                }
+
+
                 if (note != null) {
                     note.setId(dataSnapshot.getKey());
                 }
@@ -107,7 +134,10 @@ public class DBListFragment extends Fragment {
                 viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        updateDialog((Note) viewHolder.viewBinding.title.getTag());
+                        int pos = viewHolder.getBindingAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION && pos < mFirebaseAdapter.getItemCount()) {
+                            updateDialog(mFirebaseAdapter.getItem(pos));
+                        }
                     }
                 });
             }
@@ -116,14 +146,19 @@ public class DBListFragment extends Fragment {
         //Again, I'm not really sure what is going on here.
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
+            public void onItemRangeInserted(final int positionStart, final int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
                 int noteCount = mFirebaseAdapter.getItemCount();
                 int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
                 // to the bottom of the list to show the newly added message.
                 if (lastVisiblePosition == -1 || (positionStart >= (noteCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                    binding.list.scrollToPosition(positionStart);
+                    binding.list.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            binding.list.scrollToPosition(positionStart);
+                        }
+                    });
                 }
             }
         });
@@ -144,11 +179,10 @@ public class DBListFragment extends Fragment {
                 //called when it has been animated off the screen.  So item is no longer showing.
                 //use ItemtouchHelper.X to find the correct one.
                 if (direction == ItemTouchHelper.RIGHT) {
-                    Note mynote = (Note) ((NoteViewHolder) viewHolder).viewBinding.title.getTag();
-                    //  this is the delete.
-                    //mFirebaseDatabaseReference.child("messages").child(mynote.getId()).removeValue();
-                    //or use this, since it already declared.
-                    myChildRef.child(mynote.getId()).removeValue();
+                    int pos = viewHolder.getBindingAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION && pos < mFirebaseAdapter.getItemCount()) {
+                        mFirebaseAdapter.getRef(pos).removeValue();
+                    }
                 }
             }
         };
@@ -164,10 +198,14 @@ public class DBListFragment extends Fragment {
         super.onPause();
     }
 
+
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onResume() {
         super.onResume();
         mFirebaseAdapter.startListening();
+        //This is required, on restore since the data has changed otherwise the app likely crashes.
+        mFirebaseAdapter.notifyDataSetChanged();
     }
 
     /**
