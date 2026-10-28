@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.0"
 appcompat = "1.8.0"
 play-services-maps = "20.0.0"
 play-services-base = "18.11.0"

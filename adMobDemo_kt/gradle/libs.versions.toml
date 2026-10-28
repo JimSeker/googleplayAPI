@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.0"
 consentLibrary = "1.0.8"
 coreKtx = "1.19.1"
 appcompat = "1.8.0"
