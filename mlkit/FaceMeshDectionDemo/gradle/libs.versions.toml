@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.0"
+agp = "9.5.1"
 appcompat = "1.8.0"
 exifinterface = "1.4.2"
 faceMeshDetection = "16.0.0-beta3"
