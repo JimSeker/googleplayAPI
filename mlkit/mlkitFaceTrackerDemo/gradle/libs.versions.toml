@@ -5,7 +5,7 @@ material = "1.14.0"
 constraintlayout = "2.2.2"
 activity = "1.13.0"
 face-detection = "16.1.7"
-camerax = "1.6.2"
+camerax = "1.7.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }

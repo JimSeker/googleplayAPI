@@ -12,8 +12,10 @@ import androidx.camera.core.Preview;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -38,22 +40,31 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import edu.cs4730.mlkitfacevideoxdemo.databinding.ActivityMainBinding;
+
 public class MainActivity extends AppCompatActivity {
 
 
     String TAG = "MainActivity";
     ActivityResultLauncher<String[]> rpl;
     private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA};
-    PreviewView viewFinder;
+    // PreviewView viewFinder;
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    GraphicOverlay graphicOverlay;
+    // GraphicOverlay graphicOverlay;
     int lensFacing = CameraSelector.LENS_FACING_BACK;
     FaceDetector faceDetector;
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(binding.main.getId()), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         rpl = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
             new ActivityResultCallback<Map<String, Boolean>>() {
@@ -68,10 +79,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         );
-        viewFinder = findViewById(R.id.viewFinder);
-        graphicOverlay = findViewById(R.id.graphic_overlay);
 
-        //create the faceDectector
+        //create the faceDetector
         //most accurate one
         FaceDetectorOptions highAccuracyOpts =
             new FaceDetectorOptions.Builder()
@@ -110,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                         Preview preview = (new Preview.Builder()).build();
-                        preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
+                        preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
 
                         // 1. Define the preferred size and fallback rules
                         ResolutionStrategy resolutionStrategy = new ResolutionStrategy(
@@ -136,10 +145,10 @@ public class MainActivity extends AppCompatActivity {
                                 int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
                                 boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
                                 if (rotationDegrees == 0 || rotationDegrees == 180) {
-                                    graphicOverlay.setImageSourceInfo(
+                                    binding.graphicOverlay.setImageSourceInfo(
                                         imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
                                 } else {
-                                    graphicOverlay.setImageSourceInfo(
+                                    binding.graphicOverlay.setImageSourceInfo(
                                         imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
                                 }
 
@@ -151,11 +160,11 @@ public class MainActivity extends AppCompatActivity {
                                             new OnSuccessListener<List<Face>>() {
                                                 @Override
                                                 public void onSuccess(List<Face> faces) {
-                                                    graphicOverlay.clear();
+                                                    binding.graphicOverlay.clear();
                                                     for (Face face : faces) {
-                                                        graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
+                                                        binding.graphicOverlay.add(new FaceGraphic(binding.graphicOverlay, face));
                                                     }
-                                                    graphicOverlay.postInvalidate();
+                                                    binding.graphicOverlay.postInvalidate();
                                                 }
                                             })
                                         .addOnFailureListener(executor,
