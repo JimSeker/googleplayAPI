@@ -1,7 +1,7 @@
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
 appcompat = "1.8.0"
-play-services-nearby = "19.5.1"
+play-services-nearby = "19.5.2"
 material = "1.14.0"
 activity = "1.13.0"
 
