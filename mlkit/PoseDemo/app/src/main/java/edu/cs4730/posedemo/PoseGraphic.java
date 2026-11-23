@@ -72,6 +72,19 @@ public class PoseGraphic extends GraphicOverlay.Graphic {
             whitePaint);
       }
     }
+    PoseLandmark nose = pose.getPoseLandmark(PoseLandmark.NOSE);
+    PoseLandmark lefyEyeInner = pose.getPoseLandmark(PoseLandmark.LEFT_EYE_INNER);
+    PoseLandmark lefyEye = pose.getPoseLandmark(PoseLandmark.LEFT_EYE);
+    PoseLandmark leftEyeOuter = pose.getPoseLandmark(PoseLandmark.LEFT_EYE_OUTER);
+    PoseLandmark rightEyeInner = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE_INNER);
+    PoseLandmark rightEye = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE);
+    PoseLandmark rightEyeOuter = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE_OUTER);
+    PoseLandmark leftEar = pose.getPoseLandmark(PoseLandmark.LEFT_EAR);
+    PoseLandmark rightEar = pose.getPoseLandmark(PoseLandmark.RIGHT_EAR);
+    PoseLandmark leftMouth = pose.getPoseLandmark(PoseLandmark.LEFT_MOUTH);
+    PoseLandmark rightMouth = pose.getPoseLandmark(PoseLandmark.RIGHT_MOUTH);
+
+
     PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
     PoseLandmark rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
     PoseLandmark leftElbow = pose.getPoseLandmark(PoseLandmark.LEFT_ELBOW);
@@ -95,6 +108,17 @@ public class PoseGraphic extends GraphicOverlay.Graphic {
     PoseLandmark rightHeel = pose.getPoseLandmark(PoseLandmark.RIGHT_HEEL);
     PoseLandmark leftFootIndex = pose.getPoseLandmark(PoseLandmark.LEFT_FOOT_INDEX);
     PoseLandmark rightFootIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_FOOT_INDEX);
+
+    // Face
+    drawLine(canvas, nose.getPosition(), lefyEyeInner.getPosition(), whitePaint);
+    drawLine(canvas, lefyEyeInner.getPosition(), lefyEye.getPosition(), whitePaint);
+    drawLine(canvas, lefyEye.getPosition(), leftEyeOuter.getPosition(), whitePaint);
+    drawLine(canvas, leftEyeOuter.getPosition(), leftEar.getPosition(), whitePaint);
+    drawLine(canvas, nose.getPosition(), rightEyeInner.getPosition(), whitePaint);
+    drawLine(canvas, rightEyeInner.getPosition(), rightEye.getPosition(), whitePaint);
+    drawLine(canvas, rightEye.getPosition(), rightEyeOuter.getPosition(), whitePaint);
+    drawLine(canvas, rightEyeOuter.getPosition(), rightEar.getPosition(), whitePaint);
+    drawLine(canvas, leftMouth.getPosition(), rightMouth.getPosition(), whitePaint);
 
     drawLine(canvas, leftShoulder.getPosition(), rightShoulder.getPosition(), leftPaint);
     drawLine(canvas, leftHip.getPosition(), rightHip.getPosition(), leftPaint);
